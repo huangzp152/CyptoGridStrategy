@@ -1,12 +1,12 @@
 {
   "platform": "binance_spot",
   "symbol": "ETHUSDT",
-  "api_key": "WRrJ4i1xmTCjTKL0zNBBFHih80g4GliLBPqLEwDFwBTNnPI3tzkZzrdwseqiFyR3t",
-  "api_secret": "rMNw2S749q8o8KvImtTvw1dVD0rwhP4bdTNiqQGFe2970QmCeCwfpwRh1oppdRaRt",
+  "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
+  "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
   "gap_percent": 0.01,
-  "quantity": 0.003,
+  "quantity": 0.03,
   "min_price": 0.0001,
-  "min_qty": 0.0001,
+  "min_qty": 0.009,
   "max_orders": 1,
   "proxy_host": "",
   "proxy_port": 0
