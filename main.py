@@ -42,7 +42,7 @@ if __name__ == '__main__':
     while True:
         try:
             trader.henged_grid_strategy()
-            time.sleep(5)
+            time.sleep(1)
 
         except Exception as error:
             print(f"catch error: {error}")
