@@ -27,6 +27,16 @@ from threading import Lock
 
 
 class OrderStatus(Enum):
+
+    '''
+    NEW 新建订单
+    PARTIALLY_FILLED 部分成交
+    FILLED 全部成交
+    CANCELED 已撤销
+    REJECTED 订单被拒绝
+    EXPIRED 订单过期(根据timeInForce参数规则)
+    '''
+
     NEW = "NEW"
     PARTIALLY_FILLED = "PARTIALLY_FILLED"
     FILLED = "FILLED"
@@ -36,10 +46,11 @@ class OrderStatus(Enum):
     EXPIRED = "EXPIRED"
 
 
+
 class OrderType(Enum):
-    LIMIT = "LIMIT"
-    MARKET = "MARKET"
-    STOP = "STOP"
+    LIMIT = "LIMIT" #限价单
+    MARKET = "MARKET" #市价单
+    STOP = "STOP" #止损单（但是最终成交价应该会低于它）
 
 
 class RequestMethod(Enum):
@@ -253,7 +264,7 @@ class BinanceSpotHttp(object):
 
     def place_order(self, symbol: str, order_side: OrderSide, order_type: OrderType, quantity: float, price: float,
                     client_order_id: str = None, time_inforce="GTC", stop_price=0):
-        """挂单
+        """下单
 
         :param symbol: 交易对名称
         :param order_side: 买或者卖， BUY or SELL

@@ -207,11 +207,14 @@ class BinanceTrader(object):
         #初始时以当前价格先买1份多单 1份空单
 
         #买
-        if bid_price > 0:#测试时因为bid_price一直是0，所以换做ask_price
+        if bid_price > 0:
             price = round_to(bid_price * (1 - float(config.gap_percent)), float(config.min_price))#价格为买价下跌设定的百分比，按这个价格挂单
             buy_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.BUY, order_type=OrderType.LIMIT, quantity=quantity, price=price)
             print(f"buy_order:" + str(buy_order))
 
+            check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),
+                                                     client_order_id=buy_order.get('clientOrderId'))
+            print(f"order current status:{check_order.get('status')}")
         #卖
 
         # if ask_price > 0:
