@@ -253,7 +253,7 @@ class BinanceSpotHttp(object):
 
     def place_order(self, symbol: str, order_side: OrderSide, order_type: OrderType, quantity: float, price: float,
                     client_order_id: str = None, time_inforce="GTC", stop_price=0):
-        """
+        """挂单
 
         :param symbol: 交易对名称
         :param order_side: 买或者卖， BUY or SELL
