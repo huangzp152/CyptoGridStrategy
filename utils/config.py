@@ -27,7 +27,7 @@ class Config:
     def __init__(self):
 
         self.platform: str = "binance_spot"  # 交易的平台
-        self.symbol:str = "BNBUSDT"  # 交易对.
+        self.symbol:str = "BTCUSDT"  # 交易对.
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
         self.api_secret: str = None
@@ -38,6 +38,8 @@ class Config:
         self.max_orders = 1
         self.proxy_host = ""  # proxy host
         self.proxy_port = 0  # proxy port
+        self.initial_price = 0
+        self.grid_number = 0
 
 
     def loads(self, config_file=None):

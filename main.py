@@ -16,7 +16,7 @@
 
 
 """
-
+import signal
 import time
 import logging
 from trader.binance_trader import BinanceTrader
@@ -29,7 +29,6 @@ logger = logging.getLogger('binance')
 
 if __name__ == '__main__':
 
-
     config.loads('./config.json')
 
     if config.platform == 'binance_spot':
@@ -37,15 +36,33 @@ if __name__ == '__main__':
     else:
         trader = BinanceFutureTrader()
 
-    orders = trader.http_client.cancel_open_orders(config.symbol)
-    print(f"cancel orders: {orders}")
+    # 列出所有订单
+    # orders = trader.http_client.get_all_orders(config.symbol)
+    # for order in orders:
+    #     print(f"check orders: {order}")
 
-    while True:
+    # orders = trader.http_client.cancel_open_orders(config.symbol)
+    # print(f"cancel orders: {orders}")
+
+    for i in range(0, 3):
         try:
             trader.henged_grid_strategy()
-            time.sleep(1)
-
+            time.sleep(3)
         except Exception as error:
             print(f"catch error: {error}")
             time.sleep(5)
+
+    #kill pid 中断进程时要做的事 todo
+    def sth_to_do_before_exit():
+        print("googbye!")
+    signal.signal(signal.SIGTERM, sth_to_do_before_exit)
+
+    # while True: #一直跑
+    #     try:
+    #         trader.henged_grid_strategy()
+    #         time.sleep(1)
+    #
+    #     except Exception as error:
+    #         print(f"catch error: {error}")
+    #         time.sleep(5)
 

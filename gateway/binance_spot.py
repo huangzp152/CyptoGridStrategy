@@ -342,11 +342,25 @@ class BinanceSpotHttp(object):
 
     def get_open_orders(self, symbol=None):
         """
-        获取所有的订单.
+        获取所有挂着的订单.
         :param symbol: BNBUSDT, or BTCUSDT etc.
         :return:
         """
         path = "/api/v3/openOrders"
+
+        params = {"timestamp": self.get_current_timestamp()}
+        if symbol:
+            params["symbol"] = symbol
+
+        return self.request(RequestMethod.GET, path, params, verify=True)
+
+    def get_all_orders(self, symbol=None):
+        """
+        获取所有的订单.
+        :param symbol: BNBUSDT, or BTCUSDT etc.
+        :return:
+        """
+        path = "/api/v3/allOrders"
 
         params = {"timestamp": self.get_current_timestamp()}
         if symbol:

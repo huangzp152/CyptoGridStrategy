@@ -197,34 +197,75 @@ class BinanceTrader(object):
     #             self.sell_orders.remove(delete_order)
 
 
+    '''
+    10个格子，初始价格37500，
+    
+    价格list：[37100,37200,37300,37400,【37500】,37600,37700,37800,37900,38000]
+    
+    多单
+    for piece in list:
+        第一个价格，检查状态（get order）是否持有（Fill），如果持有，检查有没有挂多单（place_order），如果没有就挂多单
+    
+    空单  
+    for piece in list:
+        第一个价格，检查状态（get order）是否持有（Fill），如果持有，检查有没有挂多单（place_order），如果没有就挂多单
+    
+    '''
+
     def henged_grid_strategy(self):
-        #方法外循环执行
 
         #先查询价格
         bid_price, ask_price = self.get_bid_ask_price()
-        print(f"bid_price: {bid_price}, ask_price: {ask_price}")
-        quantity = round_to(float(config.quantity), float(config.min_qty)) # 买多少个
-        #初始时以当前价格先买1份多单 1份空单
+        print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
 
-        #买
+        #初始时以设定的价格先买1份多单 1份空单
+
+        # 买一份
+        self.buy_one_piece()
+        # 挂卖单
+        self.place_one_piece()
+
+        # 卖一份
+        self.sell_one_piece()
+
+
+        pass
+
+    def buy_one_piece(self):
+        #先查询价格
+        bid_price, ask_price = self.get_bid_ask_price()
+        print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
+        quantity = round_to(float(config.quantity), float(config.min_qty))# 买多少个
+        #买一份
         if bid_price > 0:
-            price = round_to(bid_price * (1 - float(config.gap_percent)), float(config.min_price))#价格为买价下跌设定的百分比，按这个价格挂单
+            price = round_to(bid_price * (1 - float(config.gap_percent)), float(config.min_price))#价格为买价下跌设定的百分比，按这个价格下单
+            print(f"以:" + str(price) + "这个价格买入,比买价低的百分比：" + str(config.gap_percent) + "，买的产品:" + str(config.symbol) + ", 买的数量：" + str(quantity) + "(需要" + str(round(price*quantity,2))+ "U)")
             buy_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.BUY, order_type=OrderType.LIMIT, quantity=quantity, price=price)
             print(f"check buy_order:" + str(buy_order))
 
-            check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),
-                                                     client_order_id=buy_order.get('clientOrderId'))
-            print(f"order current status:{check_order.get('status')}")
-        #卖
+            check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol), client_order_id=buy_order.get('clientOrderId'))
+            if check_order.get('status') == OrderStatus.NEW.value:
+                print(f"订单状态 order current status:{check_order.get('status')}，新增（挂着？）")
+            else:
+                print(f"订单状态order current status:{check_order.get('status')}")
 
-        # if ask_price > 0:
-        #     price = round_to(ask_price * (1 + float(config.gap_percent)), float(config.min_price))
-        #     order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.SELL, order_type=OrderType.LIMIT, quantity=quantity, price=price)
-
-
-        #买之前检查线上有没有
-        self.http_client.get_order(buy_order.get('symbol', config.symbol), client_order_id=buy_order.get('clientOrderId'))
-        pass
+    def sell_one_piece(self):
+        #先查询价格
+        bid_price, ask_price = self.get_bid_ask_price()
+        print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
+        quantity = round_to(float(config.quantity), float(config.min_qty))# 买多少个
+        #卖一份
+        if ask_price > 0:
+            price = round_to(ask_price * (1 + float(config.gap_percent)), float(config.min_price))
+            print(f"以:" + str(price) + "这个价格卖出,比卖价高的百分比：" + str(config.gap_percent) + "，卖的产品:" + str(config.symbol) + ", 卖的数量：" + str(quantity) + "(需要" + str(round(price*quantity,2))+ "U)")
+            sell_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.SELL, order_type=OrderType.LIMIT, quantity=quantity, price=price)
+            print(f"check sell_order:" + str(sell_order))
+        #
+            check_order = self.http_client.get_order(sell_order.get('symbol', config.symbol), client_order_id=sell_order.get('clientOrderId'))
+            if check_order.get('status') == OrderStatus.NEW.value:
+                print(f"订单状态 order current status:{check_order.get('status')}，新增（挂着？）")
+            else:
+                print(f"订单状态order current status:{check_order.get('status')}")
 
     def grid_trader_new(self):
         """

@@ -9,5 +9,7 @@
   "min_qty": 0.001,
   "max_orders": 1,
   "proxy_host": "",
-  "proxy_port": 0
+  "proxy_port": 0,
+  "initial_price": 37500,
+  "grid_number": 10
 }
