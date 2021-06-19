@@ -229,16 +229,25 @@ class BinanceTrader(object):
         price_list = [min_border_price + price_interval * i for i in range(0, grid_number + 1)]
         print("price list:" + str(price_list))
 
-
-
         open_orders = self.http_client.get_open_orders(config.symbol)
-        open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
-        for price in price_list:
-            # for order_price in open_order_price:
+        print("open_order before:")
+        if open_orders and len(open_orders) > 0:
 
-            if not round_to(float(price), float(config.min_price)) in open_order_price:
-                print("check " + str(round_to(float(price), float(config.min_price))) + ", "+ str(open_order_price[0]))
-                # self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
+            for order in open_orders:
+                print(str(order))
+
+            open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
+
+            for price in price_list:
+                # for order_price in open_order_price:
+                if not round_to(float(price), float(config.min_price)) in open_order_price:
+                    print("check " + str(round_to(float(price), float(config.min_price))) + ", "+ str(open_order_price[0]))
+                    # self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
+        else:
+            for price in price_list:
+                print("以 " + price  + "下单～")
+                self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
+                self
 
         #check
         open_orders_after = self.http_client.get_open_orders(config.symbol)
