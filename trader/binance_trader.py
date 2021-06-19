@@ -203,12 +203,14 @@ class BinanceTrader(object):
     价格list：[37100,37200,37300,37400,【37500】,37600,37700,37800,37900,38000]
     
     多单
-    for piece in list:
+    for piece in list:遍历每个价格，
         第一个价格，检查状态（get order）是否持有（Fill），如果持有，检查有没有挂多单（place_order），如果没有就挂多单
+        其它每个价格，如果没挂买单，则挂上去
     
     空单  
-    for piece in list:
-        第一个价格，检查状态（get order）是否持有（Fill），如果持有，检查有没有挂多单（place_order），如果没有就挂多单
+    for piece in list:遍历每个价格，
+        第一个价格，检查状态（get order）是否持有（Fill），如果持有，检查有没有挂空单（place_order），如果没有就挂空单
+        其它每个价格，如果没挂买单，则挂上去
     
     '''
 
@@ -218,15 +220,45 @@ class BinanceTrader(object):
         bid_price, ask_price = self.get_bid_ask_price()
         print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
 
-        #初始时以设定的价格先买1份多单 1份空单
+        quantity = round_to(float(config.quantity), float(config.min_qty))# 买多少个
+        initial_price = config.initial_price
+        grid_number = config.grid_number
+        max_border_price = config.max_border_price
+        min_border_price = config.min_border_price
+        price_interval = (max_border_price - min_border_price) / grid_number
+        price_list = [min_border_price + price_interval * i for i in range(0, grid_number + 1)]
+        print("price list:" + str(price_list))
+
+
+
+        open_orders = self.http_client.get_open_orders(config.symbol)
+        open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
+        for price in price_list:
+            # for order_price in open_order_price:
+
+            if not round_to(float(price), float(config.min_price)) in open_order_price:
+                print("check " + str(round_to(float(price), float(config.min_price))) + ", "+ str(open_order_price[0]))
+                # self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
+
+        #check
+        open_orders_after = self.http_client.get_open_orders(config.symbol)
+        for order in open_orders_after:
+            print("check open order after:" + str(order))
+
+
+
+        # for i in range(0, len(price_list) - 1):
+
+
+        #遍历买单
 
         # 买一份
-        self.buy_one_piece()
+        # self.buy_one_piece()
         # 挂卖单
-        self.place_one_piece()
+        # self.place_one_piece()
 
         # 卖一份
-        self.sell_one_piece()
+        # self.sell_one_piece()
 
 
         pass

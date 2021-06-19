@@ -44,7 +44,7 @@ if __name__ == '__main__':
     # orders = trader.http_client.cancel_open_orders(config.symbol)
     # print(f"cancel orders: {orders}")
 
-    for i in range(0, 3):
+    for i in range(0, 1):
         try:
             trader.henged_grid_strategy()
             time.sleep(3)

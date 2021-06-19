@@ -5,11 +5,13 @@
   "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
   "gap_percent": 0.01,
   "quantity": 0.01,
-  "min_price": 0.000001,
+  "min_price": 0.01,
   "min_qty": 0.001,
   "max_orders": 1,
   "proxy_host": "",
   "proxy_port": 0,
   "initial_price": 37500,
-  "grid_number": 10
+  "grid_number": 10,
+  "max_border_price": 38500,
+  "min_border_price": 36500
 }

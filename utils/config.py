@@ -40,6 +40,8 @@ class Config:
         self.proxy_port = 0  # proxy port
         self.initial_price = 0
         self.grid_number = 0
+        self.max_border_price = 0
+        self.min_border_price = 0
 
 
     def loads(self, config_file=None):
