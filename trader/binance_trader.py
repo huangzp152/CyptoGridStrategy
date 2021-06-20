@@ -233,59 +233,75 @@ class BinanceTrader(object):
         price_list = [round_to(float(min_border_price + price_interval * i), float(config.min_price)) for i in range(0, grid_number + 1)]
         print("price list:" + str(price_list))
 
-        open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的买单
+        open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的单
         print("open_order before:")
 
+
         if open_orders and len(open_orders) > 0:
-            for order in open_orders:
-                print(str(order))
 
-            #把未添加的挂着的买单添加到买单列表里
-            if self.buy_orders and len(self.buy_orders) > 0:
-                if not open_orders in self.buy_orders:
-                    self.buy_orders.append(open_orders)
+            for i in range(0, len(open_orders)):
+                print(str(open_orders[i]))
 
+                #把未添加的挂着的买单添加到买单列表里
+                buy_order_equal = False
+                for j in range(0, len(self.buy_orders)):
+                    if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId")\
+                            and open_orders[i].get("side") == OrderSide.BUY:
+                        buy_order_equal = True
+                if not buy_order_equal:
+                    self.buy_orders.append(open_orders[i])
 
-            open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
+                #把未添加的挂着的卖单添加到卖单列表里
+                sell_order_equal = False
+                for j in range(0, len(self.sell_orders)):
+                    if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId")\
+                            and open_orders[i].get("side") == OrderSide.SELL:
+                        sell_order_equal = True
+                if not sell_order_equal:
+                    self.sell_orders.append(open_orders[i])
 
-            #挂买单
-            for price in price_list:#第一次或者卖完了
-                need_place_order = True
-                #没有挂买单的就挂买单
-                for order_price in open_order_price:
-                    if round_to(float(price), float(config.min_price)) == round_to(float(order_price), float(config.min_price)):#todo and open_order['status']==OrderStatus.OPEN
-                       need_place_order = False
-                       break
-                if need_place_order:
-                    print("need place order:" + str(order_price))
-                        # print("check " + str(round_to(float(price), float(config.min_price))) + ", "+ str(open_order_price[0]))
-                    new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
-                    self.buy_orders.append(new_buy_order)
-                time.sleep(1)
+            # open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
 
-        else:
-            for price in price_list:
+        #挂买单
+        for price in price_list:
+            need_place_buy_order = True
+            if self.buy_orders or len(self.buy_orders) > 0:
+                for i in range(0, len(self.buy_orders)):
+                    if price == self.buy_orders[i].get("price") or self.buy_orders[i].get("status") == OrderStatus.FILLED:
+                        need_place_buy_order = False
+                        break
+            if need_place_buy_order:
                 print("以 " + str(price) + "下单～")
                 new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
                 self.buy_orders.append(new_buy_order)
-                print("order result:" + str(new_buy_order))
-                time.sleep(1)
+            time.sleep(1)
 
         #check
         open_orders_after = self.http_client.get_open_orders(config.symbol)
         for order in open_orders_after:
-            print("check open order after:" + str(order))
+            if order.get("side") == OrderSide.BUY:
+                print("check open buy order after:" + str(order))
 
         # 买入成交了的就挂卖单
         for buy_order in self.buy_orders:
-            current_order = self.http_client.get_order(config.symbol, buy_order.get("clientOrderId"))
-            if current_order.get("status") != buy_order.get("status"):#更新订单
+            current_remote_order = self.http_client.get_order(config.symbol, buy_order.get("clientOrderId"))
+            if current_remote_order.get("status") != buy_order.get("status"):#更新订单
                 self.buy_orders.remove(buy_order)
-                self.buy_orders.append(current_order)
-                if current_order.get("status") == OrderStatus.FILLED:#已成交的，挂卖单
-                    if not current_order in self.buy_orders:#todo 会不会时间戳不一样
-                        new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_order.get("price")) + price_interval)
+                self.buy_orders.append(current_remote_order)
+                if current_remote_order.get("side") == OrderSide.BUY and current_remote_order.get("status") == OrderStatus.FILLED:#已成交的，挂卖单
+                    need_place_sell_order = True
+                    for i in range(0, len(self.sell_orders)):
+                        if current_remote_order.get("clientOrderId") == self.sell_orders[i].get("clientOrderId"):
+                            need_place_sell_order = False
+                    if need_place_sell_order:
+                        new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_remote_order.get("price")) + price_interval)
                         self.sell_orders.append(new_sell_order)
+
+        #check
+        open_orders_after = self.http_client.get_open_orders(config.symbol)
+        for order in open_orders_after:
+            if order.get("side") == OrderSide.SELL:
+                print("check open sell order after:" + str(order))
 
 
 
