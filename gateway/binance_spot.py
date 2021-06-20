@@ -141,6 +141,14 @@ class BinanceSpotHttp(object):
         path = '/api/v3/time'
         return self.request(req_method=RequestMethod.GET, path=path)
 
+    def get_my_trades(self, symbol):
+        path = '/api/v3/myTrades'
+        query_dict = {"symbol": symbol,
+                      "timestamp": self.get_current_timestamp()
+                      }
+        return self.request(req_method=RequestMethod.GET, path=path, requery_dict=query_dict, verify=True)
+
+
     def get_exchange_info(self):
 
         """
