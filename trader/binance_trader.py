@@ -229,7 +229,7 @@ class BinanceTrader(object):
         grid_number = config.grid_number
         max_border_price = config.max_border_price
         min_border_price = config.min_border_price
-        price_interval = (max_border_price - min_border_price) / grid_number
+        price_interval = float((max_border_price - min_border_price) / float(grid_number))
         price_list = [round_to(float(min_border_price + price_interval * i), float(config.min_price)) for i in range(0, grid_number + 1)]
         print("price list:" + str(price_list))
 
@@ -246,7 +246,7 @@ class BinanceTrader(object):
                 buy_order_equal = False
                 for j in range(0, len(self.buy_orders)):
                     if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId")\
-                            and open_orders[i].get("side") == OrderSide.BUY:
+                            and open_orders[i].get("side") == OrderSide.BUY.value:
                         buy_order_equal = True
                 if not buy_order_equal:
                     self.buy_orders.append(open_orders[i])
@@ -255,7 +255,7 @@ class BinanceTrader(object):
                 sell_order_equal = False
                 for j in range(0, len(self.sell_orders)):
                     if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId")\
-                            and open_orders[i].get("side") == OrderSide.SELL:
+                            and open_orders[i].get("side") == OrderSide.SELL.value:
                         sell_order_equal = True
                 if not sell_order_equal:
                     self.sell_orders.append(open_orders[i])
@@ -263,23 +263,24 @@ class BinanceTrader(object):
             # open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
 
         #挂买单
-        for price in price_list:
+        for i in range(0, len(price_list) - 1):
+        # for price in price_list:
             need_place_buy_order = True
             if self.buy_orders or len(self.buy_orders) > 0:
-                for i in range(0, len(self.buy_orders)):
-                    if price == self.buy_orders[i].get("price") or self.buy_orders[i].get("status") == OrderStatus.FILLED:
+                for j in range(0, len(self.buy_orders)):
+                    if price_list[i] == round_to(float(self.buy_orders[j].get("price")), float(config.min_price)) or self.buy_orders[j].get("status") == OrderStatus.FILLED.value:
                         need_place_buy_order = False
                         break
             if need_place_buy_order:
-                print("以 " + str(price) + "下单～")
-                new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price)
+                print("以 " + str(price_list[i]) + "下单～")
+                new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price_list[i])
                 self.buy_orders.append(new_buy_order)
-            time.sleep(1)
+            # time.sleep(1)
 
         #check
         open_orders_after = self.http_client.get_open_orders(config.symbol)
         for order in open_orders_after:
-            if order.get("side") == OrderSide.BUY:
+            if order.get("side") == OrderSide.BUY.value:
                 print("check open buy order after:" + str(order))
 
         # 买入成交了的就挂卖单
@@ -288,7 +289,7 @@ class BinanceTrader(object):
             if current_remote_order.get("status") != buy_order.get("status"):#更新订单
                 self.buy_orders.remove(buy_order)
                 self.buy_orders.append(current_remote_order)
-                if current_remote_order.get("side") == OrderSide.BUY and current_remote_order.get("status") == OrderStatus.FILLED:#已成交的，挂卖单
+                if current_remote_order.get("side") == OrderSide.BUY.value and current_remote_order.get("status") == OrderStatus.FILLED.value:#已成交的，挂卖单
                     need_place_sell_order = True
                     for i in range(0, len(self.sell_orders)):
                         if current_remote_order.get("clientOrderId") == self.sell_orders[i].get("clientOrderId"):
@@ -300,7 +301,7 @@ class BinanceTrader(object):
         #check
         open_orders_after = self.http_client.get_open_orders(config.symbol)
         for order in open_orders_after:
-            if order.get("side") == OrderSide.SELL:
+            if order.get("side") == OrderSide.SELL.value:
                 print("check open sell order after:" + str(order))
 
 
