@@ -235,8 +235,8 @@ class BinanceTrader(object):
 
         open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的买单
         print("open_order before:")
-        if open_orders and len(open_orders) > 0:
 
+        if open_orders and len(open_orders) > 0:
             for order in open_orders:
                 print(str(order))
 
@@ -245,8 +245,10 @@ class BinanceTrader(object):
                 if not open_orders in self.buy_orders:
                     self.buy_orders.append(open_orders)
 
+
             open_order_price = [round_to(float(order.get('price')), float(config.min_price)) for order in open_orders]
 
+            #挂买单
             for price in price_list:#第一次或者卖完了
                 need_place_order = True
                 #没有挂买单的就挂买单
@@ -280,9 +282,11 @@ class BinanceTrader(object):
             if current_order.get("status") != buy_order.get("status"):#更新订单
                 self.buy_orders.remove(buy_order)
                 self.buy_orders.append(current_order)
-                if current_order.get("status") == OrderStatus.FILLED:#已成交
+                if current_order.get("status") == OrderStatus.FILLED:#已成交的，挂卖单
                     if not current_order in self.buy_orders:#todo 会不会时间戳不一样
                         new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_order.get("price")) + price_interval)
+                        self.sell_orders.append(new_sell_order)
+
 
 
         # check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),
@@ -304,8 +308,6 @@ class BinanceTrader(object):
         # 卖一份
         # self.sell_one_piece()
 
-
-        pass
 
     def buy_one_piece(self):
         #先查询价格
@@ -360,8 +362,8 @@ class BinanceTrader(object):
         print("------------------------------")
         print(f"sell orders: {self.sell_orders}")
 
-        buy_delete_orders = []  # 需要删除买单
-        sell_delete_orders = [] # 需要删除的卖单
+        buy_delete_orders = []# 需要删除买单
+        sell_delete_orders = []# 需要删除的卖单
 
 
         # 买单逻辑,检查成交的情况.
