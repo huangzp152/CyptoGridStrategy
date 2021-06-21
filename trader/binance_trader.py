@@ -226,7 +226,7 @@ class BinanceTrader(object):
         print(f"我的交易：get my trades info: {self.http_client.get_my_trades(config.symbol)}")
         print(f"我的交易：get all trades info: {self.http_client.get_all_orders(config.symbol)}")
 
-        print("check specific order:" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242551977551000006")))
+        print("check specific order :" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242842419521000005")))
 
         quantity = self._format(float(config.quantity))# 买多少个
         initial_price = config.initial_price
@@ -286,25 +286,28 @@ class BinanceTrader(object):
             # time.sleep(1)
 
         #check
-        open_orders_after = self.http_client.get_open_orders(config.symbol)
-        for order in open_orders_after:
-            if order.get("side") == OrderSide.BUY.value:
-                print("check open buy order after:" + str(order))
+        # open_orders_after = self.http_client.get_open_orders(config.symbol)
+        # for order in open_orders_after:
+        #     if order.get("side") == OrderSide.BUY.value:
+        #         print("check open buy order after:" + str(order))
 
         # 买入成交了的就挂卖单
         for buy_order in self.buy_orders:
             current_remote_order = self.http_client.get_order(config.symbol, buy_order.get("clientOrderId"))
+            # print("check buy order status after:" + str(current_remote_order.get("status") + ", id:" + str(current_remote_order.get("clientOrderId")) + ", price:" + str(current_remote_order.get("price"))))
             if current_remote_order.get("status") != buy_order.get("status"):#更新订单
                 self.buy_orders.remove(buy_order)
                 self.buy_orders.append(current_remote_order)
-                if current_remote_order.get("side") == OrderSide.BUY.value and current_remote_order.get("status") == OrderStatus.FILLED.value:#已成交的，挂卖单
-                    need_place_sell_order = True
-                    for i in range(0, len(self.sell_orders)):
-                        if current_remote_order.get("clientOrderId") == self.sell_orders[i].get("clientOrderId"):
-                            need_place_sell_order = False
-                    if need_place_sell_order:
-                        new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_remote_order.get("price")) + price_interval)
-                        self.sell_orders.append(new_sell_order)
+
+            if current_remote_order.get("side") == OrderSide.BUY.value and current_remote_order.get("status") == OrderStatus.FILLED.value:#已成交的，挂卖单
+                print("buy order is filled, place sell order:" + str(current_remote_order.get("clientOrderId")))
+                need_place_sell_order = True
+                for i in range(0, len(self.sell_orders)):
+                    if current_remote_order.get("clientOrderId") == self.sell_orders[i].get("clientOrderId"):
+                        need_place_sell_order = False
+                if need_place_sell_order:
+                    new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_remote_order.get("price")) + price_interval)
+                    self.sell_orders.append(new_sell_order)
 
         #check
         open_orders_after = self.http_client.get_open_orders(config.symbol)
