@@ -31,7 +31,7 @@ class OrderStatus(Enum):
     '''
     NEW 新建订单
     PARTIALLY_FILLED 部分成交
-    FILLED 全部成交
+    FILLED 全部成交  注：filled的单是不会出现在open_order里的
     CANCELED 已撤销
     REJECTED 订单被拒绝
     EXPIRED 订单过期(根据timeInForce参数规则)
@@ -270,7 +270,7 @@ class BinanceSpotHttp(object):
         hex_digest = hmac.new(self.secret.encode('utf8'), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
         return query_string + '&signature=' + str(hex_digest)
 
-    def place_order(self, symbol: str, order_side: OrderSide, order_type: OrderType, quantity: float, price: float,
+    def place_order(self, symbol: str, order_side: OrderSide, order_type: OrderType, quantity: float, price: str,
                     client_order_id: str = None, time_inforce="GTC", stop_price=0):
         """下单
 
