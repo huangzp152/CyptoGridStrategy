@@ -261,7 +261,7 @@ class BinanceTrader(object):
                 #把未添加的挂着的卖单添加到卖单列表里
                 sell_order_equal = False
                 for j in range(0, len(self.sell_orders)):
-                    if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.SELL.value and open_orders[i].get("status") == self.sell_orders[j].get("status"):
+                    if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.SELL.value:
                         sell_order_equal = True
                 if not sell_order_equal:
                     if open_orders[i].get("side") == OrderSide.SELL.value:
@@ -305,13 +305,16 @@ class BinanceTrader(object):
                 for i in range(0, len(self.sell_orders)):
                     if current_remote_order.get("clientOrderId") == self.sell_orders[i].get("clientOrderId"):
                         need_place_sell_order = False
+                        break
                 if need_place_sell_order:
                     new_sell_order = self.http_client.place_order(config.symbol, OrderSide.SELL, OrderType.LIMIT, quantity, float(current_remote_order.get("price")) + price_interval)
                     self.sell_orders.append(new_sell_order)
 
         #check
-        open_orders_after = self.http_client.get_open_orders(config.symbol)
-        for order in open_orders_after:
+        open_sell_orders_after = []
+        for sell_order in self.sell_orders:
+            open_sell_orders_after.append(self.http_client.get_order(config.symbol, sell_order.get("clientOrderId")))
+        for order in open_sell_orders_after:
             if order.get("side") == OrderSide.SELL.value:
                 print("check open sell order after:" + str(order))
 
