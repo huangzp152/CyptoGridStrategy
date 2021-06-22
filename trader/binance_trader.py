@@ -248,22 +248,24 @@ class BinanceTrader(object):
                 print(str(open_orders[i]))
 
                 #把未添加的挂着的买单添加到买单列表里
-                buy_order_equal = False
+                has_add_in_buy_order = False
                 for j in range(0, len(self.buy_orders)):
-                    if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.BUY.value and open_orders[i].get("status") == self.buy_orders[j].get("status"):
-                        buy_order_equal = True
-                if not buy_order_equal:
+                    if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.BUY.value:
+                        has_add_in_buy_order = True
+                        break
+                if not has_add_in_buy_order:
                     if open_orders[i].get("side") == OrderSide.BUY.value:
                         if len(self.buy_orders) > 0 and open_orders[i].get("status") != self.buy_orders[j].get("status"):
                             self.buy_orders.remove(self.buy_orders[j])
                         self.buy_orders.append(open_orders[i])
 
                 #把未添加的挂着的卖单添加到卖单列表里
-                sell_order_equal = False
+                has_add_in_sell_order = False
                 for j in range(0, len(self.sell_orders)):
                     if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.SELL.value:
-                        sell_order_equal = True
-                if not sell_order_equal:
+                        has_add_in_sell_order = True
+                        break
+                if not has_add_in_sell_order:
                     if open_orders[i].get("side") == OrderSide.SELL.value:
                         if len(self.sell_orders) > 0 and open_orders[i].get("status") != self.sell_orders[j].get("status"):
                             self.sell_orders.remove(self.sell_orders[j])
@@ -276,20 +278,25 @@ class BinanceTrader(object):
             need_place_buy_order = True
             if self.buy_orders or len(self.buy_orders) > 0:
                 for j in range(0, len(self.buy_orders)):
-                    if price_list[i] == self._format(float(self.buy_orders[j].get("price"))) or self.buy_orders[j].get("status") == OrderStatus.FILLED.value:
+                    if price_list[i] == self._format(float(self.buy_orders[j].get("price"))):
+                        print(str(price_list[i]) + "这个价格已经有买单了，无需重复下单～")
+                        need_place_buy_order = False
+                        break
+                    if self.buy_orders[j].get("status") == OrderStatus.FILLED.value:
+                        print(str(price_list[i]) + "这个价格的买单成交了，无需重复下单～")
                         need_place_buy_order = False
                         break
             if need_place_buy_order:
-                print("以 " + str(price_list[i]) + "下单～")
+                print("以" + str(price_list[i]) + "的价格下单～")
                 new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price_list[i])
                 self.buy_orders.append(new_buy_order)
             # time.sleep(1)
 
-        #check
-        # open_orders_after = self.http_client.get_open_orders(config.symbol)
-        # for order in open_orders_after:
-        #     if order.get("side") == OrderSide.BUY.value:
-        #         print("check open buy order after:" + str(order))
+        # check
+        open_orders_after = self.http_client.get_open_orders(config.symbol)
+        for order in open_orders_after:
+            if order.get("side") == OrderSide.BUY.value:
+                print("check open buy order after:" + str(order))
 
         # 买入成交了的就挂卖单
         for buy_order in self.buy_orders:
@@ -317,8 +324,6 @@ class BinanceTrader(object):
         for order in open_sell_orders_after:
             if order.get("side") == OrderSide.SELL.value:
                 print("check open sell order after:" + str(order))
-
-
 
         # check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),
         #                                          client_order_id=buy_order.get('clientOrderId'))

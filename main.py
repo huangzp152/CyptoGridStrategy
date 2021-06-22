@@ -44,10 +44,11 @@ if __name__ == '__main__':
     # orders = trader.http_client.cancel_open_orders(config.symbol)
     # print(f"cancel orders: {orders}")
 
-    for i in range(0, 1):
+    while True:  # 一直跑
+    # for i in range(0, 1):
         try:
             trader.henged_grid_strategy()
-            time.sleep(3)
+            time.sleep(10)
         except Exception as error:
             print(f"catch error: {error}")
             time.sleep(5)

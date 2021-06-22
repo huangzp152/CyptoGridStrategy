@@ -11,7 +11,7 @@
   "proxy_host": "",
   "proxy_port": 0,
   "initial_price": 37500,
-  "grid_number": 20,
-  "max_border_price": 30000,
+  "grid_number": 5,
+  "max_border_price": 50000,
   "min_border_price": 60000
 }
