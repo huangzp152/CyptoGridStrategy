@@ -1,17 +1,17 @@
 {
   "platform": "binance_spot",
-  "symbol": "BTCBUSD",
-  "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
-  "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
+  "symbol": "BTCUSDT",
+  "api_key": "WRrJ4i1xmTCjTKL0zNBBFHih80g4GliLBPqLEwDFwBTNnPI3tzkZzrdwseqiFyR3",
+  "api_secret": "rMNw2S749q8o8KvImtTvw1dVD0rwhP4bdTNiqQGFe2970QmCeCwfpwRh1oppdRaR",
   "gap_percent": 0.01,
-  "quantity": 0.0004,
+  "quantity": 0.000304,
   "min_price": 0.00000001,
   "min_qty": 0.000001,
   "max_orders": 1,
   "proxy_host": "",
   "proxy_port": 0,
   "initial_price": 37500,
-  "grid_number": 5,
-  "max_border_price": 50000,
-  "min_border_price": 60000
+  "grid_number": 3,
+  "max_border_price": 34925,
+  "min_border_price": 32925
 }

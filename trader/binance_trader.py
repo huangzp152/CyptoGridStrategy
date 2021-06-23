@@ -221,12 +221,12 @@ class BinanceTrader(object):
         #先查询价格
         bid_price, ask_price = self.get_bid_ask_price()
         print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
-        print(f"我的账户信息：get account info: {self.http_client.get_account_info()}")
-        print(f"我的这是啥：get exchange info: {self.http_client.get_exchange_info()}")
-        print(f"我的交易：get my trades info: {self.http_client.get_my_trades(config.symbol)}")
-        print(f"我的交易：get all trades info: {self.http_client.get_all_orders(config.symbol)}")
+        # print(f"我的账户信息：get account info: {self.http_client.get_account_info()}")
+        # print(f"我的这是啥：get exchange info: {self.http_client.get_exchange_info()}")
+        # print(f"我的交易：get my trades info: {self.http_client.get_my_trades(config.symbol)}")
+        # print(f"我的交易：get all trades info: {self.http_client.get_all_orders(config.symbol)}")
 
-        print("check specific order :" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242842419521000005")))
+        # print("check specific order :" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242842419521000005")))
 
         quantity = self._format(float(config.quantity))# 买多少个
         initial_price = config.initial_price
@@ -239,13 +239,13 @@ class BinanceTrader(object):
         print("price list:" + str(price_list))
 
         open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的单
-        print("open_order before:")
+        # print("open_order before:")
 
 
         if open_orders and len(open_orders) > 0:
 
             for i in range(0, len(open_orders)):
-                print(str(open_orders[i]))
+                # print(str(open_orders[i]))
 
                 #把未添加的挂着的买单添加到买单列表里
                 has_add_in_buy_order = False
@@ -292,11 +292,17 @@ class BinanceTrader(object):
                 self.buy_orders.append(new_buy_order)
             # time.sleep(1)
 
-        # check
+        # check open buy order
         open_orders_after = self.http_client.get_open_orders(config.symbol)
         for order in open_orders_after:
             if order.get("side") == OrderSide.BUY.value:
-                print("check open buy order after:" + str(order))
+                print("挂着的买单:" + str(order))
+
+        # check open sell order
+        open_orders_after = self.http_client.get_open_orders(config.symbol)
+        for order in open_orders_after:
+            if order.get("side") == OrderSide.SELL.value:
+                print("挂着的卖单:" + str(order))
 
         # 买入成交了的就挂卖单
         for buy_order in self.buy_orders:
@@ -321,9 +327,9 @@ class BinanceTrader(object):
         open_sell_orders_after = []
         for sell_order in self.sell_orders:
             open_sell_orders_after.append(self.http_client.get_order(config.symbol, sell_order.get("clientOrderId")))
-        for order in open_sell_orders_after:
-            if order.get("side") == OrderSide.SELL.value:
-                print("check open sell order after:" + str(order))
+        # for order in open_sell_orders_after:
+        #     if order.get("side") == OrderSide.SELL.value:
+        #         print("check open sell order after:" + str(order))
 
         # check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),
         #                                          client_order_id=buy_order.get('clientOrderId'))
