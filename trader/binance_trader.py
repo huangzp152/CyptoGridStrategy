@@ -36,8 +36,11 @@ class BinanceTrader(object):
         self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
 
         #其实本来就是预设它一直跑着的，所以不存在需要存储下次使用的问题，下次应再从服务器中获取添加
-        self.buy_orders = []  # 买单. buy orders
-        self.sell_orders = [] # 卖单. sell orders
+        self.buy_orders = []  # 买单. buy orders 就是挂着的买单 不包括成交的
+        self.sell_orders = [] # 卖单. sell orders 就是挂着的买单 不包括成交的
+
+        self.buy_delete_orders = []  # 需要删除买单
+        self.sell_delete_orders = [] # 需要删除的卖单
 
 
     def get_bid_ask_price(self):
@@ -70,8 +73,7 @@ class BinanceTrader(object):
     #     print("------------------------------")
     #     print(f"sell orders: {self.sell_orders}")
     #
-    #     buy_delete_orders = []  # 需要删除买单
-    #     sell_delete_orders = [] # 需要删除的卖单
+
     #
     #
     #     # 买单逻辑,检查成交的情况.
@@ -242,6 +244,7 @@ class BinanceTrader(object):
         # print("open_order before:")
 
 
+
         if open_orders and len(open_orders) > 0:
 
             for i in range(0, len(open_orders)):
@@ -255,8 +258,8 @@ class BinanceTrader(object):
                         break
                 if not has_add_in_buy_order:
                     if open_orders[i].get("side") == OrderSide.BUY.value:
-                        if len(self.buy_orders) > 0 and open_orders[i].get("status") != self.buy_orders[j].get("status"):
-                            self.buy_orders.remove(self.buy_orders[j])
+                        # if len(self.buy_orders) > 0 and open_orders[i].get("status") != self.buy_orders[j].get("status"):
+                        #     self.buy_orders.remove(self.buy_orders[j])#成交了的取消的过期的不应该出现在buy_order里，通过后面的逻辑进行删除
                         self.buy_orders.append(open_orders[i])
 
                 #把未添加的挂着的卖单添加到卖单列表里
@@ -267,8 +270,8 @@ class BinanceTrader(object):
                         break
                 if not has_add_in_sell_order:
                     if open_orders[i].get("side") == OrderSide.SELL.value:
-                        if len(self.sell_orders) > 0 and open_orders[i].get("status") != self.sell_orders[j].get("status"):
-                            self.sell_orders.remove(self.sell_orders[j])
+                        # if len(self.sell_orders) > 0 and open_orders[i].get("status") != self.sell_orders[j].get("status"):
+                        #     self.sell_orders.remove(self.sell_orders[j])
                         self.sell_orders.append(open_orders[i])
 
 
@@ -276,7 +279,7 @@ class BinanceTrader(object):
         for i in range(0, len(price_list) - 1):
         # for price in price_list:
             need_place_buy_order = True
-            if self.buy_orders or len(self.buy_orders) > 0:
+            if self.buy_orders and len(self.buy_orders) > 0:
                 for j in range(0, len(self.buy_orders)):
                     if price_list[i] == self._format(float(self.buy_orders[j].get("price"))):
                         print(str(price_list[i]) + "这个价格已经有买单了，无需重复下单～")
@@ -285,11 +288,16 @@ class BinanceTrader(object):
                     if self.buy_orders[j].get("status") == OrderStatus.FILLED.value:
                         print(str(price_list[i]) + "这个价格的买单成交了，无需重复下单～")
                         need_place_buy_order = False
+                        self.buy_orders
                         break
-            if need_place_buy_order:
-                print("以" + str(price_list[i]) + "的价格下单～")
-                new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price_list[i])
-                self.buy_orders.append(new_buy_order)
+                    if self.buy_orders[j].get("clientOrderId") == OrderStatus.FILLED.value:
+                        print(str(price_list[i]) + "这个价格的买单成交了，但卖单还没成交，无需重复下单～")
+                        need_place_buy_order = False
+                        break
+                if need_place_buy_order:
+                    print("以" + str(price_list[i]) + "的价格下单～")
+                    new_buy_order = self.http_client.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price_list[i])
+                    self.buy_orders.append(new_buy_order)
             # time.sleep(1)
 
         # check open buy order
@@ -308,9 +316,10 @@ class BinanceTrader(object):
         for buy_order in self.buy_orders:
             current_remote_order = self.http_client.get_order(config.symbol, buy_order.get("clientOrderId"))
             # print("check buy order status after:" + str(current_remote_order.get("status") + ", id:" + str(current_remote_order.get("clientOrderId")) + ", price:" + str(current_remote_order.get("price"))))
-            if current_remote_order.get("status") != buy_order.get("status"):#更新订单
-                self.buy_orders.remove(buy_order)
-                self.buy_orders.append(current_remote_order)
+            # if current_remote_order.get("status") != buy_order.get("status"):#更新订单
+            #     self.buy_orders.remove(buy_order)
+            self.
+            self.buy_orders.append(current_remote_order)
 
             if current_remote_order.get("side") == OrderSide.BUY.value and current_remote_order.get("status") == OrderStatus.FILLED.value:#已成交的，挂卖单
                 print("buy order is filled, place sell order:" + str(current_remote_order.get("clientOrderId")))
