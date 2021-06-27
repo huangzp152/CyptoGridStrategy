@@ -25,6 +25,9 @@ import hashlib
 from enum import Enum
 from threading import Lock
 
+from utils import dingding
+from utils.dingding import Message
+
 
 class OrderStatus(Enum):
 
@@ -205,7 +208,7 @@ class BinanceSpotHttp(object):
 
         query_dict = {
             "symbol": symbol,
-            "interval": interval.value,
+            "interval": interval,
             "limit": limit
         }
 
@@ -229,6 +232,22 @@ class BinanceSpotHttp(object):
         path = "/api/v3/ticker/price"
         query_dict = {"symbol": symbol}
         return self.request(RequestMethod.GET, path, query_dict)
+
+    def get_ticker_24hour(self, symbol):
+        """
+        :param symbol: 获取24小时的涨跌幅
+
+        """
+        path = "/api/v3/ticker/24hr"
+        query_dict = {"symbol": symbol}
+        return self.request(RequestMethod.GET, path, query_dict)
+
+    def get_positionInfo(self, symbol):
+        '''当前持仓交易对信息'''
+        path = "/fapi/v2/positionRisk"
+        params = {"symbol": symbol}
+        time.sleep(1)
+        return self.request(RequestMethod.GET, path, params)
 
     def get_ticker(self, symbol):
         """
@@ -314,7 +333,16 @@ class BinanceSpotHttp(object):
             else:
                 raise ValueError("stopPrice must greater than 0")
 
-        return self.request(RequestMethod.POST, path=path, requery_dict=params, verify=True)
+        res = self.request(RequestMethod.POST, path=path, requery_dict=params, verify=True)
+        try:
+            if res['orderId']:
+                buy_info = "报警：币种为：{cointype}。开多买单量为：{num}".format(cointype=symbol,num=quantity)
+                Message.dingding_warn(buy_info)
+        except BaseException as e:
+            error_info = "报警：币种为：{cointype},开多多单失败.api返回内容为:{reject}".format(cointype=symbol, reject=res['msg'])
+            print("BaseException, error:" + error_info)
+            print("BaseException, error raw:" + e)
+        return res
 
     def get_order(self, symbol: str, client_order_id: str):
         """

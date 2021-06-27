@@ -218,20 +218,20 @@ class BinanceTrader(object):
     
     '''
 
+
     def henged_grid_strategy(self):
 
         #先查询价格
         bid_price, ask_price = self.get_bid_ask_price()
         print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
+
         # print(f"我的账户信息：get account info: {self.http_client.get_account_info()}")
         # print(f"我的这是啥：get exchange info: {self.http_client.get_exchange_info()}")
         # print(f"我的交易：get my trades info: {self.http_client.get_my_trades(config.symbol)}")
         # print(f"我的交易：get all trades info: {self.http_client.get_all_orders(config.symbol)}")
-
         # print("check specific order :" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242842419521000005")))
 
-        quantity = self._format(float(config.quantity))# 买多少个
-        initial_price = config.initial_price
+        quantity = self._format(float(config.quantity))
         grid_number = config.grid_number
         max_border_price = config.max_border_price
         min_border_price = config.min_border_price
@@ -240,44 +240,37 @@ class BinanceTrader(object):
         price_list.sort(reverse=False)
         print("price list:" + str(price_list))
 
-        open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的单
-        # print("open_order before:")
+        # open_orders = self.http_client.get_open_orders(config.symbol)#获取挂着的单
+        # if open_orders and len(open_orders) > 0:
+            # for i in range(0, len(open_orders)):
+            #     #把未添加的挂着的买单添加到买单列表里
+            #     has_add_in_buy_order = False
+            #     for j in range(0, len(self.buy_orders)):
+            #         if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.BUY.value:
+            #             has_add_in_buy_order = True
+            #             break
+            #     if not has_add_in_buy_order:
+            #         if open_orders[i].get("side") == OrderSide.BUY.value:
+            #             # if len(self.buy_orders) > 0 and open_orders[i].get("status") != self.buy_orders[j].get("status"):
+            #             #     self.buy_orders.remove(self.buy_orders[j])#成交了的取消的过期的不应该出现在buy_order里，通过后面的逻辑进行删除
+            #             self.buy_orders.append(open_orders[i])
+            #
+            #     #把未添加的挂着的卖单添加到卖单列表里
+            #     has_add_in_sell_order = False
+            #     for j in range(0, len(self.sell_orders)):
+            #         if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.SELL.value:
+            #             has_add_in_sell_order = True
+            #             break
+            #     if not has_add_in_sell_order:
+            #         if open_orders[i].get("side") == OrderSide.SELL.value:
+            #             # if len(self.sell_orders) > 0 and open_orders[i].get("status") != self.sell_orders[j].get("status"):
+            #             #     self.sell_orders.remove(self.sell_orders[j])
+            #             self.sell_orders.append(open_orders[i])
 
-
-
-        if open_orders and len(open_orders) > 0:
-
-            for i in range(0, len(open_orders)):
-                # print(str(open_orders[i]))
-
-                #把未添加的挂着的买单添加到买单列表里
-                has_add_in_buy_order = False
-                for j in range(0, len(self.buy_orders)):
-                    if open_orders[i].get("clientOrderId") == self.buy_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.BUY.value:
-                        has_add_in_buy_order = True
-                        break
-                if not has_add_in_buy_order:
-                    if open_orders[i].get("side") == OrderSide.BUY.value:
-                        # if len(self.buy_orders) > 0 and open_orders[i].get("status") != self.buy_orders[j].get("status"):
-                        #     self.buy_orders.remove(self.buy_orders[j])#成交了的取消的过期的不应该出现在buy_order里，通过后面的逻辑进行删除
-                        self.buy_orders.append(open_orders[i])
-
-                #把未添加的挂着的卖单添加到卖单列表里
-                has_add_in_sell_order = False
-                for j in range(0, len(self.sell_orders)):
-                    if open_orders[i].get("clientOrderId") == self.sell_orders[j].get("clientOrderId") and open_orders[i].get("side") == OrderSide.SELL.value:
-                        has_add_in_sell_order = True
-                        break
-                if not has_add_in_sell_order:
-                    if open_orders[i].get("side") == OrderSide.SELL.value:
-                        # if len(self.sell_orders) > 0 and open_orders[i].get("status") != self.sell_orders[j].get("status"):
-                        #     self.sell_orders.remove(self.sell_orders[j])
-                        self.sell_orders.append(open_orders[i])
-
+        self.get_buy_order()
 
         #挂买单
         for i in range(0, len(price_list) - 1):
-        # for price in price_list:
             need_place_buy_order = True
             if self.buy_orders and len(self.buy_orders) > 0:
                 for j in range(0, len(self.buy_orders)):
@@ -288,7 +281,7 @@ class BinanceTrader(object):
                     if self.buy_orders[j].get("status") == OrderStatus.FILLED.value:
                         print(str(price_list[i]) + "这个价格的买单成交了，无需重复下单～")
                         need_place_buy_order = False
-                        self.buy_orders
+                        self.buy_delete_orders.append(self.buy_orders[j])
                         break
                     if self.buy_orders[j].get("clientOrderId") == OrderStatus.FILLED.value:
                         print(str(price_list[i]) + "这个价格的买单成交了，但卖单还没成交，无需重复下单～")
@@ -318,8 +311,8 @@ class BinanceTrader(object):
             # print("check buy order status after:" + str(current_remote_order.get("status") + ", id:" + str(current_remote_order.get("clientOrderId")) + ", price:" + str(current_remote_order.get("price"))))
             # if current_remote_order.get("status") != buy_order.get("status"):#更新订单
             #     self.buy_orders.remove(buy_order)
-            self.
-            self.buy_orders.append(current_remote_order)
+            self.buy_delete_orders.append(current_remote_order)
+            self.sell_orders.append(current_remote_order)
 
             if current_remote_order.get("side") == OrderSide.BUY.value and current_remote_order.get("status") == OrderStatus.FILLED.value:#已成交的，挂卖单
                 print("buy order is filled, place sell order:" + str(current_remote_order.get("clientOrderId")))
@@ -344,20 +337,14 @@ class BinanceTrader(object):
         #                                          client_order_id=buy_order.get('clientOrderId'))
         # if check_order.get('status') == OrderStatus.NEW.value:
 
-
-
         # for i in range(0, len(price_list) - 1):
 
 
-        #遍历买单
+    def get_buy_order(self):
+        pass
 
-        # 买一份
-        # self.buy_one_piece()
-        # 挂卖单
-        # self.place_one_piece()
-
-        # 卖一份
-        # self.sell_one_piece()
+    def get_sell_order(self):
+        pass
 
     def _format(self, price):
         return "{:.6f}".format(price)

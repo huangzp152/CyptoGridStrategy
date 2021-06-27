@@ -76,3 +76,51 @@ class Config:
             setattr(self, k, v)
 
 config = Config()
+
+class DynamicConfig(object):
+
+    def __init__(self):
+        self.rising_ratio = 2.25
+        self.falling_ratio = 2.25
+        self.spot_buy_price = 32000
+        self.spot_sell_price = 33000
+        self.spot_step = 0 #步数/仓位数
+        self.record_spot_price = []
+
+        self.future_buy_price = 32000
+        self.future_sell_price = 33000
+        self.future_step = 0 #步数/仓位数
+        self.record_future_price = []
+
+    def loads(self, config_file=None):
+        """ Load config file.
+
+        Args:
+            config_file: config json file.
+        """
+        configures = {}
+        if config_file:
+            try:
+                with open(config_file) as f:
+                    data = f.read()
+                    configures = json.loads(data)
+            except Exception as e:
+                print(e)
+                exit(0)
+            if not configures:
+                print("config json file error!")
+                exit(0)
+        self._update(configures)
+
+    def _update(self, update_fields):
+        """
+        更新update fields.
+        :param update_fields:
+        :return: None
+
+        """
+
+        for k, v in update_fields.items():
+            setattr(self, k, v)
+
+dynamicConfig = DynamicConfig()
