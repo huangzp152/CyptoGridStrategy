@@ -16,7 +16,7 @@
 
     服务器购买地址: https://www.ucloud.cn/site/global.html?invitation_code=C1x2EA81CD79B8C#dongjing
 """
-
+import random
 
 import requests
 import time

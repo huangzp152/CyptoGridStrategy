@@ -125,7 +125,7 @@ class CalcIndex:
         last_ma5 = 0
         next_ma5 = 0
         # data = self.http_client.get_kline(symbol, interval, limit=6)
-        data = self.data[j-5:j]
+        data = self.data[j-6:j]
         # data = self.http_client.get_kline(symbol, interval, 6)
         for i in range(len(data)):
             if i==0:
@@ -163,6 +163,7 @@ class CalcIndex:
         :return: 趋势来了 正在拉伸 不买
         '''
         lastMA5,curMA5 = self.calcSlopeMA5(symbol, interval, point, i)
+        print("ascending：" + str(ascending) + "lastMA5:" + str(lastMA5) +", curMA5:" + str(curMA5))
         if ascending:
             return curMA5 >= lastMA5 #是否上涨
         else:
