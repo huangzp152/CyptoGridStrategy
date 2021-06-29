@@ -92,6 +92,10 @@ class DynamicConfig(object):
         self.future_step = 0 #步数/仓位数
         self.record_future_price = []
 
+        # test
+        self.order_list = []
+        self.total_earn = 0
+
     def loads(self, config_file=None):
         """ Load config file.
 
