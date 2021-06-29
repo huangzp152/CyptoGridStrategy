@@ -163,7 +163,7 @@ class CalcIndex:
         :return: 趋势来了 正在拉伸 不买
         '''
         lastMA5,curMA5 = self.calcSlopeMA5(symbol, interval, point, i)
-        print("ascending：" + str(ascending) + "lastMA5:" + str(lastMA5) +", curMA5:" + str(curMA5))
+        print("ascending：" + str(ascending) +", curMA5:" + str(curMA5) + ",lastMA5:" + str(lastMA5))
         if ascending:
             return curMA5 >= lastMA5 #是否上涨
         else:
