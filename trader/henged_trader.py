@@ -33,7 +33,7 @@ class HengedGrid(object):
         print("HengedGrid, run()")
         # while(True):
             #test
-        kline_path ='/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+        kline_path = '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
         with open(kline_path, 'r', encoding='utf-8') as df:
             read = csv.reader(df)
             self.rows = [row for row in read]
@@ -142,6 +142,9 @@ class HengedGrid(object):
                             break
                     else:
                         self.set_future_price(float(self.cur_market_price))
+                else:
+                    print("这个价格这轮没有买卖成功，开启下一轮")
+                print("----------------------------------------------------------")
         # time.sleep(2)
 
     def set_ratio(self):
@@ -158,7 +161,7 @@ class HengedGrid(object):
         else: #震荡时
             dynamicConfig.falling_ratio = 2 + self.get_future_share() / 4
             dynamicConfig.rising_ratio = 2 + self.get_future_share() / 4
-        print("ratio_24hr, " + str(ratio_24hr) + ", dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio) + ", dynamicConfig.falling_ratio" + str(dynamicConfig.falling_ratio) + ", self.get_spot_share():" + str(self.get_spot_share()) + ", self.get_future_share():" + str(self.get_future_share()))
+        print("ratio_24hr, " + str(ratio_24hr) + ", dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio) + ", dynamicConfig.falling_ratio:" + str(dynamicConfig.falling_ratio) + ", self.get_spot_share():" + str(self.get_spot_share()) + ", self.get_future_share():" + str(self.get_future_share()))
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
