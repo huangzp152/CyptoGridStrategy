@@ -33,7 +33,7 @@ class HengedGrid(object):
         print("HengedGrid, run()")
         # while(True):
             #test
-        kline_path = '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+        kline_path = '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
         with open(kline_path, 'r', encoding='utf-8') as df:
             read = csv.reader(df)
             self.rows = [row for row in read]
@@ -58,7 +58,7 @@ class HengedGrid(object):
                 self.future_step = dynamicConfig.future_step
 
                 print("多单买入价：" + str(self.spot_buy_price) + "，多单卖出价：" + str(self.spot_sell_price) + "， 市场价：" + str(self.cur_market_price))
-                print("空单卖出价：" + str(self.spot_sell_price) + "，空单买入价：" + str(self.future_buy_price) + "， 市场价：" + str(self.cur_market_price))
+                print("空单卖出价：" + str(self.future_sell_price) + "，空单买入价：" + str(self.future_buy_price) + "， 市场价：" + str(self.cur_market_price))
                 print("上涨趋势？" + str(index.calcTrend(config.symbol, "5m", True, self.demical_length, i)))
 
                 if float(self.cur_market_price) < config.min_border_price or float(self.cur_market_price) > config.max_border_price:
@@ -150,7 +150,7 @@ class HengedGrid(object):
                             time.sleep(6)
                         else:
                             break
-                    else:
+                    else:#没有仓位了就要设置买
                         self.set_future_price(float(self.cur_market_price))
                 else:
                     print("这个价格这轮没有买卖成功，开启下一轮")
