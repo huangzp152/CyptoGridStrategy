@@ -33,7 +33,7 @@ class HengedGrid(object):
         print("HengedGrid, run()")
         # while(True):
             #test
-        kline_path = '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+        kline_path = '/home/code/binance/data/BTCUSDT-5m-2021-06.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
         with open(kline_path, 'r', encoding='utf-8') as df:
             read = csv.reader(df)
             self.rows = [row for row in read]
@@ -108,7 +108,7 @@ class HengedGrid(object):
                             break
                     else:
                         print("多单没仓位了，平不了多单")
-                    #     self.set_spot_price(float(self.cur_market_price))#没有份额啦，修改价格等待下次被买入
+                        self.set_spot_price(float(self.cur_market_price))#没有份额啦，修改价格等待下次被买入
 
                 #开空单（卖出借仓），趋势下跌时不买
                 #空单市场价要高于你的卖出价，才能成交
@@ -155,10 +155,24 @@ class HengedGrid(object):
                             break
                     else:
                         print("空单没仓位了，平不了空单")
-                    #     self.set_future_price(float(self.cur_market_price))#没有仓位了就要设置补仓??
+                        self.set_future_price(float(self.cur_market_price))#没有仓位了就要设置补仓??
                 else:
                     print("这个价格这轮没有买卖成功，开启下一轮")
                 print("----------------------------------------------------------")
+
+        print('总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str((sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price]) + sum([float(tmp_future) for tmp_future in dynamicConfig.record_future_price])) * config.quantity) + '， 曾经最多投资额数：' + str(dynamicConfig.total_invest))
+        tmp_list2 = [float(tmp) for tmp in dynamicConfig.record_spot_price]
+        tmp_list_result2 = 0
+        for ttt in tmp_list2:
+            tmp_list_result2 += ttt
+        if len(dynamicConfig.record_spot_price) > 0:
+            print('，多单浮动盈亏：' +  str((float(self.cur_market_price) - tmp_list_result2/len(dynamicConfig.record_spot_price)) * config.quantity))
+        tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price]
+        tmp_list_result = 0
+        for ttt in tmp_list:
+            tmp_list_result += ttt
+        if len(dynamicConfig.record_future_price) > 0:
+            print(', 空单浮动盈亏：' +  str((tmp_list_result/len(dynamicConfig.record_future_price) - float(self.cur_market_price)) * config.quantity))
         # time.sleep(2)
 
     def set_ratio(self):
@@ -182,11 +196,12 @@ class HengedGrid(object):
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
+        print('record_spot_price:' + str(dynamicConfig.record_spot_price))
 
     def get_last_spot_price(self):
         if len(dynamicConfig.record_spot_price) == 0:
             return dynamicConfig.spot_buy_price
-        return dynamicConfig.record_spot_price[self.spot_step - 1]
+        return dynamicConfig.record_spot_price[-1]
 
     def get_last_spot_prices(self):
         return dynamicConfig.record_spot_price
@@ -199,13 +214,14 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
+        print('record_future_price:' + str(dynamicConfig.record_future_price))
 
     def get_last_future_price(self):
         if len(dynamicConfig.record_future_price) == 0:
             return dynamicConfig.future_sell_price
-        else:
-            print('sdfdfg:' + str(self.future_step) + str(dynamicConfig.record_future_price))
-            return dynamicConfig.record_future_price[self.future_step - 1]
+        # else:
+        #     print('sdfdfg:' + str(self.future_step) + str(dynamicConfig.record_future_price))
+        return dynamicConfig.record_future_price[-1]
 
     def remove_last_future_price(self):
         del dynamicConfig.record_future_price[-1]
