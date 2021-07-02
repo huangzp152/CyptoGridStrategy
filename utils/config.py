@@ -32,7 +32,7 @@ class Config:
         self.api_key: str = None
         self.api_secret: str = None
         self.pass_phrase = None
-        self.quantity:float = 1
+        self.quantity:float = 0.0004
         self.min_price =  0.0001
         self.min_qty = 0.01
         self.max_orders = 1
@@ -88,13 +88,14 @@ class DynamicConfig(object):
         self.record_spot_price = []
 
         self.future_buy_price = 32000
-        self.future_sell_price = 33000
+        self.future_sell_price = 32221
         self.future_step = 0 #步数/仓位数
         self.record_future_price = []
 
         # test
         self.order_list = []
         self.total_earn = 0
+        self.total_invest = 0
 
     def loads(self, config_file=None):
         """ Load config file.
