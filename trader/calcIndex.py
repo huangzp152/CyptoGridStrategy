@@ -1,6 +1,8 @@
 
 import os,json,time
 
+import numpy as np
+
 from gateway import BinanceSpotHttp
 from utils import config
 from utils.dingding import Message
@@ -127,6 +129,7 @@ class CalcIndex:
         # data = self.http_client.get_kline(symbol, interval, limit=6)
         data = self.data[j-6:j]
         # data = self.http_client.get_kline(symbol, interval, 6)
+        tmp_list_ma5 = []
         for i in range(len(data)):
             if i==0:
                 last_ma5+=float(data[i][4])
@@ -135,8 +138,34 @@ class CalcIndex:
             else:
                 last_ma5+=float(data[i][4])
                 next_ma5+=float(data[i][4])
+            tmp_list_ma5.append(float(data[i][4]))
 
         return [round(last_ma5/5,point), round(next_ma5/5,point)]
+
+    def calcSlopeMA5_list(self,symbol,interval,point, j):
+        '''
+
+        :param symbol:
+        :param interval:
+        :return: 上一时刻的m20值
+        '''
+        last_ma5 = 0
+        next_ma5 = 0
+        # data = self.http_client.get_kline(symbol, interval, limit=6)
+        data = self.data[j-6:j]
+        # data = self.http_client.get_kline(symbol, interval, 6)
+        tmp_list_ma5 = []
+        for i in range(len(data)):
+            if i==0:
+                last_ma5+=float(data[i][4])
+            elif i==5:
+                next_ma5+=float(data[i][4])
+            else:
+                last_ma5+=float(data[i][4])
+                next_ma5+=float(data[i][4])
+            tmp_list_ma5.append(float(data[i][4]))
+
+        return tmp_list_ma5
 
 
     # def calcSlope(self,symbol,interval,direction):
@@ -154,6 +183,49 @@ class CalcIndex:
     #         return lastMA10 > tmpMA10
 
 
+
+    def Mann_Kenddall_Trend_desc(self, inputdata):
+        # 计算总趋势秩次和
+        inputdata = np.array(inputdata)
+        n = inputdata.shape[0]
+        sum_sgn = 0
+        for i in np.arange(n):
+            if i <= (n - 1):
+                for j in np.arange(i + 1, n):
+                    if inputdata[j] > inputdata[i]:
+                        sum_sgn = sum_sgn + 1
+                    elif inputdata[j] < inputdata[i]:
+                        sum_sgn = sum_sgn - 1
+                    else:
+                        sum_sgn = sum_sgn
+        # 计算Z统计值
+        if n <= 5:
+            Z_value = sum_sgn / (n * (n - 1) / 2)
+        else:
+            if sum_sgn > 0:
+                Z_value = (sum_sgn - 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+            elif sum_sgn == 0:
+                Z_value = 0
+            else:
+                Z_value = (sum_sgn + 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+        # 趋势描述
+        # 99% ——> +—2.576
+        # 95% ——> +—1.96
+        # 90% ——> +—1.645
+        if np.abs(Z_value) > 1.96 and np.abs(Z_value) <= 2.576:
+            if Z_value > 0:
+                result_desc = u"95% up"
+            else:
+                result_desc = u"95% down"
+        elif np.abs(Z_value) > 2.576:
+            if Z_value > 0:
+                result_desc = u"99% up"
+            else:
+                result_desc = u"99% down"
+        else:
+            result_desc = u"not trendency"
+        return result_desc
+
     def calcTrend(self, symbol, interval, ascending, point, i):
         '''
 
@@ -168,6 +240,26 @@ class CalcIndex:
             return curMA5 >= lastMA5 #是否上涨
         else:
             return curMA5 <= lastMA5 #是否下跌
+
+    def calcTrend_MK(self, symbol, interval, ascending, point, i):
+        '''
+
+        :param symbol:
+        :param interval:
+        :param direction:
+        :return: 趋势来了 正在拉伸 不买
+        '''
+        tmp_list_ma5 = self.calcSlopeMA5_list(symbol, interval, point, i)
+        result = str(self.Mann_Kenddall_Trend_desc(tmp_list_ma5))
+        print('tmp_list_ma5:' + str(tmp_list_ma5))
+        print("Mann_Kenddall_Trend_desc:" + str(result))
+        if ascending:
+            if 'up' in result:
+                return True
+        else:
+            if 'down' in result:
+                return True
+        return False
 
     def calcMA10(self,symbol,interval,point):
         sum_ma10 = 0

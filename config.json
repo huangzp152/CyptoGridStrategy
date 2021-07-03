@@ -13,6 +13,6 @@
   "proxy_port": 0,
   "initial_price": 37500,
   "grid_number": 3,
-  "max_border_price": 34925,
-  "min_border_price": 30000
+  "max_border_price": 45000,
+  "min_border_price": 25000
 }
