@@ -11,11 +11,11 @@ msg = Message()
 
 class CalcIndex:
 
-    def __init__(self, data):
+    def __init__(self, test_data=None):
         self.coinType = config.symbol  # 交易币种
         self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret,
                                            proxy_host=config.proxy_host, proxy_port=config.proxy_port)
-        self.data = data
+        self.test_data = test_data
 
     def calcMA(self,symbol,interval,point):
         '''
@@ -117,7 +117,7 @@ class CalcIndex:
 
         return [round(last_ma10/10,point),round(next_ma10/10,point)]
 
-    def calcSlopeMA5(self,symbol,interval,point, j):
+    def calcSlopeMA5(self, symbol, interval, point, j):
         '''
 
         :param symbol:
@@ -126,9 +126,11 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        # data = self.http_client.get_kline(symbol, interval, limit=6)
-        data = self.data[j-6:j]
-        # data = self.http_client.get_kline(symbol, interval, 6)
+        data = self.http_client.get_kline(symbol, interval, limit=6)
+
+        # test
+        # data = self.test_data[j - 6:j]
+
         tmp_list_ma5 = []
         for i in range(len(data)):
             if i==0:
@@ -142,7 +144,7 @@ class CalcIndex:
 
         return [round(last_ma5/5,point), round(next_ma5/5,point)]
 
-    def calcSlopeMA5_list(self,symbol,interval,point, j):
+    def calcSlopeMA5_list(self, symbol, interval, point, j=0):
         '''
 
         :param symbol:
@@ -151,9 +153,11 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        # data = self.http_client.get_kline(symbol, interval, limit=6)
-        data = self.data[j-6:j]
-        # data = self.http_client.get_kline(symbol, interval, 6)
+        data = self.http_client.get_kline(symbol, interval, limit=6)
+
+        # test
+        # data = self.test_data[j - 6:j]
+
         tmp_list_ma5 = []
         for i in range(len(data)):
             if i==0:
@@ -241,7 +245,7 @@ class CalcIndex:
         else:
             return curMA5 <= lastMA5 #是否下跌
 
-    def calcTrend_MK(self, symbol, interval, ascending, point, i):
+    def calcTrend_MK(self, symbol, interval, ascending, point, i=0):
         '''
 
         :param symbol:

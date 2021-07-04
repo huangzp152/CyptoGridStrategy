@@ -87,7 +87,7 @@ class BinanceFutureHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host="", proxy_port=0, timeout=5, try_counts=5):
         self.key = api_key
         self.secret = secret
-        self.host = host if host else "https://fapi.binance.com"
+        self.host = host if host else "https://testnet.binance.vision" #"https://fapi.binance.com"
         self.recv_window = 5000
         self.timeout = timeout
         self.order_count_lock = Lock()
@@ -367,6 +367,20 @@ class BinanceFutureHttp(object):
         """
         path = "/fapi/v1/positionRisk"
         params = {"timestamp": self._timestamp()}
+        return self.request(RequestMethod.GET, path, params, verify=True)
+
+    def get_all_orders(self, symbol=None):
+        """
+        获取所有的订单.
+        :param symbol: BNBUSDT, or BTCUSDT etc.
+        :return:
+        """
+        path = "/fapi/v1/allOrders"
+
+        params = {"timestamp": self._timestamp()}
+        if symbol:
+            params["symbol"] = symbol
+
         return self.request(RequestMethod.GET, path, params, verify=True)
 
 

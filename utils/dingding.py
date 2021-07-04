@@ -193,12 +193,12 @@ class Message:
             error_info = "报警：币种为：{cointype},卖单失败".format(cointype=market)
             self.dingding_warn(error_info)
             return res
-
-    def dingding_warn(self,text):
+    @staticmethod
+    def dingding_warn(text):
         headers = {'Content-Type': 'application/json;charset=utf-8'}
-        api_url = "https://oapi.dingtalk.com/robot/send?access_token=%s" % dingding_token
-        json_text = self._msg(text)
-        requests.post(api_url, json.dumps(json_text), headers=headers).content
+        api_url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
+        # json_text = self._msg(text)
+        requests.post(api_url, headers=headers).content
 
     def _msg(self,text):
         json_text = {

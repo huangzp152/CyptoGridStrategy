@@ -97,7 +97,7 @@ class BinanceSpotHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host=None, proxy_port=0, timeout=5, try_counts=5):
         self.api_key = api_key
         self.secret = secret
-        self.host = host if host else "https://api.binance.com"#"https://testnet.binance.vision"#"https://api.binance.com"
+        self.host = host if host else "https://testnet.binance.vision"#"https://testnet.binance.vision"#"https://api.binance.com"
         self.recv_window = 10000
         self.timeout = timeout
         self.order_count_lock = Lock()
@@ -247,7 +247,8 @@ class BinanceSpotHttp(object):
         path = "/fapi/v2/positionRisk"
         params = {"symbol": symbol}
         time.sleep(1)
-        return self.request(RequestMethod.GET, path, params)
+        res = self.request(RequestMethod.GET, path, params)
+        return res
 
     def get_ticker(self, symbol):
         """
@@ -353,8 +354,8 @@ class BinanceSpotHttp(object):
         """
         path = "/api/v3/order"
         prams = {"symbol": symbol, "timestamp": self.get_current_timestamp(), "origClientOrderId": client_order_id}
-
-        return self.request(RequestMethod.GET, path, prams, verify=True)
+        res = self.request(RequestMethod.GET, path, prams, verify=True)
+        return res
 
     def cancel_order(self, symbol, client_order_id):
         """

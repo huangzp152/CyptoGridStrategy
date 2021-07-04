@@ -2,7 +2,7 @@
   "platform": "binance_spot",
   "symbol": "BTCUSDT",
   "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
-  "api_secret": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
+  "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
   "dingding_token":"1a3677bdef9d94609d0436a5622a9a4a5420ebd6531ab18f3eef816fbb6714da",
   "gap_percent": 0.01,
   "quantity": 0.000304,
