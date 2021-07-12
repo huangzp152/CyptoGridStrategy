@@ -87,7 +87,7 @@ class BinanceFutureHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host="", proxy_port=0, timeout=5, try_counts=5):
         self.key = api_key
         self.secret = secret
-        self.host = host if host else "https://testnet.binance.vision" #"https://fapi.binance.com"
+        self.host = host if host else "https://testnet.binancefuture.com" #"https://fapi.binance.com"
         self.recv_window = 5000
         self.timeout = timeout
         self.order_count_lock = Lock()
@@ -120,11 +120,12 @@ class BinanceFutureHttp(object):
 
         for i in range(0, self.try_counts):
             try:
+                print(f"url:{url}")
                 response = requests.request(req_method.value, url=url, headers=headers, timeout=self.timeout, proxies=self.proxies)
                 if response.status_code == 200:
                     return response.json()
                 else:
-                    print(f"请求没有成功: {response.status_code}, 继续尝试请求")
+                    print(f"请求没有成功: {response.status_code},看下原因：{response.content}, 继续尝试请求")
             except Exception as error:
                 print(f"请求:{path}, 发生了错误: {error}, 时间: {datetime.now()}")
                 time.sleep(3)
@@ -155,6 +156,15 @@ class BinanceFutureHttp(object):
 
         path = '/fapi/v1/exchangeInfo'
         return self.request(req_method=RequestMethod.GET, path=path)
+
+    def get_positionInfo(self, symbol):
+        '''当前持仓交易对信息'''
+        path = "/fapi/v2/positionRisk"
+        params = {"symbol": symbol,
+                  "timestamp": self._timestamp()}
+        time.sleep(1)
+        res = self.request(RequestMethod.GET, path, params, verify=True)
+        return res
 
     def order_book(self, symbol, limit=5):
         limits = [5, 10, 20, 50, 100, 500, 1000]

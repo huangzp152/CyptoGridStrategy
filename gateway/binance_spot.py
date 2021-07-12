@@ -242,20 +242,12 @@ class BinanceSpotHttp(object):
         query_dict = {"symbol": symbol}
         return self.request(RequestMethod.GET, path, query_dict)
 
-    def get_positionInfo(self, symbol):
-        '''当前持仓交易对信息'''
-        path = "/fapi/v2/positionRisk"
-        params = {"symbol": symbol}
-        time.sleep(1)
-        res = self.request(RequestMethod.GET, path, params)
-        return res
-
     def get_ticker(self, symbol):
         """
         :param symbol: 交易对
         :return: 返回的数据如下:
         {
-        'symbol': 'BTCUSDT', 'bidPrice': '9168.50000000', 'bidQty': '1.27689900',
+        'symbol': 'BTCUSDT', 'bidPrice':p '9168.50000000', 'bidQty': '1.27689900',
         'askPrice': '9168.51000000', 'askQty': '0.93307800'
         }
         """

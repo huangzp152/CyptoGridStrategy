@@ -29,7 +29,7 @@ class HengedGrid(object):
 
     def __init__(self):
         self.http_client_spot = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
-        self.http_client_future = BinanceFutureHttp(api_key=config.api_key, secret=config.api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        self.http_client_future = BinanceFutureHttp(api_key=config.api_key_future, secret=config.api_secret_future, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
 
         pass
 
@@ -323,18 +323,20 @@ class HengedGrid(object):
         print("设置空单仓位： " + str(dynamicConfig.future_step))
 
     def get_future_share(self):
-        # tmp = self.http_client.get_positionInfo(config.symbol)
-        # for item in tmp:  # 空头持仓均价
-        #     if item['positionSide'] == "SHORT":
-        #         dynamicConfig.future_step = float(item['positionAmt'])
-        #         break
-        #测试时默认是0开始
-        return dynamicConfig.future_step
+        tmp = self.http_client_future.get_positionInfo(config.symbol)
+        for item in tmp:  # 空头持仓均价
+            if item['positionSide'] == "SHORT":
+                dynamicConfig.future_step = float(item['positionAmt'])
+                return dynamicConfig.future_step
+                #测试时默认是0开始
+        return 0
 
     def set_spot_price(self, deal_price):
         demical_point = len(str(deal_price).split(".")[1]) + 2
         dynamicConfig.spot_buy_price = round(deal_price * (1 - dynamicConfig.falling_ratio / 100), demical_point) #多单跌的时候补仓 # 保留2位小数
         dynamicConfig.spot_sell_price = round(deal_price * (1 + dynamicConfig.rising_ratio / 100), demical_point)
+        self.spot_buy_price = dynamicConfig.spot_buy_price
+        self.spot_sell_price = dynamicConfig.spot_sell_price
         print("设置接下来多单买入的价格, " + str(dynamicConfig.spot_buy_price) + ", dynamicConfig.rising_ratio:" + str(
             dynamicConfig.rising_ratio) + ", dynamicConfig.falling_ratio" + str(
             dynamicConfig.falling_ratio) + ", 设置接下来多单卖出的价格:" + str(dynamicConfig.spot_sell_price))
@@ -343,12 +345,15 @@ class HengedGrid(object):
         demical_length = len(str(deal_price).split(".")[1]) + 2
         dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.rising_ratio / 100), demical_length)  #空单涨的时候补仓 # 保留2位小数
         dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.falling_ratio / 100), demical_length)
+        self.future_sell_price = dynamicConfig.future_sell_price
+        self.future_buy_price = dynamicConfig.future_buy_price
         print("设置接下来新开空单卖出的价格, " + str(dynamicConfig.future_sell_price) + ", dynamicConfig.rising_ratio:" + str(
             dynamicConfig.rising_ratio) + ", dynamicConfig.falling_ratio" + str(
             dynamicConfig.falling_ratio) + ", 设置接下来空单的买回价格:" + str(dynamicConfig.future_buy_price))
 
 
     def set_spot_share(self, spot_step):
+        print("set_spot_share")
         dynamicConfig.spot_step = spot_step
         self.spot_step = dynamicConfig.spot_step
         print("设置多单仓位： " + str(dynamicConfig.spot_step))
@@ -370,7 +375,8 @@ class HengedGrid(object):
         cmd_receive.app.run(host='104.225.143.245', port=5000, threaded=True)
 
     def get_step_by_position(self,direction=True):
-        tmp = self.http_client_spot.get_positionInfo(config.symbol)
+        tmp = self.http_client_future.get_positionInfo(config.symbol)
+        print(f"positionInfo:{tmp}")
         for item in tmp:  # 遍历所有仓位
             if direction: # 多头持仓均价
                 if item['positionSide'] == "LONG":

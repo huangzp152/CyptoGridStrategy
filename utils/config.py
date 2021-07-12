@@ -31,6 +31,8 @@ class Config:
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
         self.api_secret: str = None
+        self.api_key_future: str = None
+        self.api_secret_future: str = None
         self.pass_phrase = None
         self.quantity:float = 0.0004
         self.min_price =  0.0001
