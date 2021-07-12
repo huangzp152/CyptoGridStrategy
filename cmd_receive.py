@@ -1,12 +1,6 @@
-import threading
-
-from flask import Flask, request, jsonify
-import multiprocessing
-
-from trader.henged_trader import HengedGrid
-from utils import config
-from utils.dingding import Message
-
+import sys
+sys.path.append("/usr/local/lib/python3.6/dist-packages")
+from flask import Flask, request
 app = Flask(__name__)
 
 @app.route('/')
