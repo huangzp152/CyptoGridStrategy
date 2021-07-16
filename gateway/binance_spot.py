@@ -428,3 +428,12 @@ class BinanceSpotHttp(object):
                   "recvWindow": self.recv_window
                   }
         return self.request(RequestMethod.GET, path, params, verify=True)
+
+    def get_spot_position_info(self, coin):
+        res = self.get_account_info()
+        if res:
+            assets = res.get('balances')
+            for asset in assets:
+                if coin == asset.get('asset'):
+                    return asset.get('free')
+        return -1

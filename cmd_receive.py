@@ -12,6 +12,7 @@ class flaskConfig(object):
         self.stop_singal_from_client=False
         self.ratio_no_trendency=1
         self.ratio_up_or_down=1
+        self.every_time_trade_share = 35
 
 fc = flaskConfig()
 @app.route('/grid/stop')
@@ -30,6 +31,15 @@ def grid_change_params():
     if param2:
         fc.ratio_up_or_down = float(param2)
     return 'hzp, /change/params, ratio_up_or_down:' + param1 + ', ratio_no_trendency:' + param2
+
+@app.route('/grid/change/trade_share', methods=['GET'])
+def grid_change_trade_share():
+
+    # data = request.get_json()
+    every_time_trade_share = str(request.args.get('every_time_trade_share'))
+    if every_time_trade_share:
+        fc.every_time_trade_share = float(every_time_trade_share)
+    return 'hzp, /change/trade_share, every_time_trade_share:' + every_time_trade_share
 
 @app.route('/grid/start')
 def grid_start():

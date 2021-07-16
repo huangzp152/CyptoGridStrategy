@@ -134,7 +134,7 @@ class BinanceFutureHttp(object):
         path = '/fapi/v1/time'
         return self.request(req_method=RequestMethod.GET, path=path)
 
-    def exchangeInfo(self):
+    def exchangeInfo(self,symbol):
 
         """
         {'timezone': 'UTC', 'serverTime': 1570802268092, 'rateLimits':
@@ -155,7 +155,9 @@ class BinanceFutureHttp(object):
         """
 
         path = '/fapi/v1/exchangeInfo'
-        return self.request(req_method=RequestMethod.GET, path=path)
+        params = {"symbol": symbol,
+                  "timestamp": self._timestamp()}
+        return self.request(RequestMethod.GET, path, params)
 
     def get_positionInfo(self, symbol):
         '''当前持仓交易对信息'''
@@ -263,7 +265,7 @@ class BinanceFutureHttp(object):
         :param quantity: 数量.
         :param price: 价格
         :param stop_price: 停止单的价格.
-        :param time_inforce:
+        :param time_inforce:,空单传""，解决{"code":-1106,"msg":"Parameter \'timeInForce\' sent when not required."}报错
         :param params: 其他参数
 
         LIMIT : timeInForce, quantity, price
@@ -281,28 +283,30 @@ class BinanceFutureHttp(object):
         params = {
             "symbol": symbol,
             "side": order_side.value,
+            "positionSide": "SHORT",
             "type": order_type.value,
             "quantity": quantity,
             "price": price,
             "recvWindow": recvWindow,
-            "timeInForce": "GTC",
+            # "timeInForce": time_inforce,
             "timestamp": self._timestamp(),
             "newClientOrderId": client_order_id
         }
 
-        if order_type == OrderType.LIMIT:
+        if order_type.value == OrderType.LIMIT.value:
             params['timeInForce'] = time_inforce
 
-        if order_type == OrderType.MARKET:
+        if order_type.value == OrderType.MARKET.value:
             if params.get('price'):
                 del params['price']
 
-        if order_type == OrderType.STOP:
+        if order_type.value == OrderType.STOP.value:
             if stop_price > 0:
                 params["stopPrice"] = stop_price
             else:
                 raise ValueError("stopPrice must greater than 0")
-        # print(params)
+        print("check")
+        print("check params："+str(params))
         return self.request(RequestMethod.POST, path=path, requery_dict=params, verify=True)
 
     def get_order(self, symbol, client_order_id=None):
@@ -378,6 +382,23 @@ class BinanceFutureHttp(object):
         path = "/fapi/v1/positionRisk"
         params = {"timestamp": self._timestamp()}
         return self.request(RequestMethod.GET, path, params, verify=True)
+
+    def set_position_side(self):
+        """
+            By default the futures keeps the position mode to One-way. In order to enable the new feature of Hedge Mode, so you can have dual sides positions.
+
+            enable it by endpoint POST /fapi/v1/positionSide/dual, setting the parameter dualSidePosition = true
+            Open position:
+            Long : positionSide=LONG, side=BUY
+            Short: positionSide=SHORT, side=SELL
+            Close position:
+            Close long position: positionSide=LONG, side=SELL
+            Close short position: positionSide=SHORT, side=BUY
+        """
+        path = "/fapi/v1/positionSide/dual"
+        params = {"dualSidePosition": "true",
+                  "timestamp": self._timestamp()}
+        return self.request(RequestMethod.POST, path, params, verify=True)
 
     def get_all_orders(self, symbol=None):
         """

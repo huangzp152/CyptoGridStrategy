@@ -1,11 +1,10 @@
 {
   "platform": "binance_spot",
-  "symbol": "BTCUSDT",
+  "symbol": "BTCBUSD",
   "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
   "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
   "api_key_future": "c005ffcd11fafc80eb340e7956503fd52f85c4e41f4592c28ea32e75d5e05474",
   "api_secret_future": "21fa31af58bfc8e89e9ff2c79c2ad6a7298d197d3b1c21051e6796f809fc08bc",
-  "dingding_token":"1a3677bdef9d94609d0436a5622a9a4a5420ebd6531ab18f3eef816fbb6714da",
   "gap_percent": 0.01,
   "quantity": 0.000304,
   "min_price": 0.00000001,
