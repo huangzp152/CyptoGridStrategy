@@ -1,6 +1,7 @@
 {
   "platform": "binance_spot",
-  "symbol": "BTCBUSD",
+  "symbol": "BTCUSDT",
+  "coin": "BTC",
   "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
   "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
   "api_key_future": "c005ffcd11fafc80eb340e7956503fd52f85c4e41f4592c28ea32e75d5e05474",

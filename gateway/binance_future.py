@@ -370,7 +370,7 @@ class BinanceFutureHttp(object):
         'maxWithdrawAmount': '530.2133479100000'}]}
         :return:
         """
-        path = "/fapi/v1/account"
+        path = "/fapi/v2/account"
         params = {"timestamp": self._timestamp()}
         return self.request(RequestMethod.GET, path, params, verify=True)
 
@@ -383,10 +383,10 @@ class BinanceFutureHttp(object):
         params = {"timestamp": self._timestamp()}
         return self.request(RequestMethod.GET, path, params, verify=True)
 
-    def set_position_side(self):
+    def set_henged_position_mode(self):
         """
+            把持仓模式改为双向
             By default the futures keeps the position mode to One-way. In order to enable the new feature of Hedge Mode, so you can have dual sides positions.
-
             enable it by endpoint POST /fapi/v1/positionSide/dual, setting the parameter dualSidePosition = true
             Open position:
             Long : positionSide=LONG, side=BUY
@@ -399,6 +399,15 @@ class BinanceFutureHttp(object):
         params = {"dualSidePosition": "true",
                   "timestamp": self._timestamp()}
         return self.request(RequestMethod.POST, path, params, verify=True)
+
+    def check_position_side(self):
+        """
+        查询持仓模式，如果是单向的话，本项目多空双开，需要改为双向
+        """
+        path = "/fapi/v1/positionSide/dual"
+        params = {"timestamp": self._timestamp()}
+        res = self.request(RequestMethod.GET, path, params, verify=True)
+        return res
 
     def get_all_orders(self, symbol=None):
         """
@@ -413,6 +422,16 @@ class BinanceFutureHttp(object):
             params["symbol"] = symbol
 
         return self.request(RequestMethod.GET, path, params, verify=True)
+
+    def get_future_position_info(self, symbol):
+        res = self.get_account_info() # 现货与合约同样接口返回的结果不一样
+        if res:
+            positions = res.get('positions')
+            if positions:
+                for position in positions:
+                    if symbol == position.get('symbol'):
+                        return position.get('positionAmt')
+        return -1
 
 
 if __name__ == '__main__':

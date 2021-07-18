@@ -10,9 +10,9 @@ def index():
 class flaskConfig(object):
     def __init__(self):
         self.stop_singal_from_client=False
-        self.ratio_no_trendency=1
+        self.ratio_no_trendency=0.5
         self.ratio_up_or_down=1
-        self.every_time_trade_share = 35
+        self.every_time_trade_share = 35 #  测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
 
 fc = flaskConfig()
 @app.route('/grid/stop')

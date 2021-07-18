@@ -235,7 +235,7 @@ class BinanceSpotHttp(object):
 
     def get_ticker_24hour(self, symbol):
         """
-        :param symbol: 获取24小时的涨跌幅
+        :param symbol: 获取24小时的涨跌幅,好像只有24hr维度的
 
         """
         path = "/api/v3/ticker/24hr"
@@ -432,8 +432,9 @@ class BinanceSpotHttp(object):
     def get_spot_position_info(self, coin):
         res = self.get_account_info()
         if res:
-            assets = res.get('balances')
-            for asset in assets:
-                if coin == asset.get('asset'):
-                    return asset.get('free')
+            balances = res.get('balances')
+            if balances:
+                for asset in balances:
+                    if coin == asset.get('asset'):
+                        return asset.get('free')
         return -1

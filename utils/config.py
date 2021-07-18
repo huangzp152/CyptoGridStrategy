@@ -27,7 +27,8 @@ class Config:
     def __init__(self):
 
         self.platform: str = "binance_spot"  # 交易的平台
-        self.symbol:str = "BTCUSDT"  # 交易对.
+        self.symbol: str = "BTCUSDT"  # 交易对.
+        self.coin: str = "BTC" # 要进行仓位查询的币种
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
         self.api_secret: str = None
@@ -82,8 +83,8 @@ config = Config()
 class DynamicConfig(object):
 
     def __init__(self):
-        self.rising_ratio = 2.25
-        self.falling_ratio = 2.25
+        self.rising_ratio = 1
+        self.falling_ratio = 1
         self.spot_buy_price = 38000
         self.spot_sell_price = 38000
         self.spot_step = 0 #步数/仓位数
