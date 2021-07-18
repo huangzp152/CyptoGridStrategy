@@ -80,6 +80,10 @@ class HengedGrid(object):
 
         # official
         index = CalcIndex()
+
+        # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
+        self.init_record_price_list()
+
         #获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
         self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
         self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -88,9 +92,6 @@ class HengedGrid(object):
         # 设定买卖数量
         quantity_basic = (cmd_receive.fc.every_time_trade_share if cmd_receive.fc.every_time_trade_share else 10.1) / float(self.cur_market_spot_price) if self.cur_market_spot_price else config.quantity
         self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
-
-        # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
-        self.init_record_price_list()
 
         # 设定仓位
         dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
@@ -129,9 +130,9 @@ class HengedGrid(object):
         self.set_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
-        self.set_spot_price(float(self.cur_market_spot_price))
+        self.set_spot_price(float(self.cur_market_spot_price) if len(dynamicConfig.record_spot_price) == 0 else dynamicConfig.record_spot_price[-1])
         self.future_step = dynamicConfig.future_step
-        self.set_future_price(float(self.cur_market_future_price))
+        self.set_future_price(float(self.cur_market_future_price) if len(dynamicConfig.record_future_price) == 0 else dynamicConfig.record_future_price[-1])
 
         ascending = True
         descending = False
