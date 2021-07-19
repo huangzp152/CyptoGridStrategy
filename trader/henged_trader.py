@@ -83,7 +83,6 @@ class HengedGrid(object):
 
         # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
         self.init_record_price_list()
-
         #获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
         self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
         self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -130,7 +129,7 @@ class HengedGrid(object):
         self.set_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
-        self.set_spot_price(float(self.cur_market_spot_price) if len(dynamicConfig.record_spot_price) == 0 else dynamicConfig.record_spot_price[-1])
+        self.set_spot_price(float(self.cur_market_spot_price))
         self.future_step = dynamicConfig.future_step
         self.set_future_price(float(self.cur_market_future_price) if len(dynamicConfig.record_future_price) == 0 else dynamicConfig.record_future_price[-1])
 
@@ -175,6 +174,7 @@ class HengedGrid(object):
                 #开多单（买入持仓） 趋势上升时不买
                 #多单市场价要低于你的买入价，才能成交
                 elif float(self.cur_market_spot_price) <= float(self.spot_buy_price) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
+                    print("进入开多单流程")
                     #test
                     # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
                     # dynamicConfig.order_list.append(spot_res)
@@ -197,7 +197,7 @@ class HengedGrid(object):
                 #平掉多单（卖出获利）趋势上升时不卖
                 #多单市场价要高于你的卖出价，才能成交
                 elif float(self.cur_market_spot_price) >= float(self.spot_sell_price) and float(self.cur_market_spot_price) > float(self.get_last_spot_price()) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
-
+                    print("进入平多单流程")
                     if self.spot_step > 0:
                         # test
                         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
@@ -207,12 +207,14 @@ class HengedGrid(object):
                             Message.dingding_warn(str(self.cur_market_spot_price) + "平掉一份多单了！")
                             print('多单卖出获利了！获得：' + str((float(self.cur_market_spot_price) - float(self.get_last_spot_price())) * float(self.quantity)) + " usdt， 卖出价格：" + str(self.cur_market_spot_price) + ", 买入的价格:" + str(self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity))
                             dynamicConfig.total_earn += (float(self.cur_market_spot_price) - float(self.get_last_spot_price())) * float(self.quantity)
+                            self.remove_last_spot_price() #移除上次的价格 这个价格就是刚刚卖出的价格
                             self.addMoney(float(self.cur_market_spot_price) * float(self.quantity))
+                            self.set_spot_share(self.spot_step - 1)
                             self.set_ratio()
-                            last_price = self.get_last_spot_price() #获取上次的价格
-                            self.set_spot_price(float(last_price)) #卖掉之后改为上次的价格
-                            self.set_spot_share(self.spot_step - 1)  # 卖掉之后仓位 -1 改为从线上拿
-                            self.remove_last_spot_price() #移除上次的价格
+                            self.set_spot_price(float(self.cur_market_spot_price))#卖掉之后改为上次的价格
+                            #last_price = self.get_last_spot_price() #获取上次的价格
+                            #self.set_spot_price(float(last_price)) 
+ 
                             print(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) + ', 目前获利：' + str(dynamicConfig.total_earn) + ", 投资总额：" + str(dynamicConfig.total_invest) + ", 多单目前仓位：" + str(self.spot_step))
                             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", self.cur_market_future_price, "", ""])
                             time.sleep(0.01)
@@ -220,13 +222,14 @@ class HengedGrid(object):
                             print("貌似没有平多单成功，为啥：")
                             print("spot_res：" + str(spot_res))
                     else:
-                        print("多单没仓位了，平不了多单， 等开多单再说吧")
+                        print("多单没仓位了，售罄了，平不了多单，等多单有货再说吧")
                         # self.set_spot_price(float(self.cur_market_spot_price))#没有份额啦，修改价格等待下次被买入
                     print("----------------------------------------------------------")
 
                 #开空单（卖出借仓），趋势下跌时不买
                 #空单市场价要高于你的卖出价，才能成交
-                elif float(self.cur_market_future_price) >= float(self.future_sell_price) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
+                if float(self.cur_market_future_price) >= float(self.future_sell_price) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
+                    print("进入开空单流程")
                     #future_res
                     # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
                     # dynamicConfig.order_list.append(future_res)
@@ -251,7 +254,7 @@ class HengedGrid(object):
                 #平掉空单（买入获利）下跌趋势时不买
                 #空单市场价要低于你的买回价，才能成交
                 elif float(self.cur_market_future_price) <= float(self.future_buy_price) and float(self.cur_market_future_price) < float(self.get_last_future_price()) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
-
+                    print("进入平空单流程")
                     if self.future_step > 0:
                         # future_res
                         # future_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
@@ -262,12 +265,12 @@ class HengedGrid(object):
                             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
                             print('空单买回获利了！获得：' + str((float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
                             dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
+                            self.remove_last_future_price()
                             self.set_ratio()
                             #获取上一个价格
-                            last_price = self.get_last_future_price()
-                            self.set_future_price(float(last_price))
+                            #last_price = self.get_last_future_price()
+                            self.set_future_price(float(self.cur_market_future_price))
                             self.set_future_step(self.future_step - 1)
-                            self.remove_last_future_price()
                             print(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) + ', 目前获利：' + str(dynamicConfig.total_earn) + ", 投资总额：" + str(dynamicConfig.total_invest) + ", 空单目前仓位：" + str(self.future_step))
                             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", self.cur_market_future_price])
                             # 移除文件中的历史合约价格
@@ -276,7 +279,7 @@ class HengedGrid(object):
                             print("貌似没有平掉空单成功，为啥：")
                             print("future_res：" + str(future_res))
                     else:
-                        print("空单没仓位了，平不了空单， 等开空单再说吧")
+                        print("空单没仓位了，售罄了，平不了空单，等空单有货再说吧")
                         # self.set_future_price(float(self.cur_market_future_price))#没有仓位了就要设置补仓??
                     print("----------------------------------------------------------")
                 else:
