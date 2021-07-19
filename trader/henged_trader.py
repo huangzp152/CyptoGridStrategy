@@ -129,7 +129,7 @@ class HengedGrid(object):
         self.set_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
-        self.set_spot_price(float(self.cur_market_spot_price))
+        self.set_spot_price(float(self.cur_market_spot_price) if len(dynamicConfig.record_spot_price) == 0 else dynamicConfig.record_spot_price[-1])
         self.future_step = dynamicConfig.future_step
         self.set_future_price(float(self.cur_market_future_price) if len(dynamicConfig.record_future_price) == 0 else dynamicConfig.record_future_price[-1])
 
