@@ -31,8 +31,12 @@ from utils.dingding import Message
 
 class HengedGrid(object):
 
+    '''
+        20210720暂用spot来表示多单，future表示空单，底层方法先更换
+    '''
+
     def __init__(self):
-        self.http_client_spot = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        self.http_client_spot = BinanceFutureHttp(api_key=config.api_key_future, secret=config.api_secret_future, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
         self.http_client_future = BinanceFutureHttp(api_key=config.api_key_future, secret=config.api_secret_future, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
 
         pass
@@ -53,13 +57,13 @@ class HengedGrid(object):
 
     def addMoney(self, money):
         res = float(self.getMoney()) + float(money)
-        with open('/home/code/binance/data/test_account.txt', 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account2.txt', 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
-        with open('/home/code/binance/data/test_account.txt', 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account2.txt', 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
@@ -99,14 +103,14 @@ class HengedGrid(object):
         self.spot_step = dynamicConfig.spot_step
         self.future_step = dynamicConfig.future_step
 
-        if self.spot_step != int(float(self.http_client_spot.get_spot_position_info(config.coin)) / float(self.quantity)):
+        if self.spot_step != int(float(self.http_client_spot.get_future_position_info(config.coin)) / float(self.quantity)):
             print(f"现货：接口中获取的仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.spot_step}，你自己处理掉吧")
         if self.get_future_share() != self.get_step_by_position(False):
             print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
 
         # test check value
         # print('check account exchangeinfo: ' + str(self.http_client_spot.get_exchange_info()))  # 保留账户模拟数据
-        print('check account assets spot: ' + str(self.http_client_spot.get_spot_position_info('BTC')))  # 保留账户模拟数据
+        print('check account assets spot: ' + str(self.http_client_spot.get_future_position_info(config.symbol)))  # 保留账户模拟数据
         print('check account assets future: ' + str(self.http_client_future.get_future_position_info(config.symbol)))
         print('check account: ' + str(self.http_client_spot.get_account_info()))# 查询现货指定货币的仓位
         print('check market price: ' + str(round(float(self.cur_market_spot_price), 2)))
@@ -495,7 +499,7 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info.json', 'r') as df:
+        with open('../data/trade_info2.json', 'r') as df:
             record_price_dict_to_file = json.load(df)
             print(f"record_price_dict_to_file['record_spot_price']:{record_price_dict_to_file['record_spot_price']}")
             print(f"record_price_dict_to_file['record_future_price']:{record_price_dict_to_file['record_future_price']}")
@@ -512,7 +516,7 @@ class HengedGrid(object):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}")
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price}
-        with open('../data/trade_info.json', "w") as df:
+        with open('../data/trade_info2.json', "w") as df:
             json.dump(record_price_dict_to_file, df)
 
 

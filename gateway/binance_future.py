@@ -180,6 +180,15 @@ class BinanceFutureHttp(object):
 
         return self.request(RequestMethod.GET, path, query_dict)
 
+    def get_ticker_24hour(self, symbol):
+        """
+        :param symbol: 获取24小时的涨跌幅,好像只有24hr维度的
+
+        """
+        path = "/fapi/v1/ticker/24hr"
+        query_dict = {"symbol": symbol}
+        return self.request(RequestMethod.GET, path, query_dict)
+
     def get_kline(self, symbol, interval: Interval, start_time=None, end_time=None, limit=500, max_try_time=10):
         """
 
