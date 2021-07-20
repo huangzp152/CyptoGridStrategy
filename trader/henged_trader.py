@@ -19,6 +19,7 @@ import threading
 import time
 import sys
 sys.path.append("/home/code/mac/binance")
+sys.path.append("/home/code/binance")
 import cmd_receive
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
@@ -158,6 +159,7 @@ class HengedGrid(object):
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print('time:' + str(time_format))
                 print('check account: ' + str(self.getMoney())) #保留账户模拟数据
+                print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price) + "，目前市场价：" + str(self.cur_market_spot_price))
                 print("需要的空单卖出价：" + str(self.future_sell_price) + "，需要的空单买入价：" + str(self.future_buy_price) + "，目前市场价：" + str(self.cur_market_future_price))
                 # print("上涨趋势？" + str(index.calcTrend(config.symbol, "5m", True, self.demical_length, i)))
@@ -186,17 +188,17 @@ class HengedGrid(object):
                         dynamicConfig.total_invest += float(self.cur_market_spot_price) * float(self.quantity)
                         self.set_spot_share(self.spot_step + 1)
                         self.set_ratio()
-                        self.add_record_spot_price(self.cur_market_spot_price)#以市场价买入才划算
+                        self.add_record_spot_price(self.cur_market_spot_price)
                         self.set_spot_price(float(self.cur_market_spot_price)) #打折设置下次的买入卖出价格
                         self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
                         time.sleep(0.01)
                     else:
                         print("貌似没有开多单成功，为啥：")
                         print("spot_res：" + str(spot_res))
-                    print("----------------------------------------------------------")
+
                 #平掉多单（卖出获利）趋势上升时不卖
                 #多单市场价要高于你的卖出价，才能成交
-                elif float(self.cur_market_spot_price) >= float(self.spot_sell_price) and float(self.cur_market_spot_price) > float(self.get_last_spot_price()) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
+                elif float(self.cur_market_spot_price) >= float(self.spot_sell_price) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
                     print("进入平多单流程")
                     if self.spot_step > 0:
                         # test
@@ -224,7 +226,6 @@ class HengedGrid(object):
                     else:
                         print("多单没仓位了，售罄了，平不了多单，等多单有货再说吧")
                         # self.set_spot_price(float(self.cur_market_spot_price))#没有份额啦，修改价格等待下次被买入
-                    print("----------------------------------------------------------")
 
                 #开空单（卖出借仓），趋势下跌时不买
                 #空单市场价要高于你的卖出价，才能成交
@@ -249,11 +250,10 @@ class HengedGrid(object):
                         print("貌似没有开空单成功，为啥：")
                         print("future_res：" + str(future_res))
                         # break
-                    print("----------------------------------------------------------")
 
                 #平掉空单（买入获利）下跌趋势时不买
                 #空单市场价要低于你的买回价，才能成交
-                elif float(self.cur_market_future_price) <= float(self.future_buy_price) and float(self.cur_market_future_price) < float(self.get_last_future_price()) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
+                elif float(self.cur_market_future_price) <= float(self.future_buy_price) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
                     print("进入平空单流程")
                     if self.future_step > 0:
                         # future_res
@@ -281,7 +281,6 @@ class HengedGrid(object):
                     else:
                         print("空单没仓位了，售罄了，平不了空单，等空单有货再说吧")
                         # self.set_future_price(float(self.cur_market_future_price))#没有仓位了就要设置补仓??
-                    print("----------------------------------------------------------")
                 else:
                     print("这个价格这轮没有买卖成功，开启下一轮")
                 print('休息5s')
