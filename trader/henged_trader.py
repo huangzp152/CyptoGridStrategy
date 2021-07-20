@@ -151,6 +151,9 @@ class HengedGrid(object):
             # print("kline:" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(self.rows[i][0])/1000)) + ", price:" + self.rows[i][2])
             # self.cur_market_price = self.rows[i][2]
 
+            spot_res = None
+            future_res = None
+
             try:
                 self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -158,7 +161,7 @@ class HengedGrid(object):
                 time.sleep(0.01)
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print('time:' + str(time_format))
-                print('check account: ' + str(self.getMoney())) #保留账户模拟数据
+                print('check account: ' + str(self.getMoney()) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price) + "，目前市场价：" + str(self.cur_market_spot_price))
                 print("需要的空单卖出价：" + str(self.future_sell_price) + "，需要的空单买入价：" + str(self.future_buy_price) + "，目前市场价：" + str(self.cur_market_future_price))
@@ -281,8 +284,10 @@ class HengedGrid(object):
                     else:
                         print("空单没仓位了，售罄了，平不了空单，等空单有货再说吧")
                         # self.set_future_price(float(self.cur_market_future_price))#没有仓位了就要设置补仓??
-                else:
+
+                if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
+
                 print('休息5s')
                 time.sleep(5)
 
@@ -298,6 +303,7 @@ class HengedGrid(object):
                 print("----------------------------------------------------------")
 
             except Exception as eloop:
+                print('loop时出错了！，error：' + str(eloop))
                 Message.dingding_warn(str(eloop))
 
         print('loop结束了')
