@@ -271,11 +271,11 @@ class HengedGrid(object):
                             print('空单买回获利了！获得：' + str((float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
                             dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                             self.remove_last_future_price()
+                            self.set_future_step(self.future_step - 1)
                             self.set_ratio()
                             #获取上一个价格
                             #last_price = self.get_last_future_price()
                             self.set_future_price(float(self.cur_market_future_price))
-                            self.set_future_step(self.future_step - 1)
                             print(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) + ', 目前获利：' + str(dynamicConfig.total_earn) + ", 投资总额：" + str(dynamicConfig.total_invest) + ", 空单目前仓位：" + str(self.future_step))
                             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", self.cur_market_future_price])
                             # 移除文件中的历史合约价格
