@@ -139,6 +139,7 @@ class HengedGrid(object):
 
         print("--------------初始准备阶段完成！---------------")
 
+        begin_time = time.time()
         loop_count = 1
         # for kkkkk in range(0, 1):
         while(True):
@@ -159,8 +160,20 @@ class HengedGrid(object):
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
+                diff_time = time.time() - begin_time
+                struct_time = time.gmtime(diff_time)
+
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                print('time:' + str(time_format))
+                print('now time:' + str(time_format))
+
+                print('网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                     struct_time.tm_year-1970,
+                     struct_time.tm_mon-1,
+                     struct_time.tm_mday-1,
+                     struct_time.tm_hour,
+                     struct_time.tm_min,
+                     struct_time.tm_sec)))
+
                 print('check account: ' + str(self.getMoney()) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price) + "，目前市场价：" + str(self.cur_market_spot_price))
