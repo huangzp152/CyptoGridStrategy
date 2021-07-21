@@ -359,6 +359,12 @@ class BinanceFutureHttp(object):
 
         return self.request(RequestMethod.GET, path=path, requery_dict=params, verify=True)
 
+    def set_future_leverage(self, leverage=1):
+        path = "/fapi/v1/leverage"
+        params = {"timestamp": self._timestamp(),
+                  "leverage": leverage}
+        return self.request(RequestMethod.POST, path, params, verify=True)
+
     def get_account_info(self):
         """
         {'feeTier': 2, 'canTrade': True, 'canDeposit': True, 'canWithdraw': True, 'updateTime': 0, 'totalInitialMargin': '0.00000000',
@@ -422,6 +428,17 @@ class BinanceFutureHttp(object):
             params["symbol"] = symbol
 
         return self.request(RequestMethod.GET, path, params, verify=True)
+
+
+    def set_future_leverage(self, leverage):
+        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
+        if res:
+            positions = res.get('positions')
+            if positions:
+                for position in positions:
+                    if symbol == position.get('symbol'):
+                        return position.get('positionAmt')
+        return -1
 
     def get_future_position_info(self, symbol):
         res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样

@@ -51,6 +51,13 @@ class HengedGrid(object):
                     return asset.get('free')
         return 0
 
+    def getAsset(self):
+        return str(self.http_client_future.get_future_asset(config.symbol))
+
+    def set_leverage(self, leverage):
+        ret = self.http_client_future.set_future_leverage(leverage)
+        return ret['leverage']
+
     def addMoney(self, money):
         res = float(self.getMoney()) + float(money)
         with open('/home/code/binance/data/test_account.txt', 'w', encoding='utf-8') as df:
@@ -173,8 +180,9 @@ class HengedGrid(object):
                      struct_time.tm_hour,
                      struct_time.tm_min,
                      struct_time.tm_sec)))
-
-                print('check account, spot: ' + str(self.getMoney()) +', future: ' + str(self.http_client_future.get_future_asset(config.symbol)) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                # str(self.http_client_future.get_future_asset(config.symbol))
+                print('目前杠杆:' + str(self.set_leverage(cmd_receive.fc.leverage)))
+                print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price) + "，目前市场价：" + str(self.cur_market_spot_price))
