@@ -201,7 +201,8 @@ class HengedGrid(object):
 
                 #平掉多单（卖出获利）趋势上升时不卖
                 #多单市场价要高于你的卖出价，才能成交
-                elif float(self.cur_market_spot_price) >= float(self.spot_sell_price) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
+                #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱
+                elif float(self.cur_market_spot_price) >= float(self.spot_sell_price) and float(self.cur_market_spot_price) >= float(self.get_last_spot_price()) and not index.calcTrend_MK(config.symbol, "5m", ascending, self.demical_length):
                     print("进入平多单流程")
                     if self.spot_step > 0:
                         # test
@@ -237,7 +238,7 @@ class HengedGrid(object):
                     #future_res
                     # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
                     # dynamicConfig.order_list.append(future_res)
-                    future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+                    future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
                     if future_res['orderId']:
                         print("开空单成功")
                         Message.dingding_warn(str(self.cur_market_future_price) + "买入一份空单了！")
@@ -256,13 +257,14 @@ class HengedGrid(object):
 
                 #平掉空单（买入获利）下跌趋势时不买
                 #空单市场价要低于你的买回价，才能成交
-                elif float(self.cur_market_future_price) <= float(self.future_buy_price) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
+                #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱
+                elif float(self.cur_market_future_price) <= float(self.future_buy_price) and float(self.cur_market_future_price) <= float(self.get_last_future_price()) and not index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length):
                     print("进入平空单流程")
                     if self.future_step > 0:
                         # future_res
                         # future_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
                         # dynamicConfig.order_list.append(future_res)
-                        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+                        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
                         if future_res['orderId']:
                             Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份空单了！")
                             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
