@@ -94,14 +94,14 @@ class HengedGrid(object):
         self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
 
         # 设定仓位
-        dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
-        dynamicConfig.future_step = self.get_future_share() #self.get_step_by_position(False) 一样的
-        self.spot_step = dynamicConfig.spot_step
-        self.future_step = dynamicConfig.future_step
+        # dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
+        # dynamicConfig.future_step = self.get_future_share() #self.get_step_by_position(False) 一样的
+        self.set_spot_share(int(len(dynamicConfig.record_spot_price)))
+        self.set_future_step(len(dynamicConfig.record_future_price))
 
         if self.spot_step != int(float(self.http_client_spot.get_spot_position_info(config.coin)) / float(self.quantity)):
             print(f"现货：接口中获取的仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.spot_step}，你自己处理掉吧")
-        if self.get_future_share() != self.get_step_by_position(False):
+        if self.future_step != self.get_step_by_position(False):
             print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
 
         # test check value
@@ -174,8 +174,9 @@ class HengedGrid(object):
                      struct_time.tm_min,
                      struct_time.tm_sec)))
 
-                print('check account: ' + str(self.getMoney()) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                print('check account, spot: ' + str(self.getMoney()) +', future: ' + str(self.http_client_future.get_future_asset(config.symbol)) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
+                print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price) + "，目前市场价：" + str(self.cur_market_spot_price))
                 print("需要的空单卖出价：" + str(self.future_sell_price) + "，需要的空单买入价：" + str(self.future_buy_price) + "，目前市场价：" + str(self.cur_market_future_price))
                 # print("上涨趋势？" + str(index.calcTrend(config.symbol, "5m", True, self.demical_length, i)))
@@ -202,9 +203,9 @@ class HengedGrid(object):
                         Message.dingding_warn(str(self.cur_market_spot_price) + "买入一份多单了！")
                         self.decreaseMoney(float(self.cur_market_spot_price) * float(self.quantity))
                         dynamicConfig.total_invest += float(self.cur_market_spot_price) * float(self.quantity)
+                        self.add_record_spot_price(self.cur_market_spot_price)
                         self.set_spot_share(self.spot_step + 1)
                         self.set_ratio()
-                        self.add_record_spot_price(self.cur_market_spot_price)
                         self.set_spot_price(float(self.cur_market_spot_price)) #打折设置下次的买入卖出价格
                         self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
                         time.sleep(0.01)
@@ -257,9 +258,9 @@ class HengedGrid(object):
                         Message.dingding_warn(str(self.cur_market_future_price) + "买入一份空单了！")
                         self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
                         dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
+                        self.add_record_future_price(self.cur_market_future_price)#以市场价买入才划算
                         self.set_future_step(self.future_step + 1)
                         self.set_ratio()
-                        self.add_record_future_price(self.cur_market_future_price)#以市场价买入才划算
                         self.set_future_price(float(self.cur_market_future_price))
                         self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", self.cur_market_future_price, ""])
                         time.sleep(0.01)
@@ -365,16 +366,16 @@ class HengedGrid(object):
         if abs(ratio_24hr) > 8:
             if ratio_24hr > 0:  #上涨时，多单利润目标调大一点
                 print("上涨趋势")
-                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.get_spot_share() / 2
-                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.get_spot_share() / 4
+                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.spot_step / 2
+                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.spot_step / 4
             else: #下跌时，空单利润目标调大一点
                 print("下跌趋势")
-                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.get_future_share() / 2
-                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.get_future_share() / 4
+                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.future_step / 2
+                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.future_step / 4
         else: #震荡时
             print("震荡趋势")
-            dynamicConfig.falling_ratio = cmd_receive.fc.ratio_no_trendency + self.get_future_share() / 4
-            dynamicConfig.rising_ratio = cmd_receive.fc.ratio_no_trendency + self.get_future_share() / 4
+            dynamicConfig.falling_ratio = cmd_receive.fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.rising_ratio = cmd_receive.fc.ratio_no_trendency + self.future_step / 4
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio)
               + ", 设置上涨的比率：dynamicConfig.falling_ratio:" + str(dynamicConfig.falling_ratio))
@@ -475,11 +476,10 @@ class HengedGrid(object):
         cmd_receive.app.run(host='104.225.143.245', port=5000, threaded=True)
 
     def get_future_share(self):
-        print(f"get_future_share")
-        dynamicConfig.future_step = len(dynamicConfig.record_future_price)
-        self.future_step = dynamicConfig.future_step
-        print("get_future_share, dynamicConfig.future_step:" + str(dynamicConfig.future_step))
-        return dynamicConfig.future_step
+        # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
+        # self.future_step = dynamicConfig.future_step
+        print("get_future_share, self.future_step:" + str(self.future_step))
+        return self.future_step
         # tmp = self.http_client_future.get_positionInfo(config.symbol)
         # print(f"positionInfo:{tmp}")
         # for item in tmp:  # 空头持仓均价

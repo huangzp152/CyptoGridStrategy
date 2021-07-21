@@ -251,17 +251,17 @@ class CalcIndex:
         :param symbol:
         :param interval:
         :param direction:
-        :return: 趋势来了 正在拉伸 不买
+        :return: 趋势来了 正在拉伸 不买不卖，锁死
         '''
         tmp_list_ma5 = self.calcSlopeMA5_list(symbol, interval, point, i)
         result = str(self.Mann_Kenddall_Trend_desc(tmp_list_ma5))
         print('tmp_list_ma5:' + str(tmp_list_ma5))
         print("Mann_Kenddall_Trend_desc:" + str(result))
         if ascending:
-            if 'up' in result:
+            if 'up' in result or 'down' in result:
                 return True
         else:
-            if 'down' in result:
+            if 'up' in result or 'down' in result:
                 return True
         return False
 

@@ -424,7 +424,7 @@ class BinanceFutureHttp(object):
         return self.request(RequestMethod.GET, path, params, verify=True)
 
     def get_future_position_info(self, symbol):
-        res = self.get_account_info() # 现货与合约同样接口返回的结果不一样
+        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
         if res:
             positions = res.get('positions')
             if positions:
@@ -432,6 +432,16 @@ class BinanceFutureHttp(object):
                     if symbol == position.get('symbol'):
                         return position.get('positionAmt')
         return -1
+
+    def get_future_asset(self, symbol):
+        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
+        if res:
+            assets = res.get('assets')
+            if assets:
+                for asset in assets:
+                    if symbol.endswith(asset.get('asset')):
+                        return [asset.get('walletBalance'), asset.get('marginBalance')]
+        return []
 
 
 if __name__ == '__main__':
