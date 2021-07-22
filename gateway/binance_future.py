@@ -87,7 +87,7 @@ class BinanceFutureHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host="", proxy_port=0, timeout=5, try_counts=5):
         self.key = api_key
         self.secret = secret
-        self.host = host if host else "https://testnet.binancefuture.com" #"https://fapi.binance.com"
+        self.host = host if host else "https://fapi.binance.com" #"https://testnet.binancefuture.com" #"https://fapi.binance.com"
         self.recv_window = 5000
         self.timeout = timeout
         self.order_count_lock = Lock()
