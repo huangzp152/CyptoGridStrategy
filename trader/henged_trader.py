@@ -385,8 +385,8 @@ class HengedGrid(object):
                 dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.future_step / 4
         else: #震荡时
             print("震荡趋势")
-            dynamicConfig.falling_ratio = fc.ratio_no_trendency + self.future_step / 4
-            dynamicConfig.rising_ratio = fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.falling_ratio = fc.ratio_no_trendency# + self.future_step / 4 为啥仓位越大利率要变大？
+            dynamicConfig.rising_ratio = fc.ratio_no_trendency# + self.future_step / 4 为啥仓位越大利率要变大？
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio)
               + ", 设置上涨的比率：dynamicConfig.falling_ratio:" + str(dynamicConfig.falling_ratio))

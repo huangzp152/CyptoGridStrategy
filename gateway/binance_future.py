@@ -120,7 +120,6 @@ class BinanceFutureHttp(object):
 
         for i in range(0, self.try_counts):
             try:
-                print(f"url:{url}")
                 response = requests.request(req_method.value, url=url, headers=headers, timeout=self.timeout, proxies=self.proxies)
                 if response.status_code == 200:
                     return response.json()
