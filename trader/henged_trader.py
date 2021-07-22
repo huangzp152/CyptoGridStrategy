@@ -220,6 +220,7 @@ class HengedGrid(object):
                         self.set_spot_share(self.spot_step + 1)
                         self.set_ratio()
                         self.set_spot_price(float(self.cur_market_spot_price)) #打折设置下次的买入卖出价格
+                        self.set_future_price(float(self.cur_market_spot_price))
                         self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
                         time.sleep(0.01)
                     else:
@@ -277,6 +278,7 @@ class HengedGrid(object):
                         self.add_record_future_price(self.cur_market_future_price)#以市场价买入才划算
                         self.set_future_step(self.future_step + 1)
                         self.set_ratio()
+                        self.set_spot_price(float(self.cur_market_future_price))
                         self.set_future_price(float(self.cur_market_future_price))
                         self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", self.cur_market_future_price, ""])
                         time.sleep(0.01)
