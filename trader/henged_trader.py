@@ -208,7 +208,7 @@ class HengedGrid(object):
                     #test
                     # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
                     # dynamicConfig.order_list.append(spot_res)
-                    spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.MARKET, self.quantity, price=round(float(self.cur_market_spot_price), 2), time_inforce="")
+                    spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_spot_price), 2), time_inforce="")
                     if spot_res['orderId']:
                         print("开多单成功")
                         Message.dingding_warn(str(self.cur_market_spot_price) + "买入一份多单了！")
@@ -233,7 +233,7 @@ class HengedGrid(object):
                         # test
                         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
                         # dynamicConfig.order_list.append(spot_res)
-                        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, OrderType.MARKET, self.quantity, price=round(float(self.cur_market_spot_price), 2),time_inforce="")
+                        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_spot_price), 2),time_inforce="")
                         if spot_res['orderId']:
                             Message.dingding_warn(str(self.cur_market_spot_price) + "平掉一份多单了！")
                             print('多单卖出获利了！获得：' + str((float(self.cur_market_spot_price) - float(self.get_last_spot_price())) * float(self.quantity)) + " usdt， 卖出价格：" + str(self.cur_market_spot_price) + ", 买入的价格:" + str(self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity))
@@ -265,7 +265,8 @@ class HengedGrid(object):
                     #future_res
                     # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
                     # dynamicConfig.order_list.append(future_res)
-                    future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+                    future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, "SHORT", OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+
                     if future_res['orderId']:
                         print("开空单成功")
                         Message.dingding_warn(str(self.cur_market_future_price) + "买入一份空单了！")
@@ -291,7 +292,7 @@ class HengedGrid(object):
                         # future_res
                         # future_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
                         # dynamicConfig.order_list.append(future_res)
-                        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+                        future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
                         if future_res['orderId']:
                             Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份空单了！")
                             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
