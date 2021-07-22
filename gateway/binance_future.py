@@ -134,7 +134,24 @@ class BinanceFutureHttp(object):
         path = '/fapi/v1/time'
         return self.request(req_method=RequestMethod.GET, path=path)
 
-    def exchangeInfo(self,symbol):
+    def get_future_asset(self, symbol):
+        res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
+        if res:
+            assets = res.get('assets')
+            if assets:
+                for asset in assets:
+                    if symbol.endswith(asset.get('asset')):
+                        return [asset.get('walletBalance'), asset.get('marginBalance')]
+        return []
+
+    def set_future_leverage(self, symbol, leverage):
+        path = "/fapi/v1/leverage"
+        params = {"timestamp": self._timestamp(),
+                  "symbol": symbol,
+                  "leverage": leverage}
+        return self.request(RequestMethod.POST, path, params, verify=True)
+
+    def exchangeInfo(self, symbol):
 
         """
         {'timezone': 'UTC', 'serverTime': 1570802268092, 'rateLimits':
@@ -359,13 +376,7 @@ class BinanceFutureHttp(object):
 
         return self.request(RequestMethod.GET, path=path, requery_dict=params, verify=True)
 
-    def set_future_leverage(self, leverage=1):
-        path = "/fapi/v1/leverage"
-        params = {"timestamp": self._timestamp(),
-                  "leverage": leverage}
-        return self.request(RequestMethod.POST, path, params, verify=True)
-
-    def get_account_info(self):
+    def get_account_info(self, symbol):
         """
         {'feeTier': 2, 'canTrade': True, 'canDeposit': True, 'canWithdraw': True, 'updateTime': 0, 'totalInitialMargin': '0.00000000',
         'totalMaintMargin': '0.00000000', 'totalWalletBalance': '530.21334791', 'totalUnrealizedProfit': '0.00000000',
@@ -377,7 +388,8 @@ class BinanceFutureHttp(object):
         :return:
         """
         path = "/fapi/v2/account"
-        params = {"timestamp": self._timestamp()}
+        params = {"timestamp": self._timestamp(),
+                  "symbol" : symbol}
         return self.request(RequestMethod.GET, path, params, verify=True)
 
     def get_position_info(self):
@@ -429,19 +441,8 @@ class BinanceFutureHttp(object):
 
         return self.request(RequestMethod.GET, path, params, verify=True)
 
-
-    def set_future_leverage(self, leverage):
-        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
-        if res:
-            positions = res.get('positions')
-            if positions:
-                for position in positions:
-                    if symbol == position.get('symbol'):
-                        return position.get('positionAmt')
-        return -1
-
     def get_future_position_info(self, symbol):
-        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
+        res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
         if res:
             positions = res.get('positions')
             if positions:
@@ -449,16 +450,6 @@ class BinanceFutureHttp(object):
                     if symbol == position.get('symbol'):
                         return position.get('positionAmt')
         return -1
-
-    def get_future_asset(self, symbol):
-        res = self.get_account_info()  # 现货与合约同样接口返回的结果不一样
-        if res:
-            assets = res.get('assets')
-            if assets:
-                for asset in assets:
-                    if symbol.endswith(asset.get('asset')):
-                        return [asset.get('walletBalance'), asset.get('marginBalance')]
-        return []
 
 
 if __name__ == '__main__':

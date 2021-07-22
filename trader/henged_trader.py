@@ -20,7 +20,7 @@ import time
 import sys
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
-import cmd_receive
+from cmd_receive import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
@@ -52,10 +52,11 @@ class HengedGrid(object):
         return 0
 
     def getAsset(self):
-        return str(self.http_client_future.get_future_asset(config.symbol))
+        ret = str(self.http_client_future.get_future_asset(config.symbol))
+        return ret
 
     def set_leverage(self, leverage):
-        ret = self.http_client_future.set_future_leverage(leverage)
+        ret = self.http_client_future.set_future_leverage(config.symbol, leverage)
         return ret['leverage']
 
     def addMoney(self, money):
@@ -97,7 +98,7 @@ class HengedGrid(object):
         # 设定精度，无所谓现货或者合约
         self.demical_length = len(str(self.cur_market_spot_price).split(".")[1])
         # 设定买卖数量
-        quantity_basic = (cmd_receive.fc.every_time_trade_share if cmd_receive.fc.every_time_trade_share else 10.1) / float(self.cur_market_spot_price) if self.cur_market_spot_price else config.quantity
+        quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_spot_price) if self.cur_market_spot_price else config.quantity
         self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
 
         # 设定仓位
@@ -181,7 +182,9 @@ class HengedGrid(object):
                      struct_time.tm_min,
                      struct_time.tm_sec)))
                 # str(self.http_client_future.get_future_asset(config.symbol))
-                print('目前杠杆:' + str(self.set_leverage(cmd_receive.fc.leverage)))
+                # print('目前杠杆:' + str(self.set_leverage(fc.leverage)))
+                # tmp = self.http_client_future.get_positionInfo(config.symbol)
+                # print(f"查看杠杆效果:{tmp}")
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
@@ -190,7 +193,7 @@ class HengedGrid(object):
                 # print("上涨趋势？" + str(index.calcTrend(config.symbol, "5m", True, self.demical_length, i)))
 
                 #设定仓位
-                quantity_basic = (cmd_receive.fc.every_time_trade_share if cmd_receive.fc.every_time_trade_share else 10.1) / float(self.cur_market_spot_price) if self.cur_market_spot_price else config.quantity
+                quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_spot_price) if self.cur_market_spot_price else config.quantity
                 self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
 
                 if max(float(self.cur_market_spot_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_spot_price), float(self.cur_market_future_price)) > config.max_border_price:
@@ -241,8 +244,8 @@ class HengedGrid(object):
                             self.set_ratio()
                             self.set_spot_price(float(self.cur_market_spot_price))#卖掉之后改为上次的价格
                             #last_price = self.get_last_spot_price() #获取上次的价格
-                            #self.set_spot_price(float(last_price)) 
- 
+                            #self.set_spot_price(float(last_price))
+
                             print(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) + ', 目前获利：' + str(dynamicConfig.total_earn) + ", 投资总额：" + str(dynamicConfig.total_invest) + ", 多单目前仓位：" + str(self.spot_step))
                             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", self.cur_market_future_price, "", ""])
                             time.sleep(0.01)
@@ -350,7 +353,7 @@ class HengedGrid(object):
         if len(dynamicConfig.record_future_price) > 0:
             msg3 = ', 空单浮动盈亏：' + str((tmp_list_result / len(dynamicConfig.record_future_price) - float(self.cur_market_future_price)) * float(self.quantity))
         Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
-        cmd_receive.stop_singal_from_client = False
+        stop_singal_from_client = False
         time.sleep(10)
 
     def save_trade_to_file(self, time_format, trade_info):
@@ -374,16 +377,16 @@ class HengedGrid(object):
         if abs(ratio_24hr) > 8:
             if ratio_24hr > 0:  #上涨时，多单利润目标调大一点
                 print("上涨趋势")
-                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.spot_step / 2
-                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.spot_step / 4
+                dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.spot_step / 2
+                dynamicConfig.falling_ratio = fc.ratio_up_or_down + self.spot_step / 4
             else: #下跌时，空单利润目标调大一点
                 print("下跌趋势")
-                dynamicConfig.falling_ratio = cmd_receive.fc.ratio_up_or_down + self.future_step / 2
-                dynamicConfig.rising_ratio = cmd_receive.fc.ratio_up_or_down + self.future_step / 4
+                dynamicConfig.falling_ratio = fc.ratio_up_or_down + self.future_step / 2
+                dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.future_step / 4
         else: #震荡时
             print("震荡趋势")
-            dynamicConfig.falling_ratio = cmd_receive.fc.ratio_no_trendency + self.future_step / 4
-            dynamicConfig.rising_ratio = cmd_receive.fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.falling_ratio = fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.rising_ratio = fc.ratio_no_trendency + self.future_step / 4
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio)
               + ", 设置上涨的比率：dynamicConfig.falling_ratio:" + str(dynamicConfig.falling_ratio))
@@ -471,8 +474,8 @@ class HengedGrid(object):
         return "{:.2}".format(round(quantity, 3))
 
     def normal_exit(self):
-        while not cmd_receive.fc.stop_singal_from_client:
-            # print(str(cmd_receive.fc.stop_singal_from_client))
+        while not fc.stop_singal_from_client:
+            # print(str(fc.stop_singal_from_client))
             time.sleep(1)
         msg = 'stop by myself!'
         print(msg)
@@ -481,7 +484,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        cmd_receive.app.run(host='104.225.143.245', port=5000, threaded=True)
+        app.run(host='104.225.143.245', port=5000, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)

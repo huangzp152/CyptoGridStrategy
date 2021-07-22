@@ -13,7 +13,7 @@ class flaskConfig(object):
         self.ratio_no_trendency=0.5
         self.ratio_up_or_down=1
         self.every_time_trade_share = 35 #  测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
-        self.leverage = 2
+        self.leverage = 20
 
 fc = flaskConfig()
 @app.route('/grid/stop')
@@ -43,7 +43,7 @@ def grid_change_trade_share():
     return 'hzp, /change/trade_share, every_time_trade_share:' + every_time_trade_share
 
 @app.route('/grid/change/leverage', methods=['GET'])
-def grid_change_trade_share():
+def grid_change_leverage():
 
     # data = request.get_json()
     leverage = str(request.args.get('leverage'))
