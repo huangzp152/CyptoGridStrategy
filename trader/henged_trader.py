@@ -395,6 +395,7 @@ class HengedGrid(object):
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
+        dynamicConfig.record_spot_price.sort(reverse=False)
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
 
     def get_last_spot_price(self):
@@ -413,6 +414,7 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
+        dynamicConfig.record_spot_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
 
     def get_last_future_price(self):
