@@ -52,10 +52,12 @@ class HengedGrid(object):
 
     def getAsset(self):
         ret = str(self.http_client_future.get_future_asset(config.symbol))
+        print('ret:' + ret)
         return ret
 
     def set_leverage(self, leverage):
         ret = self.http_client_future.set_future_leverage(config.symbol, leverage)
+        print('set_leverage:' + str(ret))
         return ret['leverage']
 
     def addMoney(self, money):
@@ -181,7 +183,7 @@ class HengedGrid(object):
                      struct_time.tm_min,
                      struct_time.tm_sec)))
                 # str(self.http_client_future.get_future_asset(config.symbol))
-                # print('目前杠杆:' + str(self.set_leverage(fc.leverage)))
+                print('目前杠杆:' + str(self.set_leverage(fc.leverage)))
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
