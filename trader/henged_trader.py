@@ -139,9 +139,9 @@ class HengedGrid(object):
         self.set_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
-        self.set_spot_price(float(self.cur_market_future_price) if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
+        self.set_spot_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
         self.future_step = dynamicConfig.future_step
-        self.set_future_price(float(self.cur_market_future_price) if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
+        self.set_future_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
 
         ascending = True
         descending = False
@@ -533,7 +533,7 @@ class HengedGrid(object):
         while not fc.stop_singal_from_client:
             # print(str(fc.stop_singal_from_client))
             time.sleep(1)
-        self.save_trade_info()
+        # self.save_trade_info()
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
@@ -631,7 +631,7 @@ if __name__ == "__main__":
             print('ctrl + c 程序中断了')
             error_raw = 'ctrl + c 程序中断了' + str(be)
     finally:
-        hengedGrid.save_trade_info()
+        # hengedGrid.save_trade_info()
         if error_raw:
             error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
             Message.dingding_warn(str(error_info))
