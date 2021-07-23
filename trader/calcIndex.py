@@ -153,7 +153,7 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        data = self.http_client.get_kline(symbol, interval, limit=11)#临时从6改为11了,多几根线参与趋势判断
+        data = self.http_client.get_kline(symbol, interval, limit=8)
 
         # test
         # data = self.test_data[j - 6:j]
@@ -162,7 +162,7 @@ class CalcIndex:
         for i in range(len(data)):
             if i==0:
                 last_ma5+=float(data[i][4])
-            elif i==10:
+            elif i==7:
                 next_ma5+=float(data[i][4])
             else:
                 last_ma5+=float(data[i][4])
@@ -258,14 +258,14 @@ class CalcIndex:
         print('最近几根均线为:' + str(tmp_list_ma5))
         print("Mann_Kenddall_Trend_desc, 趋势为:" + str(result))
         if ascending:
-            if 'up' in result or 'down' in result:
+            if '99%' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:
                     print('下跌')
                 return True
         else:
-            if 'up' in result or 'down' in result:
+            if '99%' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:
