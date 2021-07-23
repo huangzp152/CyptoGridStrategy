@@ -153,7 +153,7 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        data = self.http_client.get_kline(symbol, interval, limit=11)#临时从5改为10了，名字还没改
+        data = self.http_client.get_kline(symbol, interval, limit=11)#临时从6改为11了,多几根线参与趋势判断
 
         # test
         # data = self.test_data[j - 6:j]
@@ -255,14 +255,23 @@ class CalcIndex:
         '''
         tmp_list_ma5 = self.calcSlopeMA5_list(symbol, interval, point, i)
         result = str(self.Mann_Kenddall_Trend_desc(tmp_list_ma5))
-        print('tmp_list_ma5:' + str(tmp_list_ma5))
-        print("Mann_Kenddall_Trend_desc:" + str(result))
+        print('最近几根均线为:' + str(tmp_list_ma5))
+        print("Mann_Kenddall_Trend_desc, 趋势为:" + str(result))
         if ascending:
             if 'up' in result or 'down' in result:
+                if 'up' in result:
+                    print('拉升')
+                elif 'down' in result:
+                    print('下跌')
                 return True
         else:
             if 'up' in result or 'down' in result:
+                if 'up' in result:
+                    print('拉升')
+                elif 'down' in result:
+                    print('下跌')
                 return True
+        print('震荡')
         return False
 
     def calcMA10(self,symbol,interval,point):
