@@ -295,10 +295,6 @@ class HengedGrid(object):
             self.add_record_spot_price(self.cur_market_future_price)
             self.set_spot_share(self.spot_step + 1)
             self.set_ratio()
-            try:
-                print('成交价格：' + str(float(spot_res['cumQuote']) / float(spot_res['executedQty'])))
-            except RuntimeError as e:
-                print('error' + str(e))
             self.set_spot_price(float(self.cur_market_future_price))  # 打折设置下次的买入卖出价格
             self.set_future_price(float(self.cur_market_future_price)) # 开多单成功后，空单的买入卖出价格要下调，不然价格上涨时，空单难成交
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
@@ -330,10 +326,6 @@ class HengedGrid(object):
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
                 self.set_spot_share(self.spot_step - 1)
                 self.set_ratio()
-                try:
-                    print('成交价格：' + str(float(spot_res['cumQuote']) / float(spot_res['executedQty'])))
-                except RuntimeError as e:
-                    print('error' + str(e))
                 self.set_spot_price(float(self.cur_market_future_price))  # 卖掉之后改为上次的价格
                 # last_price = self.get_last_spot_price() #获取上次的价格
                 # self.set_spot_price(float(last_price))
@@ -367,10 +359,6 @@ class HengedGrid(object):
             self.add_record_future_price(self.cur_market_future_price)  # 以市场价买入才划算
             self.set_future_step(self.future_step + 1)
             self.set_ratio()
-            try:
-                print('成交价格：' + str(float(future_res['cumQuote']) / float(future_res['executedQty'])))
-            except RuntimeError as e:
-                print('error' + str(e))
             self.set_spot_price(float(self.cur_market_future_price))#开空单成功后，多单的买入卖出价格要上调，不然价格回落时，多单难成交
             self.set_future_price(float(self.cur_market_future_price))
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "",
@@ -402,11 +390,7 @@ class HengedGrid(object):
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(
                     self.cur_market_future_price)) * float(self.quantity)
                 self.remove_last_future_price()
-                try:
-                    print('成交价格：' + str(float(future_res['cumQuote']) / float(future_res['executedQty'])))
-                except RuntimeError as e:
-                    print('error' + str(e))
-                self.set_future_step(self.future_step - 1)
+                self.set_future_step(self.fußture_step - 1)
                 self.set_ratio()
                 # 获取上一个价格
                 # last_price = self.get_last_future_price()
@@ -438,7 +422,7 @@ class HengedGrid(object):
                                                 'record_market_price_%s.csv' % time_format.split()[0])) == 0:
                     writer_p.writerow(['datetime', 'price', 'long_buy', 'long_sell', 'short_sell', 'short_buy'])
                 writer_p.writerow(trade_info)
-        except RuntimeError as ee:
+        except Exception as ee:
             print('ee:' + str(ee))
 
     def set_ratio(self):
