@@ -489,6 +489,7 @@ class HengedGrid(object):
         while not fc.stop_singal_from_client:
             # print(str(fc.stop_singal_from_client))
             time.sleep(1)
+        self.save_trade_info()
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
