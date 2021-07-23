@@ -198,9 +198,9 @@ class HengedGrid(object):
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
-                print("目前市场价：" + str(self.cur_market_future_price))
-                print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的多单卖出价：" + str(self.spot_sell_price))
-                print("需要的空单卖出价：" + str(self.future_sell_price) + "，需要的空单买入价：" + str(self.future_buy_price))
+                print("目前【市场价】：" + str(self.cur_market_future_price))
+                print("需要的多单买入价：" + str(self.spot_buy_price) + "，需要的【多单卖出价】：" + str(self.spot_sell_price))
+                print("需要的空单卖出价：" + str(self.future_sell_price) + "，需要的【空单买入价】：" + str(self.future_buy_price))
                 #判断一下趋势
                 index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length)
 
