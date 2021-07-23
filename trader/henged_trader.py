@@ -300,7 +300,7 @@ class HengedGrid(object):
             except RuntimeError as e:
                 print('error' + str(e))
             self.set_spot_price(float(self.cur_market_future_price))  # 打折设置下次的买入卖出价格
-            # self.set_future_price(float(self.cur_market_future_price))
+            self.set_future_price(float(self.cur_market_future_price)) # 开多单成功后，空单的买入卖出价格要下调，不然价格上涨时，空单难成交
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
             time.sleep(0.01)
         else:
@@ -367,11 +367,11 @@ class HengedGrid(object):
             self.add_record_future_price(self.cur_market_future_price)  # 以市场价买入才划算
             self.set_future_step(self.future_step + 1)
             self.set_ratio()
-            # self.set_spot_price(float(self.cur_market_future_price))
             try:
                 print('成交价格：' + str(float(future_res['cumQuote']) / float(future_res['executedQty'])))
             except RuntimeError as e:
                 print('error' + str(e))
+            self.set_spot_price(float(self.cur_market_future_price))#开空单成功后，多单的买入卖出价格要上调，不然价格回落时，多单难成交
             self.set_future_price(float(self.cur_market_future_price))
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "",
                                                   self.cur_market_future_price, ""])
