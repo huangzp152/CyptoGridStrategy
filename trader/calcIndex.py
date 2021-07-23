@@ -258,14 +258,14 @@ class CalcIndex:
         print('最近几根均线为:' + str(tmp_list_ma5))
         print("Mann_Kenddall_Trend_desc, 趋势为:" + str(result))
         if ascending:
-            if '99%' in result:
+            if 'up' in result or 'down' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:
                     print('下跌')
                 return True
         else:
-            if '99%' in result:
+            if 'up' in result or 'down' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:
