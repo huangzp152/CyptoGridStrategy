@@ -206,7 +206,7 @@ class HengedGrid(object):
                 print('目前杠杆:' + str(self.set_leverage(fc.leverage)))
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
-                print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
+                # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
