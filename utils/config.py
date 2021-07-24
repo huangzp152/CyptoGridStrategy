@@ -34,6 +34,8 @@ class Config:
         self.api_secret: str = None
         self.api_key_future: str = None
         self.api_secret_future: str = None
+        self.api_key_future_testnet: str = None
+        self.api_secret_future_testnet: str = None
         self.pass_phrase = None
         self.quantity:float = 0.0004
         self.min_price =  0.0001

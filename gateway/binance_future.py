@@ -2,6 +2,7 @@
     1. Binance Future http requests.
 
 """
+from utils import config
 
 """
     币安推荐码:  返佣10%
@@ -87,7 +88,7 @@ class BinanceFutureHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host="", proxy_port=0, timeout=5, try_counts=5):
         self.key = api_key
         self.secret = secret
-        self.host = host if host else "https://fapi.binance.com" #"https://testnet.binancefuture.com" #"https://fapi.binance.com"
+        self.host = host if host else "https://testnet.binancefuture.com" if config.platform == 'binance_future_testnet' else "https://fapi.binance.com"
         self.recv_window = 5000
         self.timeout = timeout
         self.order_count_lock = Lock()
@@ -349,6 +350,15 @@ class BinanceFutureHttp(object):
             params["origClientOrderId"] = client_order_id
 
         return self.request(RequestMethod.DELETE, path, params, verify=True)
+
+    def get_my_trades(self, symbol=None):
+        path = "/fapi/v1/trades"
+
+        params = {"timestamp": self._timestamp(),
+                  "symbol": symbol,
+                  "limit": 10}
+
+        return self.request(RequestMethod.GET, path, params, verify=True)
 
     def get_open_orders(self, symbol=None):
         path = "/fapi/v1/openOrders"
