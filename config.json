@@ -1,5 +1,5 @@
 {
-  "platform": "binance_future",
+  "platform": "binance_future_testnet",
   "symbol": "BTCUSDT",
   "coin": "BTC",
   "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
