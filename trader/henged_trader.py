@@ -446,21 +446,20 @@ class HengedGrid(object):
             print('ee:' + str(ee))
 
     def set_ratio(self):
+        '''
+        设置买入卖出的比率
+        仓位越多，格子要越大，防止不断地开仓或平仓
+        '''
         print("set_ratio")
         ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
         if abs(ratio_24hr) > 8:
-            if ratio_24hr > 0:  #上涨时，多单利润目标调大一点
-                print("24小时上涨趋势")
-                dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.spot_step / 2
-                dynamicConfig.falling_ratio = fc.ratio_up_or_down + self.spot_step / 4
-            else: #下跌时，空单利润目标调大一点
-                print("24小时下跌趋势")
+                print("24小时上涨或下跌趋势")
+                dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.future_step / 2
                 dynamicConfig.falling_ratio = fc.ratio_up_or_down + self.future_step / 2
-                dynamicConfig.rising_ratio = fc.ratio_up_or_down + self.future_step / 4
         else: #震荡时
             print("24小时震荡趋势")
-            dynamicConfig.falling_ratio = fc.ratio_no_trendency# + self.future_step / 4 为啥仓位越大利率要变大？
-            dynamicConfig.rising_ratio = fc.ratio_no_trendency# + self.future_step / 4 为啥仓位越大利率要变大？
+            dynamicConfig.falling_ratio = fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.rising_ratio = fc.ratio_no_trendency + self.future_step / 4
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.rising_ratio:" + str(dynamicConfig.rising_ratio)
               + ", 设置下跌的比率：dynamicConfig.falling_ratio:" + str(dynamicConfig.falling_ratio))
@@ -553,6 +552,15 @@ class HengedGrid(object):
     def normal_exit(self):
         while not fc.stop_singal_from_client:
             # print(str(fc.stop_singal_from_client))
+            if fc.change_ratio_singal_from_client:
+                print('set new ratio from client, ratio_up_or_down:' + str(
+                    fc.ratio_up_or_down) + ', ratio_up_or_down:' + str(fc.ratio_no_trendency))
+                current_falling_ratio = dynamicConfig.falling_ratio
+                current_rising_ratio = dynamicConfig.rising_ratio
+                self.set_ratio()
+                current_share_previous_market_price = float(self.future_sell_price) / (1 + float(current_rising_ratio))
+                self.set_future_price(current_share_previous_market_price) #恢复回当时的市场价，然后根据传入的比率重新设置
+                fc.change_ratio_singal_from_client = False
             time.sleep(1)
         # self.save_trade_info()
         msg = 'stop by myself!'

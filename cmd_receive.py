@@ -10,7 +10,8 @@ def index():
 class flaskConfig(object):
     def __init__(self):
         self.stop_singal_from_client=False
-        self.ratio_no_trendency=0.5
+        self.change_ratio_singal_from_client=False
+        self.ratio_no_trendency=0.25
         self.ratio_up_or_down=1
         self.every_time_trade_share = 120 #  测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.leverage = 20
@@ -31,6 +32,8 @@ def grid_change_params():
         fc.ratio_no_trendency = float(param1)
     if param2:
         fc.ratio_up_or_down = float(param2)
+    if param1 or param2:
+        fc.change_ratio_singal_from_client = True
     return 'hzp, /change/params, ratio_up_or_down:' + param1 + ', ratio_no_trendency:' + param2
 
 @app.route('/grid/change/trade_share', methods=['GET'])
