@@ -211,6 +211,13 @@ class HengedGrid(object):
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("目前【市场价】：" + str(self.cur_market_future_price))
+
+                # if len(dynamicConfig.record_spot_price) > 0 and (float(dynamicConfig.record_spot_price[0]) - float(self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0]) > 0.0675:
+                #     print('要清掉一份仓位，不然要容易爆仓')
+                #     self.http_client_spot.
+                #
+
+
                 print("下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price))
                 print("下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price))
 
