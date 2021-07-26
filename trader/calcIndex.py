@@ -203,7 +203,7 @@ class CalcIndex:
                     else:
                         sum_sgn = sum_sgn
         # 计算Z统计值
-        if n <= 10:
+        if n <= 5:
             Z_value = sum_sgn / (n * (n - 1) / 2)
         else:
             if sum_sgn > 0:

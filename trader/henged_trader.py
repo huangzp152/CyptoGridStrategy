@@ -211,6 +211,7 @@ class HengedGrid(object):
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids))
                 print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("目前【市场价】：" + str(self.cur_market_future_price))
@@ -365,22 +366,21 @@ class HengedGrid(object):
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_future_price), 2), time_inforce="")
             if spot_res and spot_res['orderId']:
                 Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份多单了！")
-                print('多单卖出获利了！获得：' + str(
+                msg = '多单卖出获利了！获得：' + str(
                     (float(self.cur_market_future_price) - float(self.get_last_spot_price())) * float(
                         self.quantity)) + " usdt， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(
-                    self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity))
-                Message.dingding_warn('多单卖出获利了！获得：' + str(
-                    (float(self.cur_market_future_price) - float(self.get_last_spot_price())) * float(
-                        self.quantity)) + " usdt， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(
-                    self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity))
+                    self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity)
+                print(msg)
+                Message.dingding_warn(msg)
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     self.get_last_spot_price())) * float(self.quantity)
+                dynamicConfig.total_earn_grids += 1
                 self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
+                self.set_spot_next_sell_price(float(self.cur_market_future_price))
                 self.set_spot_share(self.spot_step - 1)
                 self.set_spot_ratio()
                 self.set_spot_next_buy_price(float(self.cur_market_future_price))
-                self.set_spot_next_sell_price(float(self.cur_market_future_price))
 
                 # self.set_spot_price(float(self.cur_market_future_price))  # 卖掉之后改为上次的价格
                 # last_price = self.get_last_spot_price() #获取上次的价格
@@ -413,9 +413,9 @@ class HengedGrid(object):
             self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
             self.add_record_future_price(self.cur_market_future_price)  # 以市场价买入才划算
+            self.set_future_next_buy_price(float(self.cur_market_future_price))
             self.set_future_step(self.future_step + 1)
             self.set_future_ratio()
-            self.set_future_next_buy_price(float(self.cur_market_future_price))
             self.set_future_next_sell_price(float(self.cur_market_future_price))
             # self.set_spot_price(float(self.cur_market_future_price))#开空单成功后，多单的买入卖出价格要上调，不然价格回落时，多单难成交
             # self.set_future_price(float(self.cur_market_future_price))
@@ -445,13 +445,13 @@ class HengedGrid(object):
                     (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(
                         self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
                     self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
-                dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(
-                    self.cur_market_future_price)) * float(self.quantity)
+                dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
+                dynamicConfig.total_earn_grids += 1
                 self.remove_last_future_price()
+                self.set_future_next_buy_price(float(self.cur_market_future_price))
                 self.set_future_step(self.future_step - 1)
                 self.set_future_ratio()
                 self.set_future_next_sell_price(float(self.cur_market_future_price))
-                self.set_future_next_buy_price(float(self.cur_market_future_price))
                 # 获取上一个价格
                 # last_price = self.get_last_future_price()
                 # self.set_future_price(float(self.cur_market_future_price))
