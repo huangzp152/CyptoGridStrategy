@@ -153,7 +153,7 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        data = self.http_client.get_kline(symbol, interval, limit=8)
+        data = self.http_client.get_kline(symbol, interval, limit=6)
 
         # test
         # data = self.test_data[j - 6:j]
@@ -162,7 +162,7 @@ class CalcIndex:
         for i in range(len(data)):
             if i==0:
                 last_ma5+=float(data[i][4])
-            elif i==7:
+            elif i==5:
                 next_ma5+=float(data[i][4])
             else:
                 last_ma5+=float(data[i][4])

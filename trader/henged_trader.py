@@ -123,7 +123,7 @@ class HengedGrid(object):
             print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
 
         # test check value
-        # print('check account exchangeinfo: ' + str(self.http_client_spot.get_exchange_info()))  # 保留账户模拟数据
+        # print('check account exchangeinfo: ' + str(self.http_client_spot.exchangeInfo(config.symbol)))  # 保留账户模拟数据
         # print('check account assets spot: ' + str(self.http_client_spot.get_future_position_info(config.symbol)))  # 保留账户模拟数据
         print('check account assets future: ' + str(self.http_client_future.get_future_asset(config.symbol)))
         print('check account: ' + str(self.http_client_spot.get_account_info(config.symbol)))# 查询现货指定货币的仓位
@@ -355,8 +355,8 @@ class HengedGrid(object):
                 self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
                 self.set_spot_share(self.spot_step - 1)
-                self.set_ratio()
                 self.set_spot_buy_price(float(self.cur_market_future_price))
+                self.set_ratio()
                 self.set_spot_sell_price(float(self.cur_market_future_price))
                 # self.set_spot_price(float(self.cur_market_future_price))  # 卖掉之后改为上次的价格
                 # last_price = self.get_last_spot_price() #获取上次的价格
@@ -425,8 +425,8 @@ class HengedGrid(object):
                     self.cur_market_future_price)) * float(self.quantity)
                 self.remove_last_future_price()
                 self.set_future_step(self.future_step - 1)
-                self.set_ratio()
                 self.set_future_sell_price(float(self.cur_market_future_price))
+                self.set_ratio()
                 self.set_future_buy_price(float(self.cur_market_future_price))
                 # 获取上一个价格
                 # last_price = self.get_last_future_price()
