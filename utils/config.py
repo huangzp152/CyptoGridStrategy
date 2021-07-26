@@ -85,8 +85,10 @@ config = Config()
 class DynamicConfig(object):
 
     def __init__(self):
-        self.rising_ratio = 1
-        self.falling_ratio = 1
+        self.spot_rising_ratio = 1
+        self.spot_falling_ratio = 1
+        self.future_rising_ratio = 1
+        self.future_falling_ratio = 1
         self.spot_buy_price = 38000
         self.spot_sell_price = 38000
         self.spot_step = 0 #步数/仓位数
