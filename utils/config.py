@@ -85,6 +85,7 @@ class DynamicConfig(object):
         self.total_earn = 0
         self.total_invest = 0
         self.total_earn_grids = 0
+        self.total_steps = 0
 
     def loads(self, config_file=None):
         """ Load config file.

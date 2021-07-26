@@ -144,16 +144,16 @@ class HengedGrid(object):
         # print("orders:" + str(self.http_client_spot.get))
 
         # 初始买入卖出值要自定义不灵活，不如根据当前市场价开来
-        # print("设置初始的盈利点数")
-        # self.set_spot_ratio()
-        # self.set_future_ratio()
-        # print("设置初始的多单 空单买入卖出价格，仓位")
-        # self.spot_step = dynamicConfig.spot_step
-        # self.set_spot_buy_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
-        # self.set_spot_sell_price(float(self.cur_market_future_price))
-        # self.future_step = dynamicConfig.future_step
-        # self.set_future_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
-        # self.set_future_buy_price(float(self.cur_market_future_price))
+        print("设置初始的盈利点数")
+        self.set_spot_ratio()
+        self.set_future_ratio()
+        print("设置初始的多单 空单买入卖出价格，仓位")
+        self.spot_step = dynamicConfig.spot_step
+        self.set_spot_next_buy_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
+        self.set_spot_next_sell_price(float(self.cur_market_future_price))
+        self.future_step = dynamicConfig.future_step
+        self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
+        self.set_future_next_buy_price(float(self.cur_market_future_price))
 
         ascending = True
         descending = False
@@ -212,7 +212,7 @@ class HengedGrid(object):
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('目前网格套利数：' + str(dynamicConfig.total_earn_grids))
-                print('仓位数, 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
+                print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("目前【市场价】：" + str(self.cur_market_future_price))
 
@@ -285,9 +285,15 @@ class HengedGrid(object):
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
-                # else:
+                else:
                     # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
                     #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
+                    self.set_spot_ratio()
+                    self.set_future_ratio()
+                    self.set_spot_next_buy_price(float(self.cur_market_future_price))
+                    self.set_spot_next_sell_price(float(self.cur_market_future_price))
+                    self.set_future_next_buy_price(float(self.cur_market_future_price))
+                    self.set_future_next_sell_price(float(self.cur_market_future_price))
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))
 
@@ -346,9 +352,10 @@ class HengedGrid(object):
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
             self.add_record_spot_price(self.cur_market_future_price)
             self.set_spot_share(self.spot_step + 1)
-            self.set_spot_ratio()
-            self.set_spot_next_sell_price(float(self.cur_market_future_price))
-            self.set_spot_next_buy_price(float(self.cur_market_future_price))
+            dynamicConfig.total_steps += 1
+            # self.set_spot_ratio()
+            # self.set_spot_next_sell_price(float(self.cur_market_future_price))
+            # self.set_spot_next_buy_price(float(self.cur_market_future_price))
             # self.set_spot_price(float(self.cur_market_future_price))  # 打折设置下次的买入卖出价格
             # self.set_future_price(float(self.cur_market_future_price)) # 开多单成功后，空单的买入卖出价格要下调，不然价格上涨时，空单难成交
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, self.cur_market_future_price, "", "", ""])
@@ -377,10 +384,12 @@ class HengedGrid(object):
                 dynamicConfig.total_earn_grids += 1
                 self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
-                self.set_spot_next_sell_price(float(self.cur_market_future_price))
                 self.set_spot_share(self.spot_step - 1)
-                self.set_spot_ratio()
-                self.set_spot_next_buy_price(float(self.cur_market_future_price))
+                dynamicConfig.total_steps -= 1
+                # self.set_spot_ratio()
+                # self.set_spot_next_buy_price(float(self.cur_market_future_price))
+                # self.set_spot_next_sell_price(float(self.cur_market_future_price))
+
 
                 # self.set_spot_price(float(self.cur_market_future_price))  # 卖掉之后改为上次的价格
                 # last_price = self.get_last_spot_price() #获取上次的价格
@@ -413,10 +422,11 @@ class HengedGrid(object):
             self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
             self.add_record_future_price(self.cur_market_future_price)  # 以市场价买入才划算
-            self.set_future_next_buy_price(float(self.cur_market_future_price))
             self.set_future_step(self.future_step + 1)
-            self.set_future_ratio()
-            self.set_future_next_sell_price(float(self.cur_market_future_price))
+            dynamicConfig.total_steps += 1
+            # self.set_future_ratio()
+            # self.set_future_next_buy_price(float(self.cur_market_future_price))
+            # self.set_future_next_sell_price(float(self.cur_market_future_price))
             # self.set_spot_price(float(self.cur_market_future_price))#开空单成功后，多单的买入卖出价格要上调，不然价格回落时，多单难成交
             # self.set_future_price(float(self.cur_market_future_price))
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "",
@@ -448,10 +458,11 @@ class HengedGrid(object):
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
                 self.remove_last_future_price()
-                self.set_future_next_buy_price(float(self.cur_market_future_price))
                 self.set_future_step(self.future_step - 1)
-                self.set_future_ratio()
-                self.set_future_next_sell_price(float(self.cur_market_future_price))
+                dynamicConfig.total_steps -= 1
+                # self.set_future_ratio()
+                # self.set_future_next_buy_price(float(self.cur_market_future_price))
+                # self.set_future_next_sell_price(float(self.cur_market_future_price))
                 # 获取上一个价格
                 # last_price = self.get_last_future_price()
                 # self.set_future_price(float(self.cur_market_future_price))
@@ -487,18 +498,18 @@ class HengedGrid(object):
     def set_spot_ratio(self):
         '''
         设置买入卖出的比率
-        仓位越多，格子要越大，防止不断地开仓或平仓
+        todo 仓位越多，格子要越大，防止不断地开仓或平仓, 实现起来有点复杂
         '''
         print("set_spot_ratio")
         ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
         if abs(ratio_24hr) > 8:
                 print("24小时上涨或下跌趋势")
-                dynamicConfig.spot_rising_ratio = fc.ratio_up_or_down + self.spot_step / 2
-                dynamicConfig.spot_falling_ratio = fc.ratio_up_or_down + self.spot_step / 2
+                dynamicConfig.spot_rising_ratio = fc.ratio_up_or_down + dynamicConfig.total_steps / 4
+                dynamicConfig.spot_falling_ratio = fc.ratio_up_or_down + dynamicConfig.total_steps / 4
         else: #震荡时
             print("24小时震荡趋势")
-            dynamicConfig.spot_falling_ratio = fc.ratio_no_trendency + self.spot_step / 4
-            dynamicConfig.spot_rising_ratio = fc.ratio_no_trendency + self.spot_step / 4
+            dynamicConfig.spot_falling_ratio = fc.ratio_no_trendency + dynamicConfig.total_steps / 8
+            dynamicConfig.spot_rising_ratio = fc.ratio_no_trendency + dynamicConfig.total_steps / 8
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.spot_rising_ratio:" + str(dynamicConfig.spot_rising_ratio)
               + ", 设置下跌的比率：dynamicConfig.spot_falling_ratio:" + str(dynamicConfig.spot_falling_ratio))
@@ -508,18 +519,18 @@ class HengedGrid(object):
     def set_future_ratio(self):
         '''
         设置买入卖出的比率
-        仓位越多，格子要越大，防止不断地开仓或平仓
+        todo 仓位越多，格子要越大，防止不断地开仓或平仓, 实现起来有点复杂
         '''
         print("set_future_ratio")
         ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
         if abs(ratio_24hr) > 8:
                 print("24小时上涨或下跌趋势")
-                dynamicConfig.future_rising_ratio = fc.ratio_up_or_down + self.future_step / 2
-                dynamicConfig.future_falling_ratio = fc.ratio_up_or_down + self.future_step / 2
+                dynamicConfig.future_rising_ratio = fc.ratio_up_or_down
+                dynamicConfig.future_falling_ratio = fc.ratio_up_or_down
         else: #震荡时
             print("24小时震荡趋势")
-            dynamicConfig.future_falling_ratio = fc.ratio_no_trendency + self.future_step / 4
-            dynamicConfig.future_rising_ratio = fc.ratio_no_trendency + self.future_step / 4
+            dynamicConfig.future_falling_ratio = fc.ratio_no_trendency
+            dynamicConfig.future_rising_ratio = fc.ratio_no_trendency
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.future_rising_ratio:" + str(dynamicConfig.future_rising_ratio)
               + ", 设置下跌的比率：dynamicConfig.future_falling_ratio:" + str(dynamicConfig.future_falling_ratio))
