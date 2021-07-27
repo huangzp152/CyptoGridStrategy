@@ -263,7 +263,7 @@ class HengedGrid(object):
                 else:
                     #开多单（买入持仓）
                     #多单市场价要低于你的买入价，才能成交
-                    if float(self.cur_market_future_price) <= float(self.spot_buy_price):
+                    if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position(spot_money):
                         spot_res = self.open_long(time_format)
 
                     #平掉多单（卖出获利）
@@ -274,7 +274,7 @@ class HengedGrid(object):
 
                     #开空单（卖出借仓）
                     #空单市场价要高于你的卖出价，才能成交
-                    if float(self.cur_market_future_price) >= float(self.future_sell_price):
+                    if float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position(spot_money):
                         future_res = self.open_short(time_format)
 
                     #平掉空单（买入获利）
@@ -338,6 +338,13 @@ class HengedGrid(object):
         Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
         stop_singal_from_client = False
         time.sleep(10)
+
+    def nearly_full_position(self, spot_money):
+        if float(dynamicConfig.total_steps * float(self.quantity) * dynamicConfig.every_time_trade_share) / float(spot_money) >= 0.8:
+            print('8成仓位了，不开单了')
+            time.sleep(10)
+            return True
+        return False
 
     def open_long(self, time_format):
         print("进入开多单流程")
