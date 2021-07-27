@@ -268,8 +268,8 @@ class HengedGrid(object):
 
                     #平掉多单（卖出获利）
                     #多单市场价要高于你的卖出价，才能成交
-                    #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱
-                    elif float(self.cur_market_future_price) >= float(self.spot_sell_price) and float(self.cur_market_future_price) >= float(self.get_last_spot_price()):
+                    #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                    elif float(self.cur_market_future_price) >= float(self.spot_sell_price):
                         spot_res = self.close_long(time_format)
 
                     #开空单（卖出借仓）
@@ -279,8 +279,8 @@ class HengedGrid(object):
 
                     #平掉空单（买入获利）
                     #空单市场价要低于你的买回价，才能成交
-                    #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱
-                    elif float(self.cur_market_future_price) <= float(self.future_buy_price) and float(self.cur_market_future_price) <= float(self.get_last_future_price()):
+                    #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                    elif float(self.cur_market_future_price) <= float(self.future_buy_price):
                         future_res = self.close_short(time_format)
 
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
@@ -540,7 +540,7 @@ class HengedGrid(object):
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
-        dynamicConfig.record_spot_price.sort(reverse=False)
+        # dynamicConfig.record_spot_price.sort(reverse=False)
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
 
     def get_last_spot_price(self):
@@ -559,7 +559,7 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
-        dynamicConfig.record_spot_price.sort()
+        # dynamicConfig.record_spot_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
 
     def get_last_future_price(self):
