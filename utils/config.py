@@ -7,7 +7,7 @@ class Config:
     def __init__(self):
 
         self.platform: str = "binance_spot"  # 交易的平台
-        self.symbol: str = "BTCUSDT"  # 交易对.
+        self.symbol: str = "BTCBUSD"  # 交易对.
         self.coin: str = "BTC" # 要进行仓位查询的币种
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
