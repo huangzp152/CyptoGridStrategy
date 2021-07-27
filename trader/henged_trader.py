@@ -210,8 +210,9 @@ class HengedGrid(object):
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
-                print('check account, spot: ' + str(self.getMoney()) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
-                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids))
+                spot_money = self.getMoney()
+                print('check account, spot: ' + str(spot_money) +', future:' + self.getAsset() + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + str(round(float(dynamicConfig.total_earn)/float(spot_money) * 100, 2)) + '%')
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("目前【市场价】：" + str(self.cur_market_future_price))
@@ -525,12 +526,12 @@ class HengedGrid(object):
         ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
         if abs(ratio_24hr) > 8:
                 print("24小时上涨或下跌趋势")
-                dynamicConfig.future_rising_ratio = fc.ratio_up_or_down
-                dynamicConfig.future_falling_ratio = fc.ratio_up_or_down
+                dynamicConfig.future_rising_ratio = fc.ratio_up_or_down + dynamicConfig.total_steps / 4
+                dynamicConfig.future_falling_ratio = fc.ratio_up_or_down + dynamicConfig.total_steps / 4
         else: #震荡时
             print("24小时震荡趋势")
-            dynamicConfig.future_falling_ratio = fc.ratio_no_trendency
-            dynamicConfig.future_rising_ratio = fc.ratio_no_trendency
+            dynamicConfig.future_falling_ratio = fc.ratio_no_trendency + dynamicConfig.total_steps / 8
+            dynamicConfig.future_rising_ratio = fc.ratio_no_trendency + dynamicConfig.total_steps / 8
         print("24小时涨跌率：ratio_24hr： " + str(ratio_24hr)
               + ", 设置上涨的比率：dynamicConfig.future_rising_ratio:" + str(dynamicConfig.future_rising_ratio)
               + ", 设置下跌的比率：dynamicConfig.future_falling_ratio:" + str(dynamicConfig.future_falling_ratio))
