@@ -293,3 +293,8 @@ class CalcIndex:
                     return float(item['entryPrice'])
 
         return False
+
+
+if __name__ == "__main__":
+    calcIndex = CalcIndex()
+    print('kline result:' + str(calcIndex.http_client.get_kline('BTCUSDT', "5m", limit=6)))

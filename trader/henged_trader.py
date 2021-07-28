@@ -253,7 +253,10 @@ class HengedGrid(object):
                 # future_res = None
 
                 # 判断一下趋势
-                isTrendComing = index.calcTrend_MK(config.symbol, "5m", descending, self.demical_length)
+                symbol_to_check_trend = config.symbol
+                if symbol_to_check_trend.endswith('BUSD'):
+                    symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
+                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 if max(float(self.cur_market_future_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_future_price), float(self.cur_market_future_price)) > config.max_border_price:
                     print("市场价超过网格区间上下限啦")
                     time.sleep(50)
