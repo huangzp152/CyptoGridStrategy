@@ -498,11 +498,11 @@ class HengedGrid(object):
             record_market_price_dir = '../data/record'
             if not os.path.exists(record_market_price_dir):
                 os.mkdir(record_market_price_dir)
-            with open(os.path.join(record_market_price_dir, 'record_market_price_%s.csv' % time_format.split()[0]),
+            with open(os.path.join(record_market_price_dir, 'record_market_price_%s.csv' % time_format.replace(' ', '-')),
                       'a+', encoding='utf-8-sig') as ddf:
                 writer_p = csv.writer(ddf, delimiter=',')
                 if os.path.getsize(os.path.join(record_market_price_dir,
-                                                'record_market_price_%s.csv' % time_format.split()[0])) == 0:
+                                                'record_market_price_%s.csv' % time_format.replace(' ', '-'))) == 0:
                     writer_p.writerow(['datetime', 'price', 'long_buy', 'long_sell', 'short_sell', 'short_buy'])
                 writer_p.writerow(trade_info)
         except Exception as ee:
