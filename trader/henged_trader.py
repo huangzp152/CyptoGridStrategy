@@ -223,8 +223,8 @@ class HengedGrid(object):
                     if spot_lost_ratio > 0.07:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
-                        self.close_long(time_format)
-                        Message.dingding_warn(msg + ',止损了:' + str(dynamicConfig.record_spot_price[0]))
+                        self.close_long(time_format, True)
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_spot_price[0]))
                         del dynamicConfig.record_spot_price[0]
                     else:
                         print('spot_lost_ratio:' + str(spot_lost_ratio))
@@ -235,8 +235,8 @@ class HengedGrid(object):
                     if future_lost_ratio > 0.07:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
-                        self.close_short(time_format)
-                        Message.dingding_warn(msg + ',止损了:' + str(dynamicConfig.record_future_price[0]))
+                        self.close_short(time_format, True)
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_future_price[0]))
                         del dynamicConfig.record_future_price[0]
                     else:
                         print('future_lost_ratio:' + str(future_lost_ratio))
@@ -375,7 +375,7 @@ class HengedGrid(object):
             print("貌似没有开多单成功，为啥：")
             print("spot_res：" + str(spot_res))
 
-    def close_long(self, time_format):
+    def close_long(self, time_format, cut_position = False):
         print("进入平多单流程")
         if self.spot_step > 0:
             # test
@@ -393,7 +393,8 @@ class HengedGrid(object):
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     self.get_last_spot_price())) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
-                self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
+                if not cut_position:
+                    self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
                 self.set_spot_share(self.spot_step - 1)
                 dynamicConfig.total_steps -= 1
@@ -448,7 +449,7 @@ class HengedGrid(object):
             print("future_res：" + str(future_res))
             # break
 
-    def close_short(self, time_format):
+    def close_short(self, time_format, cut_position=False):
         print("进入平空单流程")
         if self.future_step > 0:
             # future_res
@@ -468,7 +469,8 @@ class HengedGrid(object):
                     self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
-                self.remove_last_future_price()
+                if not cut_position:
+                    self.remove_last_future_price()
                 self.set_future_step(self.future_step - 1)
                 dynamicConfig.total_steps -= 1
                 # self.set_future_ratio()
