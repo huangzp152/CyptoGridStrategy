@@ -2,6 +2,8 @@
     1. Binance Future http requests.
 
 """
+import re
+
 from utils import config
 
 """
@@ -89,7 +91,7 @@ class BinanceFutureHttp(object):
         self.key = api_key
         self.secret = secret
         self.host = host if host else "https://testnet.binancefuture.com" if config.platform == 'binance_future_testnet' else "https://fapi.binance.com"
-        self.recv_window = 5000
+        self.recv_window = 60000
         self.timeout = timeout
         self.order_count_lock = Lock()
         self.order_count = 1_000_000
@@ -147,6 +149,7 @@ class BinanceFutureHttp(object):
     def set_future_leverage(self, symbol, leverage):
         path = "/fapi/v1/leverage"
         params = {"timestamp": self._timestamp(),
+                  "recvWindow": self.recv_window,
                   "symbol": symbol,
                   "leverage": leverage}
         return self.request(RequestMethod.POST, path, params, verify=True)
@@ -281,7 +284,7 @@ class BinanceFutureHttp(object):
             return "x-cLbi5uMH" + str(self._timestamp()) + str(self.order_count)
 
     def place_order(self, symbol: str, order_side: OrderSide, position_side, order_type: OrderType, quantity, price,
-                    time_inforce="GTC", client_order_id=None, recvWindow=5000, stop_price=0):
+                    time_inforce="GTC", client_order_id=None, recvWindow=60000, stop_price=0):
 
         """
         下单..
@@ -407,6 +410,7 @@ class BinanceFutureHttp(object):
         """
         path = "/fapi/v2/account"
         params = {"timestamp": self._timestamp(),
+                  "recv_window": self.recv_window,
                   "symbol" : symbol}
         return self.request(RequestMethod.GET, path, params, verify=True)
 

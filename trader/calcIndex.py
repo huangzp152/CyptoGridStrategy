@@ -3,7 +3,7 @@ import os,json,time
 
 import numpy as np
 
-from gateway import BinanceSpotHttp
+from gateway import BinanceSpotHttp, BinanceFutureHttp
 from utils import config
 from utils.dingding import Message
 
@@ -297,4 +297,6 @@ class CalcIndex:
 
 if __name__ == "__main__":
     calcIndex = CalcIndex()
-    print('kline result:' + str(calcIndex.http_client.get_kline('BTCUSDT', "5m", limit=6)))
+    http_client_future = BinanceFutureHttp(api_key=config.api_key_future, secret=config.api_secret_future, proxy_host=config.proxy_host,
+                                                proxy_port=config.proxy_port)
+    print('check result:' + str(http_client_future.server_time()) + ', ' + str(time.time() * 1000))
