@@ -108,7 +108,7 @@ class HengedGrid(object):
         # 设定精度，无所谓现货或者合约
         self.demical_length = len(str(self.cur_market_future_price).split(".")[1])
         # 设定买卖数量
-        quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
+        quantity_basic = (100 if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
         self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
 
         # 设定仓位
@@ -247,7 +247,7 @@ class HengedGrid(object):
                 print("下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price))
 
                 #设定仓位
-                quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
+                quantity_basic = (100 if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
                 self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
                 # spot_res = None
                 # future_res = None
@@ -255,7 +255,7 @@ class HengedGrid(object):
                 # 判断一下趋势
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
-                    symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
+                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
                 isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 if max(float(self.cur_market_future_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_future_price), float(self.cur_market_future_price)) > config.max_border_price:
                     print("市场价超过网格区间上下限啦")
@@ -343,8 +343,8 @@ class HengedGrid(object):
         time.sleep(10)
 
     def nearly_full_position(self, spot_money):
-        if float(dynamicConfig.total_steps * float(self.quantity) * dynamicConfig.every_time_trade_share) / float(spot_money) >= 0.8:
-            print('8成仓位了，不开单了')
+        if float(dynamicConfig.total_steps * 100) / float(spot_money) >= 0.85:
+            print('8成5仓位了，只平仓不开仓了')
             time.sleep(10)
             return True
         return False
