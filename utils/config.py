@@ -69,8 +69,8 @@ class DynamicConfig(object):
         self.spot_falling_ratio = 1
         self.future_rising_ratio = 1
         self.future_falling_ratio = 1
-        self.spot_buy_price = 38000
-        self.spot_sell_price = 38000
+        self.spot_buy_price = 9999999
+        self.spot_sell_price = 1
         self.spot_step = 0 #步数/仓位数
         self.record_spot_price = []
         self.every_time_trade_share = 200 #33是测试的 不然过不了精度 10.1 #每次交易的份额
