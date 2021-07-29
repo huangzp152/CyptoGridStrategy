@@ -393,8 +393,6 @@ class HengedGrid(object):
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     self.get_last_spot_price())) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
-                if not cut_position:
-                    self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
                 self.set_spot_share(self.spot_step - 1)
                 dynamicConfig.total_steps -= 1
@@ -406,6 +404,8 @@ class HengedGrid(object):
                     self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit
                 print(msg)
                 Message.dingding_warn(msg)
+                if not cut_position:
+                    self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                 # self.set_spot_ratio()
                 # self.set_spot_next_buy_price(float(self.cur_market_future_price))
                 # self.set_spot_next_sell_price(float(self.cur_market_future_price))
