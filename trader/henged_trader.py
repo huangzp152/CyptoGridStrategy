@@ -211,7 +211,8 @@ class HengedGrid(object):
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 # spot_money = self.getMoney()
-                print('check account: ' + str(self.getAsset()) + ', 目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                # print('check account: ' + str(self.getAsset()))
+                print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + str(round(float(dynamicConfig.total_earn)/ float(self.getAsset()[0]) * 100, 2)) + '%')
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
