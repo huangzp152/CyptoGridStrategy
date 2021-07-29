@@ -11,9 +11,9 @@ class flaskConfig(object):
     def __init__(self):
         self.stop_singal_from_client=False
         self.change_ratio_singal_from_client=False
-        self.ratio_no_trendency=0.25#随着仓位增加网格利率以0.25递增
-        self.ratio_up_or_down=0.5 #随着仓位增加网格利率以0.5递增
-        self.every_time_trade_share = 100 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
+        self.ratio_no_trendency=0.3#随着仓位增加网格利率以0.3递增
+        self.ratio_up_or_down=0.6 #随着仓位增加网格利率以0.5递增
+        self.every_time_trade_share = 200 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.leverage = 20
 
 fc = flaskConfig()
