@@ -210,7 +210,12 @@ class HengedGrid(object):
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
-                spot_money = float(self.getAsset()[0])
+                try:
+                    spot_money = float(self.getAsset()[0])
+                except Exception as e:
+                    print('exception:' + str(e))
+                    time.sleep(5)
+                    continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(spot_money) * 100, 2)) + '%'
                 print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
