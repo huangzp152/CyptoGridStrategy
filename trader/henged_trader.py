@@ -612,14 +612,14 @@ class HengedGrid(object):
     def set_spot_next_buy_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.spot_buy_price = round(min(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 1 else 999999, deal_price * (1 - dynamicConfig.spot_falling_ratio / 100)), demical_point)  # 多单跌的时候补仓 # 保留2位小数
+        dynamicConfig.spot_buy_price = round(min(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 999999, deal_price * (1 - dynamicConfig.spot_falling_ratio / 100)), demical_point)  # 多单跌的时候补仓 # 保留2位小数
         self.spot_buy_price = dynamicConfig.spot_buy_price
         print("设置接下来多单买入的价格, " + str(self.spot_buy_price))
 
     def set_spot_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.spot_sell_price = round(max(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 1 else 0, deal_price * (1 + dynamicConfig.spot_rising_ratio / 100)), demical_point)
+        dynamicConfig.spot_sell_price = round(max(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 0, deal_price * (1 + dynamicConfig.spot_rising_ratio / 100)), demical_point)
         self.spot_sell_price = dynamicConfig.spot_sell_price
         print("设置接下来多单卖出的价格:" + str(self.spot_sell_price))
 
