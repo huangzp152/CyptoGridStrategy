@@ -210,10 +210,11 @@ class HengedGrid(object):
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
-                # spot_money = self.getMoney()
+                spot_money = float(self.getAsset()[0])
                 # print('check account: ' + str(self.getAsset()))
+                self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(spot_money) * 100, 2)) + '%'
                 print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
-                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + str(round(float(dynamicConfig.total_earn)/ float(self.getAsset()[0]) * 100, 2)) + '%')
+                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
                 print("目前【市场价】：" + str(self.cur_market_future_price))
@@ -387,8 +388,8 @@ class HengedGrid(object):
                 Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份多单了！")
                 msg = '多单卖出获利了！获得：' + str(
                     (float(self.cur_market_future_price) - float(self.get_last_spot_price())) * float(
-                        self.quantity)) + " usdt， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(
-                    self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity)
+                        self.quantity)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(
+                    self.get_last_spot_price()) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + '%'
                 print(msg)
                 Message.dingding_warn(msg)
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
@@ -463,11 +464,11 @@ class HengedGrid(object):
                 print('空单买回获利了！获得：' + str(
                     (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(
                         self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
-                    self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
+                    self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + '%')
                 Message.dingding_warn('空单买回获利了！获得：' + str(
                     (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(
                         self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
-                    self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity))
+                    self.get_last_future_price()) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + '%')
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
                 if not cut_position:
