@@ -17,7 +17,7 @@ class Config:
         self.api_key_future_testnet: str = None
         self.api_secret_future_testnet: str = None
         self.pass_phrase = None
-        self.quantity:float = 0.0004
+        self.quantity:float = 0.005
         self.min_price =  0.0001
         self.min_qty = 0.01
         self.max_orders = 1
@@ -73,7 +73,7 @@ class DynamicConfig(object):
         self.spot_sell_price = 38000
         self.spot_step = 0 #步数/仓位数
         self.record_spot_price = []
-        self.every_time_trade_share = 33 #33是测试的 不然过不了精度 10.1 #每次交易的份额
+        self.every_time_trade_share = 200 #33是测试的 不然过不了精度 10.1 #每次交易的份额
 
         self.future_buy_price = 38000
         self.future_sell_price = 38000

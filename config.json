@@ -9,7 +9,7 @@
   "api_key_future_testnet": "c005ffcd11fafc80eb340e7956503fd52f85c4e41f4592c28ea32e75d5e05474",
   "api_secret_future_testnet": "21fa31af58bfc8e89e9ff2c79c2ad6a7298d197d3b1c21051e6796f809fc08bc",
   "gap_percent": 0.01,
-  "quantity": 0.000304,
+  "quantity": 0.005,
   "min_price": 0.00000001,
   "min_qty": 0.000001,
   "max_orders": 1,
