@@ -228,7 +228,7 @@ class BinanceFutureHttp(object):
 
         query_dict = {
             "symbol": symbol,
-            "interval": interval.value,
+            "interval": interval,
             "limit": limit
         }
 
