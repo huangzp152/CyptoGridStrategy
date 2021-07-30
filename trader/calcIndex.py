@@ -13,7 +13,7 @@ class CalcIndex:
 
     def __init__(self, test_data=None):
         self.coinType = config.symbol  # 交易币种
-        self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret,
+        self.http_client = BinanceFutureHttp(api_key=config.api_key, secret=config.api_secret,
                                            proxy_host=config.proxy_host, proxy_port=config.proxy_port)
         self.test_data = test_data
 
@@ -159,16 +159,16 @@ class CalcIndex:
         # data = self.test_data[j - 6:j]
 
         tmp_list_ma5 = []
-        for i in range(len(data)):
-            if i==0:
-                last_ma5+=float(data[i][4])
-            elif i==5:
-                next_ma5+=float(data[i][4])
-            else:
-                last_ma5+=float(data[i][4])
-                next_ma5+=float(data[i][4])
-            tmp_list_ma5.append(float(data[i][4]))
-
+        if data and len(data) > 0:
+            for i in range(len(data)):
+                if i==0:
+                    last_ma5+=float(data[i][4])
+                elif i==5:
+                    next_ma5+=float(data[i][4])
+                else:
+                    last_ma5+=float(data[i][4])
+                    next_ma5+=float(data[i][4])
+                tmp_list_ma5.append(float(data[i][4]))
         return tmp_list_ma5
 
 
@@ -254,7 +254,9 @@ class CalcIndex:
         :return: 趋势来了 正在拉伸 不买不卖，锁死
         '''
         tmp_list_ma5 = self.calcSlopeMA5_list(symbol, interval, point, i)
-        result = str(self.Mann_Kenddall_Trend_desc(tmp_list_ma5))
+        result = ''
+        if len(tmp_list_ma5) > 0:
+            result = str(self.Mann_Kenddall_Trend_desc(tmp_list_ma5))
         print('最近几根均线为:' + str(tmp_list_ma5))
         print("Mann_Kenddall_Trend_desc, 趋势为:" + str(result))
         if ascending:
