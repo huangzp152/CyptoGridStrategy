@@ -189,7 +189,6 @@ class HengedGrid(object):
 
             try:
                 # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
-                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
                 diff_time = time.time() - begin_time
@@ -222,6 +221,15 @@ class HengedGrid(object):
                 print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
+
+                # 判断一下趋势
+                symbol_to_check_trend = config.symbol
+                if symbol_to_check_trend.endswith('BUSD'):
+                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
+                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+
+                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
+                    'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
                 print("目前【市场价】：" + str(self.cur_market_future_price))
 
                 #清仓操作
@@ -259,15 +267,11 @@ class HengedGrid(object):
                 # spot_res = None
                 # future_res = None
 
-                # 判断一下趋势
-                symbol_to_check_trend = config.symbol
-                if symbol_to_check_trend.endswith('BUSD'):
-                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
-                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
-                if max(float(self.cur_market_future_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_future_price), float(self.cur_market_future_price)) > config.max_border_price:
-                    print("市场价超过网格区间上下限啦")
-                    time.sleep(50)
-                elif isTrendComing:
+                # if max(float(self.cur_market_future_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_future_price), float(self.cur_market_future_price)) > config.max_border_price:
+                #     print("市场价超过网格区间上下限啦")
+                #     time.sleep(50)
+                # el
+                if isTrendComing:
                     print('趋势来了，多仓空仓拿好，不买不卖')
                     time.sleep(10)
                 else:
