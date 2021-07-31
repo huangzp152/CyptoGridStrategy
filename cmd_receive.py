@@ -28,45 +28,60 @@ def grid_stop():
 
 @app.route('/grid/change/params', methods=['GET'])
 def grid_change_params():
-
-    # data = request.get_json()
-    param1 = str(request.args.get('ratio_up_or_down'))
-    param2 = str(request.args.get('ratio_no_trendency'))
-    if param1:
-        fc.ratio_no_trendency = float(param1)
-    if param2:
-        fc.ratio_up_or_down = float(param2)
-    if param1 or param2:
-        fc.change_ratio_singal_from_client = True
+    param1 = ''
+    param2 = ''
+    try:
+        # data = request.get_json()
+        param1 = str(request.args.get('ratio_up_or_down'))
+        param2 = str(request.args.get('ratio_no_trendency'))
+        if param1:
+            fc.ratio_no_trendency = float(param1)
+        if param2:
+            fc.ratio_up_or_down = float(param2)
+        if param1 or param2:
+            fc.change_ratio_singal_from_client = True
+    except RuntimeError as e:
+        print(str(e))
     return 'hzp, /change/params, ratio_up_or_down:' + param1 + ', ratio_no_trendency:' + param2
 
 @app.route('/grid/change/trade_share', methods=['GET'])
 def grid_change_trade_share():
 
     # data = request.get_json()
-    every_time_trade_share = str(request.args.get('every_time_trade_share'))
-    if every_time_trade_share:
-        fc.every_time_trade_share = float(every_time_trade_share)
+    every_time_trade_share = ''
+    try:
+        every_time_trade_share = str(request.args.get('every_time_trade_share'))
+        if every_time_trade_share:
+            fc.every_time_trade_share = float(every_time_trade_share)
+    except RuntimeError as e:
+        print(str(e))
     return 'hzp, /change/trade_share, every_time_trade_share:' + every_time_trade_share
 
 @app.route('/grid/change/quantity', methods=['GET'])
 def grid_change_quantity():
 
     # data = request.get_json()
-    quantity = str(request.args.get('quantity'))
-    if quantity:
-        fc.quantity = float(quantity)
-        fc.change_quantity_singal_from_client=True
+    quantity = ''
+    try:
+        quantity = str(request.args.get('quantity'))
+        if quantity:
+            fc.quantity = float(quantity)
+            fc.change_quantity_singal_from_client=True
+    except RuntimeError as e:
+        print(str(e))
     return 'hzp, /change/trade_share, quantity:' + quantity
 
 @app.route('/grid/change/position_side', methods=['GET'])
 def grid_change_position_side():
-
     # data = request.get_json()
-    position_side = str(request.args.get('position_side'))
-    if position_side:
-        fc.position_side = float(position_side)
-        fc.change_position_side_singal_from_client=True
+    position_side = ''
+    try:
+        position_side = str(request.args.get('position_side'))
+        if position_side:
+            fc.position_side = position_side
+            fc.change_position_side_singal_from_client=True
+    except RuntimeError as e:
+        print(str(e))
     return 'hzp, /change/position_side, position_side:' + position_side
 
 @app.route('/grid/change/leverage', methods=['GET'])
