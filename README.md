@@ -1,4 +1,4 @@
-#  51bitquant网格交易策略
+#  趋势开单的多空网格交易策略
 
 ## 使用 how to use
 1. 修改配置文件, config your config file.
@@ -11,9 +11,6 @@
   "api_secret": "replace your api secret here",
   "gap_percent": 0.001,
   "quantity": 0.001,
-  "min_price": 0.01,
-  "min_qty": 0.001,
-  "max_orders": 1,
   "proxy_host": "127.0.0.1",
   "proxy_port": 1087
 }
@@ -44,36 +41,7 @@
 网格交易的原理视频讲解链接:
 [https://www.bilibili.com/video/BV1Jg4y1v7vr/](https://www.bilibili.com/video/BV1Jg4y1v7vr/)
 
-## 交易所注册推荐码
 
-- OKEX 交易所注册推荐码, 手续费返佣20%
-   - [https://www.okex.me/join/1847111798](https://www.okex.me/join/1847111798)
-
-- 币安合约推荐码:返佣10%
-   - [https://www.binancezh.com/cn/futures/ref/51bitquant](https://www.binancezh.com/cn/futures/ref/51bitquant)
-
-## 网格交易策略使用行情
-- 震荡行情
-- 适合币圈的高波动率的品种
-- 适合现货， 如果交易合约，需要注意防止极端行情爆仓。
-
-## 服务器购买
-推荐ucloud的服务器
-- 价格便宜
-- 网络速度和性能还不错
-- 推荐链接如下：可以通过下面链接够买服务器，可以享受打折优惠:
-
-[https://www.ucloud.cn/site/global.html?invitation_code=C1x2EA81CD79B8C#dongjing](https://www.ucloud.cn/site/global.html?invitation_code=C1x2EA81CD79B8C#dongjing)
-
-视频讲解如下:
-[https://www.bilibili.com/video/BV1eK4y147HT/](https://www.bilibili.com/video/BV1eK4y147HT/)
-
-
-## 部署服务器
-参考我的博客
-- [https://www.jianshu.com/p/50fc54ca5ead](https://www.jianshu.com/p/50fc54ca5ead)
-- [https://www.jianshu.com/p/61cb2a24a658](https://www.jianshu.com/p/61cb2a24a658)
-- [https://www.jianshu.com/p/8c1afcbbe722](https://www.jianshu.com/p/8c1afcbbe722)
 
 
 ## linux 常用命令
@@ -117,17 +85,6 @@
 杀死进程, 关闭程序
 > kill <进程ID> 
 
-**linux服务器指令和网格策略实盘部署过程如下**
-[https://www.bilibili.com/video/BV1mK411n7JW/](https://www.bilibili.com/video/BV1mK411n7JW/)
-
-## 更多课程内容
-请参考网易云课堂的视频
-- [网易云课堂链接](https://www.jianshu.com/go-wild?ac=2&url=https%3A%2F%2Fstudy.163.com%2Fcourse%2FcourseMain.htm%3FcourseId%3D1209509824%26share%3D2%26shareId%3D480000001919830)
-- 你也可以在网易云课堂直接搜索**51bitquant**可以找到课程视频。
-## 联系我
-可以添加我的微信，如果你有什么量化问题、python学习、课程咨询等方面的问题，都可以咨询我。
-
-![51bitquant个人微信](https://upload-images.jianshu.io/upload_images/814550-f83c8302f2c4e344.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
