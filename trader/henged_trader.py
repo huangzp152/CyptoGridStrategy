@@ -744,9 +744,9 @@ class HengedGrid(object):
         print('停止时，自动挂单吧')
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for spot_price in dynamicConfig.record_spot_price:
-            self.close_long(time_format, False, str(round(float(spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), 2)))
+            self.close_long(time_format, False, str(int(float(spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100))))
         for future_price in dynamicConfig.record_spot_price:
-            self.close_short(time_format, False, str(round(float(future_price) * (1 + dynamicConfig.future_falling_ratio / 100), 2)))
+            self.close_short(time_format, False, str(int(float(future_price) * (1 - dynamicConfig.future_falling_ratio / 100))))
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
