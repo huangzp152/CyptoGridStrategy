@@ -111,7 +111,7 @@ class HengedGrid(object):
         # 设定买卖数量
         quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
         self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
-        self.sleep(3) #给重设数据的时间
+        time.sleep(3) #给重设数据的时间
 
         # 设定仓位
         # dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
