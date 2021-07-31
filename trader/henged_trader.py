@@ -310,13 +310,7 @@ class HengedGrid(object):
                 else:
                     # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
                     #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
-                    self.set_spot_ratio()
-                    self.set_future_ratio()
-                    self.set_spot_next_buy_price(float(self.cur_market_future_price))
-                    self.set_spot_next_sell_price(float(self.cur_market_future_price))
-                    self.set_future_next_buy_price(float(self.cur_market_future_price))
-                    self.set_future_next_sell_price(float(self.cur_market_future_price))
-                    self.adjust_prices()
+                    self.set_ratio_and_price()
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))
 
@@ -360,6 +354,15 @@ class HengedGrid(object):
         Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
         stop_singal_from_client = False
         time.sleep(10)
+
+    def set_ratio_and_price(self):
+        self.set_spot_ratio()
+        self.set_future_ratio()
+        self.set_spot_next_buy_price(float(self.cur_market_future_price))
+        self.set_spot_next_sell_price(float(self.cur_market_future_price))
+        self.set_future_next_buy_price(float(self.cur_market_future_price))
+        self.set_future_next_sell_price(float(self.cur_market_future_price))
+        self.adjust_prices()
 
     def nearly_full_position(self):
         if float(dynamicConfig.total_steps * 100) / float(self.spot_money) >= 0.9:
@@ -699,9 +702,9 @@ class HengedGrid(object):
             self.grid_side = fc.position_side
             # print(str(fc.stop_singal_from_client))
             # if fc.change_ratio_singal_from_client:
-            #     print('set new ratio from client, ratio_up_or_down:' + str(
-            #         fc.ratio_up_or_down) + ', ratio_up_or_down:' + str(fc.ratio_no_trendency))
-            #     current_falling_ratio = dynamicConfig.falling_ratio
+            print('set new ratio from client, ratio_up_or_down:' + str(fc.ratio_up_or_down) + ', ratio_up_or_down:' + str(fc.ratio_no_trendency))
+            self.set_ratio_and_price()
+            # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
             #     current_share_previous_market_price = float(self.future_sell_price) / (1 + float(current_rising_ratio))
