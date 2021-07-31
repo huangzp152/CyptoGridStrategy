@@ -19,8 +19,14 @@ class flaskConfig(object):
         self.quantity = 0.001
         self.leverage = 20
         self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
-
+        self.start_grid = False
+        self.terminate = False
 fc = flaskConfig()
+@app.route('/grid/terminate')
+def grid_terminate():
+    fc.terminate=True
+    return 'hzp, /grid/terminate flask!'
+
 @app.route('/grid/stop')
 def grid_stop():
     fc.stop_singal_from_client=True
@@ -93,8 +99,14 @@ def grid_change_leverage():
         fc.leverage = int(leverage)
     return 'hzp, /change/leverage, leverage:' + leverage
 
-@app.route('/grid/start')
+@app.route('/grid/start', methods=['GET'])
 def grid_start():
+    try:
+        fc.start_grid = True
+    except RuntimeError as e:
+        print(str(e))
+    return 'hzp, /change/start, start_grid'
+
 
     #todo
     # error_raw = ''

@@ -737,7 +737,7 @@ class HengedGrid(object):
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
-        os._exit(0)
+        # os._exit(0)
 
     def place_left_orders(self):
         '''停止时，自动挂单吧'''
@@ -828,7 +828,15 @@ if __name__ == "__main__":
         receiver_thread.start()
         exit_thread = threading.Thread(target=hengedGrid.normal_exit)
         exit_thread.start()
-        hengedGrid.run()
+        run_thread = threading.Thread(target=hengedGrid.run)
+        while not fc.terminate:
+            time.sleep(1)
+            if run_thread:
+                if fc.start_grid:
+                    run_thread.start()
+                    fc.start_grid = False
+                if fc.stop_singal_from_client:
+                    run_thread.join()
         receiver_thread.join()
         exit_thread.join()
 
