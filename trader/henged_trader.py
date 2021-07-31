@@ -410,7 +410,7 @@ class HengedGrid(object):
             # dynamicConfig.order_list.append(spot_res)
             order_type = OrderType.MARKET
             time_inforce = ''
-            if price:
+            if price != 'none':
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", order_type, self.quantity, price=price, time_inforce=time_inforce)
@@ -503,7 +503,7 @@ class HengedGrid(object):
             # dynamicConfig.order_list.append(future_res)
             order_type = OrderType.MARKET
             time_inforce = ''
-            if price:
+            if price != 'none':
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
             future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, self.quantity, price, time_inforce)
