@@ -317,7 +317,7 @@ class BinanceFutureHttp(object):
             "quantity": quantity,
             "price": price,
             "recvWindow": recvWindow,
-            # "timeInForce": time_inforce,
+            "timeInForce": time_inforce,
             "timestamp": self._timestamp(),
             "newClientOrderId": client_order_id
         }

@@ -155,6 +155,7 @@ class HengedGrid(object):
         self.future_step = dynamicConfig.future_step
         self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
         self.set_future_next_buy_price(float(self.cur_market_future_price))
+        self.spot_money = float(self.getAsset()[0])
 
         ascending = True
         descending = False
@@ -400,14 +401,22 @@ class HengedGrid(object):
             print("貌似没有开多单成功，为啥：")
             print("spot_res：" + str(spot_res))
 
-    def close_long(self, time_format, cut_position = False):
+    def close_long(self, time_format, cut_position = False, price='none'):
         print("进入平多单流程")
         spot_res = {}
         if self.spot_step > 0:
             # test
             # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
             # dynamicConfig.order_list.append(spot_res)
-            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_future_price), 2), time_inforce="")
+            order_type = OrderType.MARKET
+            time_inforce = ''
+            if price:
+                order_type = OrderType.LIMIT
+                time_inforce = "GTC"
+            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", order_type, self.quantity, price=price, time_inforce=time_inforce)
+            if order_type == OrderType.LIMIT:
+                print('price:' + price + '挂平仓多单了')
+                return {}
             if spot_res and spot_res['orderId']:
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     self.get_last_spot_price())) * float(self.quantity)
@@ -485,14 +494,22 @@ class HengedGrid(object):
 
 
 
-    def close_short(self, time_format, cut_position=False):
+    def close_short(self, time_format, cut_position=False, price='none'):
         print("进入平空单流程")
         future_res = {}
         if self.future_step > 0:
             # future_res
             # future_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
             # dynamicConfig.order_list.append(future_res)
-            future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+            order_type = OrderType.MARKET
+            time_inforce = ''
+            if price:
+                order_type = OrderType.LIMIT
+                time_inforce = "GTC"
+            future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, self.quantity, price, time_inforce)
+            if order_type == OrderType.LIMIT:
+                print('price:' + price + '挂平仓空单了')
+                return {}
             if future_res and future_res['orderId']:
                 Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份空单了！")
                 self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
@@ -716,10 +733,20 @@ class HengedGrid(object):
             #     fc.change_ratio_singal_from_client = False
             time.sleep(1)
         # self.save_trade_info()
+        self.place_left_orders()
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
         os._exit(0)
+
+    def place_left_orders(self):
+        '''停止时，自动挂单吧'''
+        print('停止时，自动挂单吧')
+        time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        for spot_price in dynamicConfig.record_spot_price:
+            self.close_long(time_format, False, str(round(float(spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), 2)))
+        for future_price in dynamicConfig.record_spot_price:
+            self.close_short(time_format, False, str(round(float(future_price) * (1 + dynamicConfig.future_falling_ratio / 100), 2)))
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
