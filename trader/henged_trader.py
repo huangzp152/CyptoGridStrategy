@@ -698,12 +698,17 @@ class HengedGrid(object):
 
     def normal_exit(self):
         while not fc.stop_singal_from_client:
-            self.quantity = str(fc.quantity)
-            self.grid_side = fc.position_side
-            # print(str(fc.stop_singal_from_client))
-            # if fc.change_ratio_singal_from_client:
-            print('set new ratio from client, ratio_up_or_down:' + str(fc.ratio_up_or_down) + ', ratio_up_or_down:' + str(fc.ratio_no_trendency))
-            self.set_ratio_and_price()
+            if fc.change_ratio_singal_from_client:
+                # print(str(fc.stop_singal_from_client))
+                # if fc.change_ratio_singal_from_client:
+                self.set_ratio_and_price()
+                fc.change_ratio_singal_from_client=False
+            if fc.change_quantity_singal_from_client:
+                self.quantity = str(fc.quantity)
+                fc.change_quantity_singal_from_client=False
+            if fc.change_position_side_singal_from_client:
+                self.grid_side = fc.position_side
+                fc.change_position_side_singal_from_client=False
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()

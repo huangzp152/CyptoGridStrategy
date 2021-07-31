@@ -11,6 +11,8 @@ class flaskConfig(object):
     def __init__(self):
         self.stop_singal_from_client=False
         self.change_ratio_singal_from_client=False
+        self.change_quantity_singal_from_client=False
+        self.change_position_side_singal_from_client=False
         self.ratio_no_trendency=0.25
         self.ratio_up_or_down=0.5
         self.every_time_trade_share = 100 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
@@ -54,6 +56,7 @@ def grid_change_quantity():
     quantity = str(request.args.get('quantity'))
     if quantity:
         fc.quantity = float(quantity)
+        fc.change_quantity_singal_from_client=True
     return 'hzp, /change/trade_share, quantity:' + quantity
 
 @app.route('/grid/change/position_side', methods=['GET'])
@@ -63,6 +66,7 @@ def grid_change_position_side():
     position_side = str(request.args.get('position_side'))
     if position_side:
         fc.position_side = float(position_side)
+        fc.change_position_side_singal_from_client=True
     return 'hzp, /change/position_side, position_side:' + position_side
 
 @app.route('/grid/change/leverage', methods=['GET'])
