@@ -180,7 +180,7 @@ class HengedGrid(object):
 
         time.sleep(5)
 
-        while(True):
+        while not fc.stop_singal_from_client:
             print('loop, count:' + str(loop_count))
             loop_count = loop_count + 1
 
@@ -415,7 +415,7 @@ class HengedGrid(object):
                 time_inforce = "GTC"
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", order_type, self.quantity, price=price, time_inforce=time_inforce)
             if order_type == OrderType.LIMIT:
-                print('price:' + price + '挂平仓多单了')
+                print('price:' + price + ' 挂平仓多单了')
                 return {}
             if spot_res and spot_res['orderId']:
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
@@ -745,7 +745,7 @@ class HengedGrid(object):
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for spot_price in dynamicConfig.record_spot_price:
             self.close_long(time_format, False, str(int(float(spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100))))
-        for future_price in dynamicConfig.record_spot_price:
+        for future_price in dynamicConfig.record_future_price:
             self.close_short(time_format, False, str(int(float(future_price) * (1 - dynamicConfig.future_falling_ratio / 100))))
 
     def open_receiver(self):
