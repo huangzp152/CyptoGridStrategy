@@ -11,10 +11,12 @@ class flaskConfig(object):
     def __init__(self):
         self.stop_singal_from_client=False
         self.change_ratio_singal_from_client=False
-        self.ratio_no_trendency=0.3#随着仓位增加网格利率以0.3递增
-        self.ratio_up_or_down=0.6 #随着仓位增加网格利率以0.5递增
-        self.every_time_trade_share = 200 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
+        self.ratio_no_trendency=0.3
+        self.ratio_up_or_down=0.6
+        self.every_time_trade_share = 100 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
+        self.quantity = 0.001
         self.leverage = 20
+        self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
 
 fc = flaskConfig()
 @app.route('/grid/stop')
@@ -44,6 +46,24 @@ def grid_change_trade_share():
     if every_time_trade_share:
         fc.every_time_trade_share = float(every_time_trade_share)
     return 'hzp, /change/trade_share, every_time_trade_share:' + every_time_trade_share
+
+@app.route('/grid/change/quantity', methods=['GET'])
+def grid_change_quantity():
+
+    # data = request.get_json()
+    quantity = str(request.args.get('quantity'))
+    if quantity:
+        fc.quantity = float(quantity)
+    return 'hzp, /change/trade_share, quantity:' + quantity
+
+@app.route('/grid/change/position_side', methods=['GET'])
+def grid_change_position_side():
+
+    # data = request.get_json()
+    position_side = str(request.args.get('position_side'))
+    if position_side:
+        fc.position_side = float(position_side)
+    return 'hzp, /change/position_side, position_side:' + position_side
 
 @app.route('/grid/change/leverage', methods=['GET'])
 def grid_change_leverage():
@@ -87,5 +107,5 @@ def grid_start():
 
 if __name__ == '__main__':
     app.run(host='104.225.143.245',
-            port=5000,
+            port=5001,
             debug=True)

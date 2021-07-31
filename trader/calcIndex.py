@@ -153,7 +153,7 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        data = self.http_client.get_kline(symbol, interval, limit=6)
+        data = self.http_client.get_kline(symbol, interval, limit=8)
 
         # test
         # data = self.test_data[j - 6:j]
@@ -163,7 +163,7 @@ class CalcIndex:
             for i in range(len(data)):
                 if i==0:
                     last_ma5+=float(data[i][4])
-                elif i==5:
+                elif i==7:
                     next_ma5+=float(data[i][4])
                 else:
                     last_ma5+=float(data[i][4])
@@ -203,7 +203,7 @@ class CalcIndex:
                     else:
                         sum_sgn = sum_sgn
         # 计算Z统计值
-        if n <= 5:
+        if n <= 7:
             Z_value = sum_sgn / (n * (n - 1) / 2)
         else:
             if sum_sgn > 0:
