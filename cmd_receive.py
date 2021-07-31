@@ -35,9 +35,9 @@ def grid_change_params():
         param1 = str(request.args.get('ratio_up_or_down'))
         param2 = str(request.args.get('ratio_no_trendency'))
         if param1:
-            fc.ratio_no_trendency = float(param1)
+            fc.ratio_up_or_down = float(param1)
         if param2:
-            fc.ratio_up_or_down = float(param2)
+            fc.ratio_no_trendency = float(param2)
         if param1 or param2:
             fc.change_ratio_singal_from_client = True
     except RuntimeError as e:
