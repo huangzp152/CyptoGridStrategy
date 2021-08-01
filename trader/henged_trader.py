@@ -591,7 +591,7 @@ class HengedGrid(object):
         '''
         print("set_future_ratio")
         ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
-        if abs(ratio_24hr) > 8:
+        if abs(ratio_24hr) > 6:
                 print("24小时上涨或下跌趋势")
                 dynamicConfig.future_rising_ratio = fc.ratio_up_or_down# + dynamicConfig.total_steps / 4
                 dynamicConfig.future_falling_ratio = fc.ratio_up_or_down# + dynamicConfig.total_steps / 4
