@@ -21,7 +21,7 @@ class flaskConfig(object):
         self.quantity = 0.001
         self.leverage = 20
         self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
-        self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
+        self.long_bottom_position_share = 0.1 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
 

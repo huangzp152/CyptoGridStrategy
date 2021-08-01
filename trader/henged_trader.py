@@ -288,11 +288,11 @@ class HengedGrid(object):
                 else:
                     #开多单（买入持仓）
                     #多单市场价要低于你的买入价，才能成交
-                    # if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                    if not self.long_bottom_position_full():
-                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
-                    if not spot_open_long_res:#不需要建仓
-                        spot_res = self.open_long(time_format)
+                    if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
+                        if not self.long_bottom_position_full():
+                            spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                        if not spot_open_long_res:#不需要建仓
+                            spot_res = self.open_long(time_format)
 
                     #平掉多单（卖出获利）
                     #多单市场价要高于你的卖出价，才能成交
