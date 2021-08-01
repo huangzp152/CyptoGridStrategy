@@ -253,7 +253,7 @@ class HengedGrid(object):
                         Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_spot_price[0]))
                         del dynamicConfig.record_spot_price[0]
                     else:
-                        print('spot_lost_ratio:' + str(spot_lost_ratio))
+                        print('多单损益:' + str(spot_lost_ratio))
 
 
                 if len(dynamicConfig.record_future_price) > 0:
@@ -265,7 +265,7 @@ class HengedGrid(object):
                         Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_future_price[0]))
                         del dynamicConfig.record_future_price[0]
                     else:
-                        print('future_lost_ratio:' + str(future_lost_ratio))
+                        print('空单损益:' + str(future_lost_ratio))
 
 
 
@@ -288,11 +288,11 @@ class HengedGrid(object):
                 else:
                     #开多单（买入持仓）
                     #多单市场价要低于你的买入价，才能成交
-                    if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                        if not self.long_bottom_position_full():
-                            spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
-                        if not spot_open_long_res:#不需要建仓
-                            spot_res = self.open_long(time_format)
+                    # if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
+                    if not self.long_bottom_position_full():
+                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                    if not spot_open_long_res:#不需要建仓
+                        spot_res = self.open_long(time_format)
 
                     #平掉多单（卖出获利）
                     #多单市场价要高于你的卖出价，才能成交
@@ -848,7 +848,6 @@ class HengedGrid(object):
             else:
                 ret_list_spot.append(tmp)
         dynamicConfig.record_spot_price = ret_list_spot
-        del ret_list_spot[:]
         print("ssdfsdf:" + str(dynamicConfig.record_spot_price))
 
         for tmp in dynamicConfig.record_future_price:
@@ -858,21 +857,22 @@ class HengedGrid(object):
             else:
                 ret_list_future.append(tmp)
         dynamicConfig.record_future_price = ret_list_future
-        del ret_list_future[:]
-
+        # del ret_list_spot[:]
+        # del ret_list_future[:]
 
         self.save_trade_info()
 
     def long_bottom_position_full(self):
         current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
             self.quantity)) / self.spot_money
-        ret = current_position_share >= fc.long_bottom_position_share
+        ret = (current_position_share >= fc.long_bottom_position_share)
         return ret
 
     def get_long_bottom_position_scale(self):
         current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
             self.quantity)) / self.spot_money
         ret = current_position_share
+        print("current_position_share:" + str(current_position_share))
         return ret
 
     def build_long_bottom_position(self, price, time_format):
