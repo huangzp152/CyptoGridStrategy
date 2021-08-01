@@ -12,15 +12,20 @@ class flaskConfig(object):
         self.stop_singal_from_client=False
         self.change_ratio_singal_from_client=False
         self.change_quantity_singal_from_client=False
+        self.change_long_bottom_position_share_singal_from_client=False
+
         self.change_position_side_singal_from_client=False
-        self.ratio_no_trendency=0.25
+        self.ratio_no_trendency=0.1
         self.ratio_up_or_down=0.5
         self.every_time_trade_share = 100 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.quantity = 0.001
         self.leverage = 20
         self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
+        self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
+
+
 fc = flaskConfig()
 @app.route('/grid/terminate')
 def grid_terminate():
@@ -76,6 +81,19 @@ def grid_change_quantity():
     except RuntimeError as e:
         print(str(e))
     return 'hzp, /change/trade_share, quantity:' + quantity
+
+@app.route('/grid/change/long_bottom_position_share', methods=['GET'])
+def grid_change_long_bottom_position_share():
+    # data = request.get_json()
+    quantity = ''
+    try:
+        long_bottom_position_share = str(request.args.get('long_bottom_position_share'))
+        if long_bottom_position_share:
+            fc.long_bottom_position_share = float(long_bottom_position_share)
+            fc.change_long_bottom_position_share_singal_from_client=True
+    except RuntimeError as e:
+        print(str(e))
+    return 'hzp, /change/long_bottom_position_share, long_bottom_position_share:' + long_bottom_position_share
 
 @app.route('/grid/change/position_side', methods=['GET'])
 def grid_change_position_side():

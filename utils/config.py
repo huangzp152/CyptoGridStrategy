@@ -79,6 +79,7 @@ class DynamicConfig(object):
         self.future_sell_price = 0.0000001
         self.future_step = 0 #步数/仓位数
         self.record_future_price = []
+        self.long_bottom_position_price = []# 记录做多的底仓的价格列表
 
         # test
         self.order_list = []

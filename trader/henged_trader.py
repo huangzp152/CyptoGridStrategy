@@ -196,6 +196,7 @@ class HengedGrid(object):
 
 
             spot_res = None
+            spot_open_long_res = None
             future_res = None
 
             try:
@@ -288,7 +289,10 @@ class HengedGrid(object):
                     #开多单（买入持仓）
                     #多单市场价要低于你的买入价，才能成交
                     if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                        spot_res = self.open_long(time_format)
+                        if not self.long_bottom_position_full():
+                            spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                        if not spot_open_long_res:#不需要建仓
+                            spot_res = self.open_long(time_format)
 
                     #平掉多单（卖出获利）
                     #多单市场价要高于你的卖出价，才能成交
@@ -310,6 +314,8 @@ class HengedGrid(object):
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
+                elif spot_open_long_res:
+                    print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 仓位比例：" + str(self.get_long_bottom_position_scale()))
                 else:
                     # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
                     #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
@@ -368,17 +374,18 @@ class HengedGrid(object):
         self.adjust_prices()
 
     def nearly_full_position(self):
-        if float(dynamicConfig.total_steps * 100) / float(self.spot_money) >= 0.9:
-            print('9成仓位了，只平仓不开仓了')
+        if float(dynamicConfig.total_steps * 100) / float(self.spot_money) >= 0.95:
+            print('9成5仓位了，只平仓不开仓了')
             time.sleep(10)
             return True
         return False
 
-    def open_long(self, time_format):
+    def open_long(self, time_format, build_position_share = False):
         spot_res = {}
         if self.grid_side == 'SHORT':
             spot_res['orderId'] = 'virtual'
             return spot_res
+
         print("进入开多单流程")
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
@@ -387,12 +394,15 @@ class HengedGrid(object):
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and spot_res['orderId']:
             print("开多单成功")
-            Message.dingding_warn(str(self.cur_market_future_price) + "买入一份多单了！")
             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
-            self.add_record_spot_price(self.cur_market_future_price)
-            self.set_spot_share(self.spot_step + 1)
-            dynamicConfig.total_steps += 1
+            if not build_position_share:
+                Message.dingding_warn(str(self.cur_market_future_price) + "买入一份多单了！")
+                self.add_record_spot_price(self.cur_market_future_price)
+                self.set_spot_share(self.spot_step + 1)
+                dynamicConfig.total_steps += 1
+            else:
+                Message.dingding_warn(str(self.cur_market_future_price) + "【建仓】买入一份多单了！")
             # self.set_spot_ratio()
             # self.set_spot_next_sell_price(float(self.cur_market_future_price))
             # self.set_spot_next_buy_price(float(self.cur_market_future_price))
@@ -610,7 +620,7 @@ class HengedGrid(object):
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
-        # dynamicConfig.record_spot_price.sort(reverse=False)
+        dynamicConfig.record_spot_price.sort(reverse=True)#降序
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
         self.save_trade_info()
 
@@ -631,7 +641,7 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
-        # dynamicConfig.record_spot_price.sort()
+        dynamicConfig.record_spot_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
         self.save_trade_info()
 
@@ -757,7 +767,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5001, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
@@ -801,11 +811,18 @@ class HengedGrid(object):
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
         with open('../data/trade_info.json', 'r') as df:
+            if os.path.getsize(df.name) == 0:
+                return
             record_price_dict_to_file = json.load(df)
-            print(f"record_price_dict_to_file['record_spot_price']:{record_price_dict_to_file['record_spot_price']}")
-            print(f"record_price_dict_to_file['record_future_price']:{record_price_dict_to_file['record_future_price']}")
-            dynamicConfig.record_spot_price = record_price_dict_to_file['record_spot_price']
-            dynamicConfig.record_future_price = record_price_dict_to_file['record_future_price']
+            if 'record_spot_price' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['record_spot_price']:{record_price_dict_to_file['record_spot_price']}")
+                dynamicConfig.record_spot_price = record_price_dict_to_file['record_spot_price']
+            if 'record_future_price' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['record_future_price']:{record_price_dict_to_file['record_future_price']}")
+                dynamicConfig.record_future_price = record_price_dict_to_file['record_future_price']
+            if 'long_bottom_position_share' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['long_bottom_position_share']:{record_price_dict_to_file['long_bottom_position_share']}")
+                dynamicConfig.long_bottom_position_price = record_price_dict_to_file['long_bottom_position_share']
 
     # def init_record_future_price_list(self):
     #     orders = self.http_client_future.get_all_orders(config.symbol)
@@ -815,24 +832,73 @@ class HengedGrid(object):
 
     def save_trade_info(self):
         print("存储记录的价格到文件里")
-        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}")
-        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price}
+        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
+        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'dynamicConfig.long_bottom_position_price':dynamicConfig.long_bottom_position_price}
         with open('../data/trade_info.json', "w") as df:
             json.dump(record_price_dict_to_file, df)
 
     def close_previous_position(self, time_format):
         print("清掉盈利的多单和空单仓位，未盈利的留着")
+        ret_list_spot = []
+        ret_list_future = []
         for tmp in dynamicConfig.record_spot_price:
             self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
             if float(tmp) <= float(self.cur_market_future_price):
                 self.close_long(time_format, True)
+            else:
+                ret_list_spot.append(tmp)
+        dynamicConfig.record_spot_price = ret_list_spot
+        del ret_list_spot[:]
+        print("ssdfsdf:" + str(dynamicConfig.record_spot_price))
 
         for tmp in dynamicConfig.record_future_price:
             self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
             if float(tmp) >= float(self.cur_market_future_price):
                 self.close_short(time_format, True)
+            else:
+                ret_list_future.append(tmp)
+        dynamicConfig.record_future_price = ret_list_future
+        del ret_list_future[:]
+
 
         self.save_trade_info()
+
+    def long_bottom_position_full(self):
+        current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
+            self.quantity)) / self.spot_money
+        ret = current_position_share >= fc.long_bottom_position_share
+        return ret
+
+    def get_long_bottom_position_scale(self):
+        current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
+            self.quantity)) / self.spot_money
+        ret = current_position_share
+        return ret
+
+    def build_long_bottom_position(self, price, time_format):
+        print('当前的价格' + str(self.cur_market_future_price) + '，目前的底仓列表：' + str(dynamicConfig.long_bottom_position_price))
+        len_position_share = len(dynamicConfig.long_bottom_position_price)
+        need_open_long = False
+        if len_position_share == 0:
+            need_open_long = True
+        else:
+            if not self.long_bottom_position_full():
+                #小于直接加
+                need_open_long = True
+            else:#大于则优胜略汰
+                for tmp in dynamicConfig.long_bottom_position_price:
+                    if float(tmp) > float(price):
+                        print('这个价格超过目前的底仓列表，剔除')
+                        self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
+                        dynamicConfig.long_bottom_position_price.remove(tmp)
+                        need_open_long = True
+        if need_open_long:
+            print('这个价格需要加入底仓')
+            dynamicConfig.long_bottom_position_price.append(price)
+            self.save_trade_info()
+            return self.open_long(time_format, True)
+
+
 
 
 if __name__ == "__main__":
