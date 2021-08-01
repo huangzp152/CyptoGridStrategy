@@ -169,6 +169,9 @@ class HengedGrid(object):
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
 
+        print("把上次存下来的卖掉一部分")
+        self.close_previous_position(time_format)
+
         print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
         if self.grid_side == 'BOTH':
             self.open_long(time_format)
@@ -609,6 +612,7 @@ class HengedGrid(object):
         dynamicConfig.record_spot_price.append(value)
         # dynamicConfig.record_spot_price.sort(reverse=False)
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
+        self.save_trade_info()
 
     def get_last_spot_price(self):
         if len(dynamicConfig.record_spot_price) == 0:
@@ -623,11 +627,13 @@ class HengedGrid(object):
 
     def remove_last_spot_price(self):
         del dynamicConfig.record_spot_price[-1]
+        self.save_trade_info()
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
         # dynamicConfig.record_spot_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
+        self.save_trade_info()
 
     def get_last_future_price(self):
         if len(dynamicConfig.record_future_price) == 0:
@@ -638,6 +644,7 @@ class HengedGrid(object):
 
     def remove_last_future_price(self):
         del dynamicConfig.record_future_price[-1]
+        self.save_trade_info()
 
     def get_spot_share(self):
         # tmp = self.http_client.get_positionInfo(config.symbol)
@@ -732,7 +739,7 @@ class HengedGrid(object):
             #     self.set_future_price(current_share_previous_market_price) #恢复回当时的市场价，然后根据传入的比率重新设置
             #     fc.change_ratio_singal_from_client = False
             time.sleep(1)
-        # self.save_trade_info()
+        self.save_trade_info()
         self.place_left_orders()
         msg = 'stop by myself!'
         print(msg)
@@ -813,7 +820,19 @@ class HengedGrid(object):
         with open('../data/trade_info.json', "w") as df:
             json.dump(record_price_dict_to_file, df)
 
+    def close_previous_position(self, time_format):
+        print("清掉盈利的多单和空单仓位，未盈利的留着")
+        for tmp in dynamicConfig.record_spot_price:
+            self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
+            if float(tmp) <= float(self.cur_market_future_price):
+                self.close_long(time_format, True)
 
+        for tmp in dynamicConfig.record_future_price:
+            self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
+            if float(tmp) >= float(self.cur_market_future_price):
+                self.close_short(time_format, True)
+
+        self.save_trade_info()
 
 
 if __name__ == "__main__":
