@@ -44,6 +44,7 @@ class HengedGrid(object):
         self.http_client_future = BinanceFutureHttp(api_key=api_key, secret=api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
 
         self.grid_side = fc.position_side
+        self.long_bottom_position_share = fc.long_bottom_position_share
         pass
 
     def getMoney(self):
@@ -231,7 +232,7 @@ class HengedGrid(object):
                 print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
-                print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price))
+                print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share))
 
                 # 判断一下趋势
                 symbol_to_check_trend = config.symbol
@@ -315,7 +316,7 @@ class HengedGrid(object):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
                 elif spot_open_long_res:
-                    print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 仓位比例：" + str(self.get_long_bottom_position_scale()))
+                    print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 底仓仓位比例：" + str(self.get_long_bottom_position_scale()))
                 else:
                     # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
                     #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
@@ -447,6 +448,7 @@ class HengedGrid(object):
                 Message.dingding_warn(msg)
                 if not cut_position:
                     self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
+
                 # self.set_spot_ratio()
                 # self.set_spot_next_buy_price(float(self.cur_market_future_price))
                 # self.set_spot_next_sell_price(float(self.cur_market_future_price))
@@ -641,7 +643,7 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
-        dynamicConfig.record_spot_price.sort()
+        dynamicConfig.record_future_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
         self.save_trade_info()
 
@@ -742,6 +744,9 @@ class HengedGrid(object):
             if fc.change_position_side_singal_from_client:
                 self.grid_side = fc.position_side
                 fc.change_position_side_singal_from_client=False
+            if fc.change_long_bottom_position_share_singal_from_client:
+                self.grid_side = fc.long_bottom_position_share
+                fc.change_long_bottom_position_share_singal_from_client = False
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
@@ -750,7 +755,7 @@ class HengedGrid(object):
             #     fc.change_ratio_singal_from_client = False
             time.sleep(1)
         self.save_trade_info()
-        self.place_left_orders()
+        # self.place_left_orders()
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
@@ -820,9 +825,10 @@ class HengedGrid(object):
             if 'record_future_price' in record_price_dict_to_file.keys():
                 print(f"record_price_dict_to_file['record_future_price']:{record_price_dict_to_file['record_future_price']}")
                 dynamicConfig.record_future_price = record_price_dict_to_file['record_future_price']
-            if 'long_bottom_position_share' in record_price_dict_to_file.keys():
-                print(f"record_price_dict_to_file['long_bottom_position_share']:{record_price_dict_to_file['long_bottom_position_share']}")
-                dynamicConfig.long_bottom_position_price = record_price_dict_to_file['long_bottom_position_share']
+            if 'long_bottom_position_price' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['long_bottom_position_price']:{record_price_dict_to_file['long_bottom_position_price']}")
+                dynamicConfig.long_bottom_position_price = record_price_dict_to_file['long_bottom_position_price']
+            dynamicConfig.total_steps = len(dynamicConfig.record_spot_price) + len(dynamicConfig.record_future_price) + len(dynamicConfig.long_bottom_position_price)
 
     # def init_record_future_price_list(self):
     #     orders = self.http_client_future.get_all_orders(config.symbol)
@@ -833,7 +839,7 @@ class HengedGrid(object):
     def save_trade_info(self):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
-        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'dynamicConfig.long_bottom_position_price':dynamicConfig.long_bottom_position_price}
+        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
         with open('../data/trade_info.json', "w") as df:
             json.dump(record_price_dict_to_file, df)
 
