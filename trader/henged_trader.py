@@ -291,7 +291,7 @@ class HengedGrid(object):
                     #开多单（买入持仓）
                     #多单市场价要低于你的买入价，才能成交
                     if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                        if not self.long_bottom_position_full():
+                        if not self.long_bottom_position_full(self.cur_market_future_price):
                             spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
                         if not spot_open_long_res:#不需要建仓
                             spot_res = self.open_long(time_format)
@@ -869,10 +869,18 @@ class HengedGrid(object):
 
         self.save_trade_info()
 
-    def long_bottom_position_full(self):
-        current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
+    def long_bottom_position_full(self, price=''):
+        need_join = False
+        tmp_list = [float(tmp) for tmp in dynamicConfig.long_bottom_position_price]
+        if len(tmp_list) == 0:
+            need_join = True
+        if price:
+            for tmp in tmp_list:
+                if float(price) < tmp:
+                    need_join = True
+        current_position_share = (sum(tmp_list) * float(
             self.quantity)) / self.spot_money
-        ret = (current_position_share >= fc.long_bottom_position_share)
+        ret = (current_position_share >= fc.long_bottom_position_share) and not need_join
         return ret
 
     def get_long_bottom_position_scale(self):
@@ -884,21 +892,21 @@ class HengedGrid(object):
 
     def build_long_bottom_position(self, price, time_format):
         print('当前的价格' + str(self.cur_market_future_price) + '，目前的底仓列表：' + str(dynamicConfig.long_bottom_position_price))
+        #todo need improve
         len_position_share = len(dynamicConfig.long_bottom_position_price)
         need_open_long = False
-        if len_position_share == 0:
-            need_open_long = True
-        else:
-            if not self.long_bottom_position_full():
-                #小于直接加
-                need_open_long = True
-            else:#大于则优胜略汰
+
+        if not self.long_bottom_position_full():
+            if len(dynamicConfig.long_bottom_position_price) == 0:
+                need_open_long = True #列表为空直接加
+            else:#列表不空则优胜略汰
                 for tmp in dynamicConfig.long_bottom_position_price:
                     if float(tmp) > float(price):
-                        print('这个价格超过目前的底仓列表，剔除')
+                        print('这个价格超过目前的底仓列表，剔除【' + str(price) + '】，将它挂单')
                         self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
                         dynamicConfig.long_bottom_position_price.remove(tmp)
                         need_open_long = True
+
         if need_open_long:
             print('这个价格需要加入底仓')
             dynamicConfig.long_bottom_position_price.append(price)
