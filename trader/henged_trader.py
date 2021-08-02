@@ -144,8 +144,8 @@ class HengedGrid(object):
         #     print(f"future_res:{future_res}")
         # print("orders:" + str(self.http_client_future.get_positionInfo('BTCUSDT')))#现货查不了
         # print("orders:" + str(self.http_client_spot.get))
-
-        print('目前杠杆:' + str(self.set_leverage(fc.leverage)))
+        self.leverage = str(self.set_leverage(fc.leverage))
+        print('目前杠杆:' + self.leverage)
         print("设置初始的盈利点数")
         self.set_spot_ratio()
         self.set_future_ratio()
@@ -231,6 +231,7 @@ class HengedGrid(object):
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
                 print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
                 print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
+                print('网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price])))
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share))
 
@@ -254,7 +255,7 @@ class HengedGrid(object):
                         Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_spot_price[0]))
                         del dynamicConfig.record_spot_price[0]
                     else:
-                        print('多单损益:' + str(spot_lost_ratio))
+                        print('最亏的那份多单损益:' + str(spot_lost_ratio))
 
 
                 if len(dynamicConfig.record_future_price) > 0:
@@ -266,7 +267,7 @@ class HengedGrid(object):
                         Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_future_price[0]))
                         del dynamicConfig.record_future_price[0]
                     else:
-                        print('空单损益:' + str(future_lost_ratio))
+                        print('最亏的那份空单损益:' + str(future_lost_ratio))
 
 
 
@@ -353,7 +354,7 @@ class HengedGrid(object):
         for ttt in tmp_list2:
             tmp_list_result2 += ttt
         if len(dynamicConfig.record_spot_price) > 0:
-            msg2 = '，多单浮动盈亏：' +  str((float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(self.quantity))
+            msg2 = '，多单浮动盈亏：' + str((float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(self.quantity))
             print(msg2)
         tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0]
         tmp_list_result = 0
@@ -375,8 +376,8 @@ class HengedGrid(object):
         self.adjust_prices()
 
     def nearly_full_position(self):
-        if float(dynamicConfig.total_steps * 100) / float(self.spot_money) >= 0.95:
-            print('9成5仓位了，只平仓不开仓了')
+        if float(dynamicConfig.total_steps * 100) / (float(self.spot_money) * int(self.leverage)) >= 0.9:
+            print('9成仓位了，只平仓不开仓了')
             time.sleep(10)
             return True
         return False
