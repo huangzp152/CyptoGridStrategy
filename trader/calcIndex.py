@@ -153,7 +153,7 @@ class CalcIndex:
         '''
         last_ma5 = 0
         next_ma5 = 0
-        data = self.http_client.get_kline(symbol, interval, limit=8)
+        data = self.http_client.get_kline(symbol, interval, limit=31)
 
         # test
         # data = self.test_data[j - 6:j]
@@ -163,7 +163,7 @@ class CalcIndex:
             for i in range(len(data)):
                 if i==0:
                     last_ma5+=float(data[i][4])
-                elif i==7:
+                elif i==30:
                     next_ma5+=float(data[i][4])
                 else:
                     last_ma5+=float(data[i][4])
@@ -203,7 +203,7 @@ class CalcIndex:
                     else:
                         sum_sgn = sum_sgn
         # 计算Z统计值
-        if n <= 7:
+        if n <= 30:
             Z_value = sum_sgn / (n * (n - 1) / 2)
         else:
             if sum_sgn > 0:
@@ -260,14 +260,14 @@ class CalcIndex:
         print('最近几根均线为:' + str(tmp_list_ma5))
         print("Mann_Kenddall_Trend_desc, 趋势为:" + str(result))
         if ascending:
-            if 'up' in result or 'down' in result:
+            if '99%' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:
                     print('下跌')
                 return True
         else:
-            if 'up' in result or 'down' in result:
+            if '99%' in result:
                 if 'up' in result:
                     print('拉升')
                 elif 'down' in result:

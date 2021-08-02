@@ -239,7 +239,7 @@ class HengedGrid(object):
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
                     symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
-                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", descending, self.demical_length)
 
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -248,7 +248,7 @@ class HengedGrid(object):
                 #清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
                     spot_lost_ratio = (float(dynamicConfig.record_spot_price[0]) - float(self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0])
-                    if spot_lost_ratio > 0.05:
+                    if spot_lost_ratio > 0.06:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.close_long(time_format, True)
