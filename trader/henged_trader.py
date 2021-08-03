@@ -923,13 +923,13 @@ class HengedGrid(object):
                     break
         if need_open_long_bottom_position and tick_out_price:
             dynamicConfig.long_bottom_position_price.remove(tick_out_price)#把价格大的剔除
-            need_open_long_bottom_position = False
             self.save_trade_info()
 
         if need_open_long_bottom_position:
             print('这个价格需要加入底仓')
             dynamicConfig.long_bottom_position_price.append(price)
             self.save_trade_info()
+            need_open_long_bottom_position = False
             return self.open_long(time_format, True)#加入底仓后，需要开单，才算真正加入了底仓
 
 
