@@ -325,8 +325,8 @@ class HengedGrid(object):
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))
 
-                print('休息10s')
-                time.sleep(10)
+                print('休息5s')
+                time.sleep(5)
 
                 # 这几个其实有点多余（未验证）
                 self.spot_buy_price = dynamicConfig.spot_buy_price
