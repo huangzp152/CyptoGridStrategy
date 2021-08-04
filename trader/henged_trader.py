@@ -45,6 +45,7 @@ class HengedGrid(object):
 
         self.grid_side = fc.position_side
         self.long_bottom_position_share = fc.long_bottom_position_share
+        self.cut_position_threshold = fc.cut_position_threshold
         pass
 
     def getMoney(self):
@@ -210,13 +211,14 @@ class HengedGrid(object):
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print('now time:' + str(time_format))
 
-                print('网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
                      struct_time.tm_year-1970,
                      struct_time.tm_mon-1,
                      struct_time.tm_mday-1,
                      struct_time.tm_hour,
                      struct_time.tm_min,
-                     struct_time.tm_sec)))
+                     struct_time.tm_sec))
+                print(grid_run_time)
                 # str(self.http_client_future.get_future_asset(config.symbol))
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
@@ -248,7 +250,7 @@ class HengedGrid(object):
                 #清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
                     spot_lost_ratio = (float(dynamicConfig.record_spot_price[0]) - float(self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0])
-                    if spot_lost_ratio > 0.06:
+                    if spot_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.close_long(time_format, True)
@@ -260,7 +262,7 @@ class HengedGrid(object):
 
                 if len(dynamicConfig.record_future_price) > 0:
                     future_lost_ratio = (float(self.cur_market_future_price) - float(dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
-                    if future_lost_ratio > 0.05:
+                    if future_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.close_short(time_format, True)
@@ -376,8 +378,8 @@ class HengedGrid(object):
         self.adjust_prices()
 
     def nearly_full_position(self):
-        if float(dynamicConfig.total_steps * 100) / (float(self.spot_money) * int(self.leverage)) >= 0.9:
-            print('9成仓位了，只平仓不开仓了')
+        if float(dynamicConfig.total_steps * 100) / (float(self.spot_money) * int(self.leverage)) >= 0.95:
+            print('9成5仓位了，只平仓不开仓了')
             time.sleep(10)
             return True
         return False
@@ -748,6 +750,9 @@ class HengedGrid(object):
             if fc.change_long_bottom_position_share_singal_from_client:
                 self.grid_side = fc.long_bottom_position_share
                 fc.change_long_bottom_position_share_singal_from_client = False
+            if fc.cut_position_threshold_singal_from_client:
+                self.cut_position_threshold = fc.cut_position_threshold
+                fc.cut_position_threshold_singal_from_client=False
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
