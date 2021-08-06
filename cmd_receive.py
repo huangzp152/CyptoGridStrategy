@@ -14,6 +14,8 @@ class flaskConfig(object):
         self.change_quantity_singal_from_client=False
         self.change_long_bottom_position_share_singal_from_client=False
         self.cut_position_threshold_singal_from_client=False
+        self.ease_position_share_singal_from_client=False
+
 
         self.change_position_side_singal_from_client=False
         self.ratio_no_trendency=0.25
@@ -26,6 +28,7 @@ class flaskConfig(object):
         self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
+        self.ease_position_share = 8 #多空单都超过8个时，掐掉一些，减少持仓数量
 
 
 
@@ -129,6 +132,16 @@ def grid_change_cut_position_threshold():
         fc.cut_position_threshold = float(cut_position_threshold)
         fc.cut_position_threshold_singal_from_client = True
     return 'hzp, /change/cut_position_threshold, cut_position_threshold:' + cut_position_threshold
+
+@app.route('/grid/change/ease_position_share', methods=['GET'])
+def grid_change_ease_position_share():
+
+    # data = request.get_json()
+    ease_position_share = str(request.args.get('ease_position_share'))
+    if ease_position_share:
+        fc.ease_position_share = float(ease_position_share)
+        fc.ease_position_share_singal_from_client = True
+    return 'hzp, /change/ease_position_share, ease_position_share:' + ease_position_share
 
 @app.route('/grid/start', methods=['GET'])
 def grid_start():

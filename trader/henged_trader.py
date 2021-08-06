@@ -158,6 +158,7 @@ class HengedGrid(object):
         self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
         self.set_future_next_buy_price(float(self.cur_market_future_price))
         self.spot_money = float(self.getAsset()[0])
+        self.ease_position_share = fc.ease_position_share
 
         ascending = True
         descending = False
@@ -258,6 +259,17 @@ class HengedGrid(object):
                         del dynamicConfig.record_spot_price[0]
                     else:
                         print('最亏的那份多单损益:' + str(spot_lost_ratio))
+
+                if len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
+                    msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
+                    print(msg)
+                    for i in range(0, self.ease_position_share):
+                        self.close_long(time_format, True)
+                        Message.dingding_warn('这份多单平掉了:' + str(dynamicConfig.record_spot_price[i]))
+                        self.close_short(time_format, True)
+                        Message.dingding_warn('这份空单平掉了:' + str(dynamicConfig.record_future_price[i]))
+                        del dynamicConfig.record_spot_price[i]
+                        del dynamicConfig.record_future_price[i]
 
 
                 if len(dynamicConfig.record_future_price) > 0:
@@ -755,6 +767,9 @@ class HengedGrid(object):
             if fc.cut_position_threshold_singal_from_client:
                 self.cut_position_threshold = fc.cut_position_threshold
                 fc.cut_position_threshold_singal_from_client=False
+            if fc.ease_position_share_singal_from_client:
+                self.ease_position_share = fc.ease_position_share
+                fc.ease_position_share_singal_from_client=False
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
