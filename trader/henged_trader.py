@@ -260,10 +260,11 @@ class HengedGrid(object):
                     else:
                         print('最亏的那份多单损益:' + str(spot_lost_ratio))
 
+                position_delta = min(len(dynamicConfig.record_spot_price) - self.ease_position_share, len(dynamicConfig.record_future_price) - self.ease_position_share)
                 if len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
-                    for i in range(0, self.ease_position_share):
+                    for i in range(0, position_delta):
                         self.close_long(time_format, True)
                         Message.dingding_warn('这份多单平掉了:' + str(dynamicConfig.record_spot_price[i]))
                         self.close_short(time_format, True)

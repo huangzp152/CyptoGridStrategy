@@ -28,7 +28,7 @@ class flaskConfig(object):
         self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
-        self.ease_position_share = 8 #多空单都超过8个时，掐掉一些，减少持仓数量
+        self.ease_position_share = 5 #多空单都超过8个时，掐掉一些，减少持仓数量
 
 
 
