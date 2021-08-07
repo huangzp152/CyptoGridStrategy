@@ -171,6 +171,18 @@ class HengedGrid(object):
 
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
+        diff_time = time.time() - begin_time
+        struct_time = time.gmtime(diff_time)
+
+        self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+            struct_time.tm_year - 1970,
+            struct_time.tm_mon - 1,
+            struct_time.tm_mday - 1,
+            struct_time.tm_hour,
+            struct_time.tm_min,
+            struct_time.tm_sec))
+        print(self.grid_run_time)
+
 
         print("把上次存下来的卖掉一部分")
         self.close_previous_position(time_format)
@@ -261,7 +273,7 @@ class HengedGrid(object):
                         print('最亏的那份多单损益:' + str(spot_lost_ratio))
 
                 position_delta = min(len(dynamicConfig.record_spot_price) - self.ease_position_share, len(dynamicConfig.record_future_price) - self.ease_position_share)
-                if len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
+                if len(dynamicConfig.record_spot_price) == len(dynamicConfig.record_future_price) and len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
                     for i in range(0, position_delta):

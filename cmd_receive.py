@@ -22,7 +22,7 @@ class flaskConfig(object):
         self.ratio_up_or_down=0.5
         self.every_time_trade_share = 100 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.cut_position_threshold = 0.2 # 0.2为亏损到本金的2成仓位时，割肉
-        self.quantity = 0.001
+        self.quantity = 0.008
         self.leverage = 20
         self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
         self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
