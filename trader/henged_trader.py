@@ -111,8 +111,8 @@ class HengedGrid(object):
         # 设定精度，无所谓现货或者合约
         self.demical_length = len(str(self.cur_market_future_price).split(".")[1])
         # 设定买卖数量
-        # quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
-        self.quantity = self._format(fc.quantity)
+        quantity_basic = round((fc.every_time_trade_share / float(self.cur_market_future_price)), 3)
+        self.quantity = self._format(quantity_basic)
 
         # 设定仓位
         # dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
@@ -768,6 +768,11 @@ class HengedGrid(object):
                 # if fc.change_ratio_singal_from_client:
                 self.set_ratio_and_price()
                 fc.change_ratio_singal_from_client=False
+            if fc.change_every_time_trade_share_signal_from_client:
+                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                quantity_basic = round((fc.every_time_trade_share / float(self.cur_market_future_price)), 3)
+                self.quantity = self._format(quantity_basic)
+                fc.change_every_time_trade_share_signal_from_client=False
             if fc.change_quantity_singal_from_client:
                 self.quantity = str(fc.quantity)
                 fc.change_quantity_singal_from_client=False
@@ -953,6 +958,7 @@ class HengedGrid(object):
                 if float(tmp) > float(price):
                     print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
                     self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
+                    tick_out_price = tmp
                     tick_out_price = tmp
                     need_open_long_bottom_position = True
                     break
