@@ -71,6 +71,7 @@ def grid_change_trade_share():
         every_time_trade_share = str(request.args.get('every_time_trade_share'))
         if every_time_trade_share:
             fc.every_time_trade_share = float(every_time_trade_share)
+            fc.change_every_time_trade_share_signal_from_client=True
     except RuntimeError as e:
         print(str(e))
     return 'hzp, /change/every_time_trade_share, every_time_trade_share:' + every_time_trade_share
