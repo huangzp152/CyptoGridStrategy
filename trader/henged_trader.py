@@ -250,11 +250,16 @@ class HengedGrid(object):
                 print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
                 print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share))
 
-                # 判断一下趋势
+                # 判断一下趋势(做多拉升时or做空暴跌时，认为趋势来了)
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
                     symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
-                isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+                if fc.position_side == 'LONG':
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
+                elif fc.position_side == 'SHORT':
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+                else:
+                    isTrendComing = False
 
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -311,35 +316,36 @@ class HengedGrid(object):
                 #     print("市场价超过网格区间上下限啦")
                 #     time.sleep(50)
                 # el
-                if isTrendComing:
-                    print('趋势来了，多仓空仓拿好，不买不卖')
-                    time.sleep(10)
-                else:
-                    #开多单（买入持仓）
-                    #多单市场价要低于你的买入价，才能成交
-                    if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                        if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(self.cur_market_future_price):
-                            spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
-                        # if not spot_open_long_res:#不需要建仓
-                        spot_res = self.open_long(time_format) #不管是否建仓，都要买一份
+                # if isTrendComing:
+                #     print('趋势来了，多仓空仓拿好，不买不卖')
+                #     time.sleep(10)
+                # else:
+
+                #开多单（买入持仓）
+                #多单市场价要低于你的买入价，才能成交
+                if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
+                    if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(self.cur_market_future_price):
+                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                    # if not spot_open_long_res:#不需要建仓
+                    spot_res = self.open_long(time_format) #不管是否建仓，都要买一份
 
 
-                    #平掉多单（卖出获利）
-                    #多单市场价要高于你的卖出价，才能成交
-                    #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
-                    elif float(self.cur_market_future_price) >= float(self.spot_sell_price):
-                        spot_res = self.close_long(time_format)
+                #平掉多单（卖出获利）
+                #多单市场价要高于你的卖出价，才能成交
+                #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price):
+                    spot_res = self.close_long(time_format)
 
-                    #开空单（卖出借仓）
-                    #空单市场价要高于你的卖出价，才能成交
-                    if float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
-                        future_res = self.open_short(time_format)
+                #开空单（卖出借仓）
+                #空单市场价要高于你的卖出价，才能成交
+                if float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
+                    future_res = self.open_short(time_format)
 
-                    #平掉空单（买入获利）
-                    #空单市场价要低于你的买回价，才能成交
-                    #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
-                    elif float(self.cur_market_future_price) <= float(self.future_buy_price):
-                        future_res = self.close_short(time_format)
+                #平掉空单（买入获利）
+                #空单市场价要低于你的买回价，才能成交
+                #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price):
+                    future_res = self.close_short(time_format)
 
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")

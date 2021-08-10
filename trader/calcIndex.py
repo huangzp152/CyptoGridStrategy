@@ -263,15 +263,19 @@ class CalcIndex:
             if '99%' in result:
                 if 'up' in result:
                     print('拉升')
+                    return True
                 elif 'down' in result:
                     print('下跌')
+                    return False
                 return True
         else:
             if '99%' in result:
                 if 'up' in result:
                     print('拉升')
+                    return False
                 elif 'down' in result:
                     print('下跌')
+                    return True
                 return True
         print('震荡')
         return False

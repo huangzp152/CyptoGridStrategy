@@ -21,15 +21,15 @@ class flaskConfig(object):
         self.change_position_side_singal_from_client=False
         self.ratio_no_trendency=0.3
         self.ratio_up_or_down=0.6
-        self.every_time_trade_share = 330 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
-        self.cut_position_threshold = 0.2 # 0.2为亏损到本金的2成仓位时，割肉
+        self.every_time_trade_share = 200 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
+        self.cut_position_threshold = 0.5 # 0.2为亏损到本金的2成仓位时，割肉
         self.quantity = 0.008
         self.leverage = 20
-        self.position_side = 'BOTH'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
+        self.position_side = 'LONG'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
         self.long_bottom_position_share = 0.2 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
-        self.ease_position_share = 5 #多空单都超过8个时，掐掉一些，减少持仓数量
+        self.ease_position_share = 30 #多空单都超过8个时，掐掉一些，减少持仓数量
 
 
 
