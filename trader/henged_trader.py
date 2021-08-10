@@ -470,8 +470,8 @@ class HengedGrid(object):
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
 
                 if not cut_position:
-                    self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
                     self.open_spot_price = self.get_last_spot_price()
+                    self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
 
 
                 # self.set_spot_ratio()
@@ -564,8 +564,9 @@ class HengedGrid(object):
                 dynamicConfig.total_earn_grids += 1
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
                 if not cut_position:
-                    self.remove_last_future_price()
                     self.open_future_price = self.get_last_future_price()
+                    self.remove_last_future_price()
+
 
 
                 self.set_future_step(self.future_step - 1)

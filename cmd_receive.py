@@ -19,9 +19,9 @@ class flaskConfig(object):
 
 
         self.change_position_side_singal_from_client=False
-        self.ratio_no_trendency=0.25
-        self.ratio_up_or_down=0.5
-        self.every_time_trade_share = 320 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
+        self.ratio_no_trendency=0.3
+        self.ratio_up_or_down=0.6
+        self.every_time_trade_share = 330 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.cut_position_threshold = 0.2 # 0.2为亏损到本金的2成仓位时，割肉
         self.quantity = 0.008
         self.leverage = 20
