@@ -266,8 +266,9 @@ class HengedGrid(object):
                     if spot_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
+                        self.open_spot_price = dynamicConfig.record_spot_price[0]
                         self.close_long(time_format, True)
-                        Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_spot_price[0]))
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_spot_price))
                         del dynamicConfig.record_spot_price[0]
                     else:
                         print('最亏的那份多单损益:' + str(spot_lost_ratio))
@@ -290,13 +291,12 @@ class HengedGrid(object):
                     if future_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
+                        self.open_future_price = dynamicConfig.record_future_price[0]
                         self.close_short(time_format, True)
-                        Message.dingding_warn(msg + ', 这份止损了:' + str(dynamicConfig.record_future_price[0]))
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_future_price))
                         del dynamicConfig.record_future_price[0]
                     else:
                         print('最亏的那份空单损益:' + str(future_lost_ratio))
-
-
 
                 print("下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price))
                 print("下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price))
@@ -469,9 +469,10 @@ class HengedGrid(object):
                 dynamicConfig.total_steps -= 1
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
 
-                last_price = dynamicConfig.record_spot_price[-1]
                 if not cut_position:
                     self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
+                    self.open_spot_price = self.get_last_spot_price()
+
 
                 # self.set_spot_ratio()
                 # self.set_spot_next_buy_price(float(self.cur_market_future_price))
@@ -489,9 +490,9 @@ class HengedGrid(object):
                                                       self.cur_market_future_price, "", ""])
                 Message.dingding_warn(str(self.cur_market_future_price) + "平掉一份多单了！")
                 msg = '多单卖出获利了！获得：' + str(
-                    (float(self.cur_market_future_price) - float(last_price)) * float(
-                        self.quantity)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(
-                    last_price) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time
+                    (float(self.cur_market_future_price) - float(self.open_spot_price)) * float(
+                        self.quantity)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(self.open_spot_price
+                    ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time
                 print(msg)
                 Message.dingding_warn(msg)
                 return spot_res
@@ -562,9 +563,11 @@ class HengedGrid(object):
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                last_future_price = dynamicConfig.record_future_price[-1]
                 if not cut_position:
                     self.remove_last_future_price()
+                    self.open_future_price = self.get_last_future_price()
+
+
                 self.set_future_step(self.future_step - 1)
                 dynamicConfig.total_steps -= 1
                 # self.set_future_ratio()
@@ -578,9 +581,9 @@ class HengedGrid(object):
                     self.future_step))
                 self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "",
                                                       self.cur_market_future_price])
-                msg = '空单买回获利了！获得：' + str( (float(last_future_price) - float(self.cur_market_future_price)) * float(
+                msg = '空单买回获利了！获得：' + str((float(self.open_future_price) - float(self.cur_market_future_price)) * float(
                         self.quantity)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
-                    last_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time
+                    self.open_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 毛利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time
                 print(msg)
                 Message.dingding_warn(msg)
                 return future_res
@@ -712,28 +715,28 @@ class HengedGrid(object):
     def set_spot_next_buy_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.spot_buy_price = round(min(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 999999, deal_price * (1 - dynamicConfig.spot_falling_ratio / 100)), demical_point)  # 多单跌的时候补仓 # 保留2位小数
+        dynamicConfig.spot_buy_price = round(min(float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 and self.grid_side != 'LONG' else 999999, deal_price * (1 - dynamicConfig.spot_falling_ratio / 100)), demical_point)  # 多单跌的时候补仓 # 保留2位小数
         self.spot_buy_price = dynamicConfig.spot_buy_price
         # print("设置接下来多单买入的价格, " + str(self.spot_buy_price))
 
     def set_spot_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.spot_sell_price = round(max(float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 else 0, float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 0, deal_price * (1 + dynamicConfig.spot_rising_ratio / 100)), demical_point)
+        dynamicConfig.spot_sell_price = round(max(float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 and self.grid_side != 'SHORT' else 0, float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 0, deal_price * (1 + dynamicConfig.spot_rising_ratio / 100)), demical_point)
         self.spot_sell_price = dynamicConfig.spot_sell_price
         # print("设置接下来多单卖出的价格:" + str(self.spot_sell_price))
 
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_sell_price = round(max(float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 else 0, deal_price * (1 + dynamicConfig.future_falling_ratio / 100)), demical_point)
+        dynamicConfig.future_sell_price = round(max(float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 and self.grid_side != 'SHORT' else 0, deal_price * (1 + dynamicConfig.future_falling_ratio / 100)), demical_point)
         self.future_sell_price = dynamicConfig.future_sell_price
         # print("设置接下来新开空单卖出的价格, " + str(self.future_sell_price))
 
     def set_future_next_buy_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_buy_price = round(min(float(dynamicConfig.record_future_price[-2]) if len(dynamicConfig.record_future_price) > 1 else 999999, float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 else 999999, deal_price * (1 - dynamicConfig.future_rising_ratio / 100)), demical_point)  #空单涨的时候补仓 # 保留2位小数
+        dynamicConfig.future_buy_price = round(min(float(dynamicConfig.record_future_price[-2]) if len(dynamicConfig.record_future_price) > 1 and self.grid_side != 'LONG' else 999999, float(dynamicConfig.record_spot_price[-2]) if len(dynamicConfig.record_spot_price) > 1 else 999999, deal_price * (1 - dynamicConfig.future_rising_ratio / 100)), demical_point)  #空单涨的时候补仓 # 保留2位小数
         self.future_buy_price = dynamicConfig.future_buy_price
         # print("设置接下来空单的买回价格:" + str(self.future_buy_price))
 
@@ -897,7 +900,7 @@ class HengedGrid(object):
             else:
                 ret_list_spot.append(tmp)
         dynamicConfig.record_spot_price = ret_list_spot
-        print("ssdfsdf:" + str(dynamicConfig.record_spot_price))
+        # print("ssdfsdf:" + str(dynamicConfig.record_spot_price))
 
         for tmp in dynamicConfig.record_future_price:
             self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
