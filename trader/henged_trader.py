@@ -46,6 +46,8 @@ class HengedGrid(object):
         self.grid_side = fc.position_side
         self.long_bottom_position_share = fc.long_bottom_position_share
         self.cut_position_threshold = fc.cut_position_threshold
+        self.open_spot_price = 99999
+        self.open_future_price = 1
         pass
 
     def getMoney(self):
@@ -323,7 +325,7 @@ class HengedGrid(object):
 
                 #开多单（买入持仓）
                 #多单市场价要低于你的买入价，才能成交
-                if float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
+                if not isTrendComing and float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
                     if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(self.cur_market_future_price):
                         spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
                     # if not spot_open_long_res:#不需要建仓
@@ -338,7 +340,7 @@ class HengedGrid(object):
 
                 #开空单（卖出借仓）
                 #空单市场价要高于你的卖出价，才能成交
-                if float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
+                if not isTrendComing and float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
                     future_res = self.open_short(time_format)
 
                 #平掉空单（买入获利）
@@ -516,6 +518,9 @@ class HengedGrid(object):
             print("多单没仓位了，售罄了，平不了多单，等多单有货再说吧")
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
             # self.set_spot_price(float(self.cur_market_future_price))#没有份额啦，修改价格等待下次被买入
+            #但价格要改的
+            spot_res['orderId'] = 'virtual'
+            return spot_res
 
     def open_short(self, time_format):
         future_res = {}
@@ -612,6 +617,8 @@ class HengedGrid(object):
             print("空单没仓位了，售罄了，平不了空单，等空单有货再说吧")
             self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
             # self.set_future_price(float(self.cur_market_future_price))#没有仓位了就要设置补仓??
+            future_res['orderId'] = 'virtual'
+            return future_res
 
     def save_trade_to_file(self, time_format, trade_info):
         try:
