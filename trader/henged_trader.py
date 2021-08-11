@@ -451,6 +451,10 @@ class HengedGrid(object):
             print("spot_res：" + str(spot_res))
 
     def close_long(self, time_format, cut_position = False, price='none'):
+        if self.grid_side == 'SHORT':
+            if float(self.cur_market_future_price) <= float(self.get_last_spot_price()):
+                print("亏本的买卖不做，不平了")
+                return {}
         print("进入平多单流程")
         spot_res = {}
         if self.spot_step > 0:
@@ -548,6 +552,10 @@ class HengedGrid(object):
 
 
     def close_short(self, time_format, cut_position=False, price='none'):
+        if self.grid_side == 'LONG':
+            if float(self.cur_market_future_price) >= float(self.get_last_future_price()):
+                print("亏本的买卖不做，不平了")
+                return {}
         print("进入平空单流程")
         future_res = {}
         if self.future_step > 0:
