@@ -407,8 +407,8 @@ class HengedGrid(object):
         self.set_future_ratio()
         self.set_spot_next_buy_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
         self.set_spot_next_sell_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
-        self.set_future_next_buy_price(max(float(self.cur_market_future_price), float(self.get_last_spot_price())))
-        self.set_future_next_sell_price(max(float(self.cur_market_future_price), float(self.get_last_spot_price())))
+        self.set_future_next_buy_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
+        self.set_future_next_sell_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
         self.adjust_prices()
 
     def nearly_full_position(self):
