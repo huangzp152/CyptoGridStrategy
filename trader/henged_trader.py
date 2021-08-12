@@ -979,14 +979,12 @@ class HengedGrid(object):
             need_open_long_bottom_position = True #列表为空直接加
         elif self.need_join_in_long_bottom_position_price(price):#列表不空则优胜略汰
             # retain_list = []
-            for tmp in dynamicConfig.long_bottom_position_price:
-                if float(tmp) > float(price):
-                    print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
-                    self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
-                    tick_out_price = tmp
-                    tick_out_price = tmp
-                    need_open_long_bottom_position = True
-                    break
+            tmp = max(dynamicConfig.long_bottom_position_price)
+            if float(tmp) > float(price):
+                print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
+                self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
+                tick_out_price = tmp
+                need_open_long_bottom_position = True
         if need_open_long_bottom_position and tick_out_price:
             dynamicConfig.long_bottom_position_price.remove(tick_out_price)#把价格大的剔除
             self.save_trade_info()
