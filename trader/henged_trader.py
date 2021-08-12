@@ -958,10 +958,8 @@ class HengedGrid(object):
         if len(tmp_list) == 0:
             need_join = True
         if price:
-            for tmp in tmp_list:
-                if float(price) < tmp:
-                    need_join = True
-                    break
+            if float(price) < max(tmp_list):
+                need_join = True
         return need_join
 
     def get_long_bottom_position_scale(self):
