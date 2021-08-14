@@ -405,10 +405,10 @@ class HengedGrid(object):
     def set_ratio_and_price(self):
         self.set_spot_ratio()
         self.set_future_ratio()
-        self.set_spot_next_buy_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
-        self.set_spot_next_sell_price(min(float(self.cur_market_future_price), float(self.get_last_spot_price())))
-        self.set_future_next_buy_price(min(float(self.cur_market_future_price), float(self.get_last_future_price())))
-        self.set_future_next_sell_price(min(float(self.cur_market_future_price), float(self.get_last_future_price())))
+        self.set_spot_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))#考虑列表价格的话，拉升后，要跌很多才能开仓；不考虑的话，有可能同个价位附近有很多仓位
+        self.set_spot_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))
+        self.set_future_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
+        self.set_future_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
         self.adjust_prices()
 
     def nearly_full_position(self):
@@ -815,6 +815,9 @@ class HengedGrid(object):
             if fc.ease_position_share_singal_from_client:
                 self.ease_position_share = fc.ease_position_share
                 fc.ease_position_share_singal_from_client=False
+            if fc.update_position_list_signal_from_client:
+                self.init_record_price_list()
+                fc.update_position_list_signal_from_client=False
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()

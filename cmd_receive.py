@@ -16,6 +16,7 @@ class flaskConfig(object):
         self.cut_position_threshold_singal_from_client=False
         self.ease_position_share_singal_from_client=False
         self.change_every_time_trade_share_signal_from_client=False
+        self.update_position_list_signal_from_client=False
 
 
         self.change_position_side_singal_from_client=False
@@ -43,6 +44,11 @@ def grid_terminate():
 def grid_stop():
     fc.stop_singal_from_client=True
     return 'hzp, /grid/stop!'
+
+@app.route('/grid/update_position_list')
+def grid_update_position_list():
+    fc.update_position_list_signal_from_client=True
+    return 'hzp, /grid/update_position_list!'
 
 @app.route('/grid/change/params', methods=['GET'])
 def grid_change_params():
