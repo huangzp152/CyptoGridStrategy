@@ -807,7 +807,7 @@ class HengedGrid(object):
                 self.grid_side = fc.position_side
                 fc.change_position_side_singal_from_client=False
             if fc.change_long_bottom_position_share_singal_from_client:
-                self.grid_side = fc.long_bottom_position_share
+                self.long_bottom_position_share = fc.long_bottom_position_share
                 fc.change_long_bottom_position_share_singal_from_client = False
             if fc.cut_position_threshold_singal_from_client:
                 self.cut_position_threshold = fc.cut_position_threshold
