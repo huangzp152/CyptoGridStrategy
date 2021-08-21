@@ -766,14 +766,14 @@ class HengedGrid(object):
         if self.grid_side == 'BOTH':
             min_buy_price = min(dynamicConfig.spot_buy_price, dynamicConfig.future_buy_price)
             max_sell_price = max(dynamicConfig.spot_sell_price, dynamicConfig.future_sell_price)
-        dynamicConfig.spot_buy_price = min_buy_price
-        dynamicConfig.spot_sell_price = max_sell_price
-        dynamicConfig.future_sell_price = max_sell_price
-        dynamicConfig.future_buy_price = min_buy_price
-        self.spot_buy_price = dynamicConfig.spot_buy_price
-        self.spot_sell_price = dynamicConfig.spot_sell_price
-        self.future_sell_price = dynamicConfig.future_sell_price
-        self.future_buy_price = dynamicConfig.future_buy_price
+            dynamicConfig.spot_buy_price = min_buy_price
+            dynamicConfig.spot_sell_price = max_sell_price
+            dynamicConfig.future_sell_price = max_sell_price
+            dynamicConfig.future_buy_price = min_buy_price
+            self.spot_buy_price = dynamicConfig.spot_buy_price
+            self.spot_sell_price = dynamicConfig.spot_sell_price
+            self.future_sell_price = dynamicConfig.future_sell_price
+            self.future_buy_price = dynamicConfig.future_buy_price
         print("【重设】接下来多单买入的价格, " + str(self.spot_buy_price))
         print("【重设】接下来多单卖出的价格:" + str(self.spot_sell_price))
         print("【重设】接下来新开空单卖出的价格, " + str(self.future_sell_price))
