@@ -76,13 +76,13 @@ class HengedGrid(object):
 
     def addMoney(self, money):
         res = float(self.getMoney()) + float(money)
-        with open('/home/code/binance/data/test_account.txt', 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol, 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
-        with open('/home/code/binance/data/test_account.txt', 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_s%.txt' % config.symbol, 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
@@ -625,11 +625,11 @@ class HengedGrid(object):
             record_market_price_dir = '../data/record'
             if not os.path.exists(record_market_price_dir):
                 os.mkdir(record_market_price_dir)
-            with open(os.path.join(record_market_price_dir, 'record_market_price_%s.csv' % time_format.replace(' ', '-')),
+            with open(os.path.join(record_market_price_dir, 'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'),  config.symbol)),
                       'a+', encoding='utf-8-sig') as ddf:
                 writer_p = csv.writer(ddf, delimiter=',')
                 if os.path.getsize(os.path.join(record_market_price_dir,
-                                                'record_market_price_%s.csv' % time_format.replace(' ', '-'))) == 0:
+                                                'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'), config.symbol))) == 0:
                     writer_p.writerow(['datetime', 'price', 'long_buy', 'long_sell', 'short_sell', 'short_buy'])
                 writer_p.writerow(trade_info)
         except Exception as ee:
@@ -887,7 +887,7 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info.json', 'r') as df:
+        with open('../data/trade_info_%s.json' % config.symbol, 'r') as df:
             if os.path.getsize(df.name) == 0:
                 return
             record_price_dict_to_file = json.load(df)
@@ -912,7 +912,7 @@ class HengedGrid(object):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
-        with open('../data/trade_info.json', "w") as df:
+        with open('../data/trade_info_%s.json' % config.symbol, "w") as df:
             json.dump(record_price_dict_to_file, df)
 
     def close_previous_position(self, time_format):
