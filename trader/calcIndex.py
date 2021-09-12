@@ -288,6 +288,13 @@ class CalcIndex:
 
         return round(sum_ma10 / 10,point)
 
+    def calcSpecificMA(self, ma_number, symbol, interval, point):
+        sum_ma = 0
+        data = self.http_client.get_kline(symbol, interval, limit = ma_number)
+        for i in range(len(data)):
+            sum_ma+=float(data[i][4])
+        return round(sum_ma / ma_number, point)
+
     def get_position_price(self,direction=True):
         tmp = self.http_client.get_positionInfo(config.symbol)
         for item in tmp:  # 遍历所有仓位

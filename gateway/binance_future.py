@@ -473,6 +473,18 @@ class BinanceFutureHttp(object):
                         return position.get('positionAmt')
         return -1
 
+    def get_future_position_info_ma(self, symbol, positionside):
+        res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
+        if res:
+            # print('test get_account_info:' + str(res))
+            positions = res.get('positions')
+            if positions:
+                for position in positions:
+                    if symbol == position.get('symbol') and positionside == position.get('positionSide'):
+                        return [position.get('positionAmt'), position.get('entryPrice'),
+                                position.get('unrealizedProfit'), position.get('initialMargin')]#当前持仓，价格，未实现盈亏，初始保证金？
+        return -1
+
 
 if __name__ == '__main__':
     # import pandas as pd
