@@ -131,7 +131,8 @@ class MA_trader(object):
         pre_price_open_long = ''
         pre_price_close_long = ''
         pre_price_open_short = ''
-        pre_price = ''
+        pre_price_for_ma_42 = ''
+        pre_price_for_ma_18 = ''
 
         price_touch_ma42_count_fall_break = 0
         price_touch_ma42_count_rise_break = 0
@@ -150,8 +151,10 @@ class MA_trader(object):
             # print('position_info_short:' + str(position_info_short))
             # print('position_info_long:' + str(position_info_long))
             current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
-            if not pre_price:
-                pre_price = current_price
+            if not pre_price_for_ma_42:
+                pre_price_for_ma_42 = current_price
+            if not pre_price_for_ma_18:
+                pre_price_for_ma_18 = current_price
             self.demical_length = len(str(current_price).split(".")[1])
 
             ma_price_42 = index.calcSpecificMA(42, config.symbol, "1m", self.demical_length)
@@ -160,13 +163,14 @@ class MA_trader(object):
             print('ma_price_42:' + str(ma_price_42))
             print('ma_price_18:' + str(ma_price_18))
 
-            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42, pre_price, position_info_long[0], position_info_short[0], price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break, position_info_long[2], position_info_short[2])
-            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18, pre_price, position_info_long[0], position_info_short[0], price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break, position_info_long[2], position_info_short[2])
+            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42, pre_price_for_ma_42, position_info_long[0], position_info_short[0], price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break, position_info_long[2], position_info_short[2])
+            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18, pre_price_for_ma_18, position_info_long[0], position_info_short[0], price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break, position_info_long[2], position_info_short[2])
 
-            pre_price = tmp_list_42[0]
+            pre_price_for_ma_42 = tmp_list_42[0]
             price_touch_ma42_count_rise_break = tmp_list_42[1]
             price_touch_ma42_count_fall_break = tmp_list_42[2]
 
+            pre_price_for_ma_18 = tmp_list_18[0]
             price_touch_ma18_count_rise_break = tmp_list_18[1]
             price_touch_ma18_count_fall_break = tmp_list_18[2]
             print('ok, 下一轮了， ' + 'sleep 10 secs')
@@ -240,7 +244,7 @@ class MA_trader(object):
                 price_touch_count_rise_break += 1# 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_rise_break > 3:#暂定碰三次吧
                     print(tag_ma + '触碰涨破' + tag_ma + '到3次了')
-                    if not long_position_amt and tag_ma == "tag_ma_18" and self.need_get_back_long:#没多仓了
+                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.need_get_back_long:#没多仓了
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
@@ -270,7 +274,7 @@ class MA_trader(object):
                 price_touch_count_fall_break += 1# 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_fall_break > 3:#暂定碰三次吧
                     print(tag_ma + '触碰跌破' + tag_ma + '到3次了')
-                    if not short_position_amt and tag_ma == "tag_ma_18" and self.need_get_back_short:#没空仓了
+                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.need_get_back_short:#没空仓了
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
