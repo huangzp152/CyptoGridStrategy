@@ -288,6 +288,21 @@ class CalcIndex:
 
         return round(sum_ma10 / 10,point)
 
+    def ma_cross_current_Kline_Half(self, ma_price, up_half, symbol, interval):
+        data = self.http_client.get_kline(symbol, interval, limit = 1)
+        if data and len(data) > 0:
+            if up_half:
+               if ((float(data[0][3]) + float(data[0][2])) / 2 < ma_price) and (ma_price < float(data[0][2])): # ma是否在k线的上半区
+                   return True
+               else:
+                   return False
+            else:
+                if (float(data[0][3]) < ma_price) and (ma_price < (float(data[0][2]) + float(data[0][3])) / 2): # ma是否在k线的下半区
+                    return True
+                else:
+                    return False
+        return True
+
     def calcSpecificMA(self, ma_number, symbol, interval, point):
         sum_ma = 0
         data = self.http_client.get_kline(symbol, interval, limit = ma_number)
