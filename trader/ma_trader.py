@@ -55,6 +55,7 @@ class MA_trader(object):
 
         self.need_get_back_long = False
         self.need_get_back_short = False
+        self.profit_total = 0
         pass
 
     def getMoney(self):
@@ -162,7 +163,7 @@ class MA_trader(object):
 
             ma_price_42 = index.calcSpecificMA(42, config.symbol, "1m", self.demical_length)
             ma_price_18 = index.calcSpecificMA(18, config.symbol, "1m", self.demical_length)
-            ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
+            # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
 
             print('ma_price_42:' + str(ma_price_42))
             print('ma_price_18:' + str(ma_price_18))
@@ -264,9 +265,10 @@ class MA_trader(object):
                         Message.dingding_warn(msg)
                         self.open_long(quantity)  # 开多，接回来
                         self.need_get_back_long = False
-                    elif short_position_amt and tag_ma == "tag_ma_42":
+                    elif short_position_amt and tag_ma == "tag_ma_42" and float(position_info_short_profit):
+                        self.profit_total += float(position_info_short_profit)
                         msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
-                            ma_price) + ', 盈亏：' + str(position_info_short_profit)
+                            ma_price) + ', 盈亏：' + str(self.profit_total)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.close_short(quantity)  # 平空
@@ -299,9 +301,10 @@ class MA_trader(object):
                         Message.dingding_warn(msg)
                         self.open_short(quantity)  # 开空，接回来
                         self.need_get_back_short = False
-                    elif long_position_amt and tag_ma == "tag_ma_42":
+                    elif long_position_amt and tag_ma == "tag_ma_42" and float(position_info_long_profit) > 0:
+                        self.profit_total += float(position_info_long_profit)
                         msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
-                            ma_price) + ', 盈亏：' + str(position_info_long_profit)
+                            ma_price) + ', 盈亏：' + str(self.profit_total)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.close_long(quantity)  # 平多
