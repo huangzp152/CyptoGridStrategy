@@ -258,14 +258,14 @@ class MA_trader(object):
                 price_touch_count_rise_break += 1  # 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_rise_break > 3:  # 暂定碰三次吧
                     print(tag_ma + '触碰涨破' + tag_ma + '到3次了')
-                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.need_get_back_long:  # 没多仓了
+                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18": #and self.need_get_back_long:  # 没多仓了
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.open_long(quantity)  # 开多，接回来
                         self.need_get_back_long = False
-                    elif short_position_amt and tag_ma == "tag_ma_42" and float(position_info_short_profit):
+                    elif float(short_position_amt) > 0 and tag_ma == "tag_ma_42" and float(position_info_short_profit) > 0:
                         self.profit_total += float(position_info_short_profit)
                         msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                             ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -294,14 +294,14 @@ class MA_trader(object):
                 price_touch_count_fall_break += 1  # 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_fall_break > 3:  # 暂定碰三次吧
                     print(tag_ma + '触碰跌破' + tag_ma + '到3次了')
-                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.need_get_back_short:  # 没空仓了
+                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18": # and self.need_get_back_short:  # 没空仓了
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.open_short(quantity)  # 开空，接回来
                         self.need_get_back_short = False
-                    elif long_position_amt and tag_ma == "tag_ma_42" and float(position_info_long_profit) > 0:
+                    elif float(long_position_amt) > 0 and tag_ma == "tag_ma_42" and float(position_info_long_profit) > 0:
                         self.profit_total += float(position_info_long_profit)
                         msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                             ma_price) + ', 盈亏：' + str(self.profit_total)
