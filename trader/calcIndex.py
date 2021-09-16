@@ -144,6 +144,32 @@ class CalcIndex:
 
         return [round(last_ma5/5,point), round(next_ma5/5,point)]
 
+    def calcSlopeMA(self, symbol, interval, point, kline_number):
+        '''
+
+        :param symbol:
+        :param interval:
+        :return: 上一时刻的m20值
+        '''
+        last_ma = 0
+        next_ma = 0
+        offset = 5
+        data = self.http_client.get_kline(symbol, interval, limit=kline_number+offset)
+
+        # test
+        # data = self.test_data[j - 6:j]
+
+        for i in range(len(data)):
+            if i<offset:
+                last_ma+=float(data[i][4])
+            elif i>=kline_number:
+                next_ma+=float(data[i][4])
+            else:
+                last_ma+=float(data[i][4])
+                next_ma+=float(data[i][4])
+
+        return [round(last_ma/kline_number,point), round(next_ma/kline_number,point)]
+
     def calcSlopeMA5_list(self, symbol, interval, point, j=0):
         '''
 

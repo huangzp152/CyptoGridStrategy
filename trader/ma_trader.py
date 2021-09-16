@@ -135,13 +135,7 @@ class MA_trader(object):
 
         index = CalcIndex()
         ma_number_18 = 20
-        ma_number_42 = 43
-
-        current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
-        self.demical_length = len(str(current_price).split(".")[1])
-
-        last_ma_price_18 = index.calcSpecificMA(ma_number_18, config.symbol, self.kline_dimemsion, self.demical_length)
-        last_ma_price_42 = index.calcSpecificMA(ma_number_42, config.symbol, self.kline_dimemsion, self.demical_length)
+        ma_number_42 = 42
 
         while not fc.stop_singal_from_client:
             print('ma henged loop, count:' + str(loop_count))
@@ -173,30 +167,27 @@ class MA_trader(object):
                 pre_price_for_ma_18 = current_price
             self.demical_length = len(str(current_price).split(".")[1])
 
-            ma_price_42 = index.calcSpecificMA(ma_number_42, config.symbol, self.kline_dimemsion, self.demical_length)
-            ma_price_18 = index.calcSpecificMA(ma_number_18, config.symbol, self.kline_dimemsion, self.demical_length)
+            ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
+            ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18)
 
             # 算斜率
             # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
-            self.angle_ma_18 = math.atan((ma_price_18 / last_ma_price_18 - 1) * 100) * 180 / 3.1415926
-            self.angle_ma_42 = math.atan((ma_price_42 / last_ma_price_42 - 1) * 100) * 180 / 3.1415926
+            self.angle_ma_18 = abs(math.degrees(math.atan(ma_price_18[1] - ma_price_18[0])))
+            self.angle_ma_42 = abs(math.degrees(math.atan(ma_price_42[1] - ma_price_42[0])))
 
-            print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18) + ', last_ma_price_18:'+ str(last_ma_price_18))
-            print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42) + ', last_ma_price_42:'+ str(last_ma_price_42))
-
-            last_ma_price_18 = ma_price_18
-            last_ma_price_42 = ma_price_42
+            print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
+            print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
 
             # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
 
-            print('ma_price_42:' + str(ma_price_42))
-            print('ma_price_18:' + str(ma_price_18))
+            print('ma_price_42:' + str(ma_price_42[1]))
+            print('ma_price_18:' + str(ma_price_18[1]))
 
-            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42, pre_price_for_ma_42,
+            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], pre_price_for_ma_42,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
                                             position_info_long[2], position_info_short[2])
-            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18, pre_price_for_ma_18,
+            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], pre_price_for_ma_18,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
                                             position_info_long[2], position_info_short[2])
