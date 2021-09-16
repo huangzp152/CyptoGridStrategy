@@ -62,6 +62,7 @@ class MA_trader(object):
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
         self.smooth_line_angle = 16
+        self.my_profit_target = 2 # 100%的盈利目标
         pass
 
     def getMoney(self):
@@ -192,11 +193,11 @@ class MA_trader(object):
             tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], pre_price_for_ma_42,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
-                                            position_info_long[2], position_info_short[2])
+                                            position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
             tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], pre_price_for_ma_18,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
-                                            position_info_long[2], position_info_short[2])
+                                            position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
 
             pre_price_for_ma_42 = tmp_list_42[0]
             price_touch_ma42_count_rise_break = tmp_list_42[1]
@@ -255,7 +256,7 @@ class MA_trader(object):
 
     def deal_with_ma(self, tag_ma, current_price, ma_price, pre_price, long_position_amt, short_position_amt,
                      price_touch_count_rise_break, price_touch_count_fall_break, position_info_long_profit,
-                     position_info_short_profit, ):
+                     position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin):
         print(tag_ma + 'deal_with_ma, params:' + str(current_price) + ', ' + str(ma_price) + ', ' + str(
             pre_price) + ', ' + str(long_position_amt) + ', ' + str(short_position_amt) + ', ' + str(
             price_touch_count_rise_break) + ', ' + str(price_touch_count_fall_break))
@@ -271,6 +272,7 @@ class MA_trader(object):
                 pre_price = current_price
                 price_touch_count_rise_break = 0
             elif pre_price > ma_price:  # 前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
+                self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin)
                 print(tag_ma + '前一个的价格存在，但大于' + tag_ma + '，说明pre与cur连成的线在' + tag_ma + '上方，不处理')
                 pre_price = current_price
                 price_touch_count_rise_break = 0
@@ -287,16 +289,17 @@ class MA_trader(object):
                         self.open_long(quantity)  # 开多，接回来
                         self.need_get_back_long = False
                     elif float(short_position_amt) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
-                        if float(position_info_short_profit) <= 0 < (float(position_info_long_profit) + float(
-                                position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 如果要平空的时候，空为负值，多空都关，为了可以保持将来多空都有浮盈平单的能力
-                            self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
-                            msg = tag_ma + '多空都平掉, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
-                                ma_price) + ', 盈亏：' + str(self.profit_total)
-                            print(msg)
-                            Message.dingding_warn(msg)
-                            self.close_short(quantity)  # 平空
-                            self.close_long(quantity)  # 平多
-                        elif float(position_info_short_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
+                        # if float(position_info_short_profit) <= 0 < (float(position_info_long_profit) + float(
+                        #         position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 如果要平空的时候，空为负值，多空都关，为了可以保持将来多空都有浮盈平单的能力
+                        #     self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
+                        #     msg = tag_ma + '多空都平掉, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
+                        #         ma_price) + ', 盈亏：' + str(self.profit_total)
+                        #     print(msg)
+                        #     Message.dingding_warn(msg)
+                        #     self.close_short(quantity)  # 平空
+                        #     self.close_long(quantity)  # 平多
+                        # el
+                        if float(position_info_short_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                             self.profit_total += float(position_info_short_profit)
                             msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -317,6 +320,8 @@ class MA_trader(object):
                 pre_price = current_price
                 price_touch_count_fall_break = 0
             elif pre_price < ma_price:  # 前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
+                self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit,
+                                    position_info_long_initial_margin, position_info_short_initial_margin)
                 print(tag_ma + '前一个的价格存在，但小于' + tag_ma + '，说明pre与cur连成的线在' + tag_ma + '下方，不处理')
                 pre_price = current_price
                 price_touch_count_fall_break = 0
@@ -333,16 +338,17 @@ class MA_trader(object):
                         self.open_short(quantity)  # 开空，接回来
                         self.need_get_back_short = False
                     elif float(long_position_amt) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
-                        if float(position_info_long_profit) <= 0 < (float(position_info_long_profit) + float(
-                                position_info_short_profit)) and not 0 >= float(position_info_short_profit): # 多空都关，为了可以保持将来多空都有浮盈平单的能力
-                            self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
-                            msg = tag_ma + '多空都平掉, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
-                                ma_price) + ', 盈亏：' + str(self.profit_total)
-                            print(msg)
-                            Message.dingding_warn(msg)
-                            self.close_short(quantity)  # 平空
-                            self.close_long(quantity)  # 平多
-                        elif float(position_info_long_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
+                        # if float(position_info_long_profit) <= 0 < (float(position_info_long_profit) + float(
+                        #         position_info_short_profit)) and not 0 >= float(position_info_short_profit): # 多空都关，为了可以保持将来多空都有浮盈平单的能力
+                        #     self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
+                        #     msg = tag_ma + '多空都平掉, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
+                        #         ma_price) + ', 盈亏：' + str(self.profit_total)
+                        #     print(msg)
+                        #     Message.dingding_warn(msg)
+                        #     self.close_short(quantity)  # 平空
+                        #     self.close_long(quantity)  # 平多
+                        # el
+                        if float(position_info_long_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                             self.profit_total += float(position_info_long_profit)
                             msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -357,10 +363,24 @@ class MA_trader(object):
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price == ma_price:
+            self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit,
+                                position_info_long_initial_margin, position_info_short_initial_margin)
             print(tag_ma + 'current_price刚好等于ma_price')
 
         return [pre_price, price_touch_count_rise_break, price_touch_count_fall_break]
 
+    def closeInAdvance(self, quantity, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin):
+        msg = ''
+        if float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
+            self.profit_total += float(position_info_long_profit)
+            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
+            self.close_long(quantity)  # 平多
+        elif float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+            self.profit_total += float(position_info_short_profit)
+            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
+            self.close_short(quantity)  # 平空
+        print(msg)
+        Message.dingding_warn(msg)
         '''
 
         self.getMoney()
