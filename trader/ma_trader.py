@@ -61,6 +61,7 @@ class MA_trader(object):
         self.angle_ma_42 = 0
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
+        self.smooth_line_angle = 16
         pass
 
     def getMoney(self):
@@ -176,7 +177,7 @@ class MA_trader(object):
             self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
             if self.angle_ma_18 > 90:
                 self.angle_ma_18 = 180 - self.angle_ma_18
-            self.angle_ma_42 = abs(math.degrees(math.atan(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
+            self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
             if self.angle_ma_42 > 90:
                 self.angle_ma_42 = 180 - self.angle_ma_42
 
@@ -278,14 +279,14 @@ class MA_trader(object):
                 price_touch_count_rise_break += 1  # 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_rise_break > 3:  # 暂定碰三次吧
                     print(tag_ma + '触碰涨破' + tag_ma + '到3次了')
-                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.angle_ma_18 >= 16: #and self.need_get_back_long:  # 没多仓了
+                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18": #and self.need_get_back_long:  # 没多仓了
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.open_long(quantity)  # 开多，接回来
                         self.need_get_back_long = False
-                    elif float(short_position_amt) > 0 and tag_ma == "tag_ma_42" and self.angle_ma_42 >= 16:
+                    elif float(short_position_amt) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                         if float(position_info_short_profit) <= 0 < (float(position_info_long_profit) + float(
                                 position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 如果要平空的时候，空为负值，多空都关，为了可以保持将来多空都有浮盈平单的能力
                             self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
@@ -295,7 +296,7 @@ class MA_trader(object):
                             Message.dingding_warn(msg)
                             self.close_short(quantity)  # 平空
                             self.close_long(quantity)  # 平多
-                        elif float(position_info_short_profit) > 0 and self.angle_ma_42 >= 16:
+                        elif float(position_info_short_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                             self.profit_total += float(position_info_short_profit)
                             msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -324,14 +325,14 @@ class MA_trader(object):
                 price_touch_count_fall_break += 1  # 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_fall_break > 3:  # 暂定碰三次吧
                     print(tag_ma + '触碰跌破' + tag_ma + '到3次了')
-                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18" and self.angle_ma_18 >= 16: # and self.need_get_back_short:  # 没空仓了
+                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18": # and self.need_get_back_short:  # 没空仓了
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
                         Message.dingding_warn(msg)
                         self.open_short(quantity)  # 开空，接回来
                         self.need_get_back_short = False
-                    elif float(long_position_amt) > 0 and tag_ma == "tag_ma_42" and self.angle_ma_42 >= 16:
+                    elif float(long_position_amt) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                         if float(position_info_long_profit) <= 0 < (float(position_info_long_profit) + float(
                                 position_info_short_profit)) and not 0 >= float(position_info_short_profit): # 多空都关，为了可以保持将来多空都有浮盈平单的能力
                             self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
@@ -340,8 +341,8 @@ class MA_trader(object):
                             print(msg)
                             Message.dingding_warn(msg)
                             self.close_short(quantity)  # 平空
-                            self.close_long(quantity)  # 平空
-                        elif float(position_info_long_profit) > 0 and self.angle_ma_42 >= 16:
+                            self.close_long(quantity)  # 平多
+                        elif float(position_info_long_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                             self.profit_total += float(position_info_long_profit)
                             msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
