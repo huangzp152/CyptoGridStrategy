@@ -288,7 +288,7 @@ class MA_trader(object):
                         Message.dingding_warn(msg)
                         self.open_long(quantity)  # 开多，接回来
                         self.need_get_back_long = False
-                    elif float(short_position_amt) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
+                    elif float(short_position_amt) != 0.0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                         # if float(position_info_short_profit) <= 0 < (float(position_info_long_profit) + float(
                         #         position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 如果要平空的时候，空为负值，多空都关，为了可以保持将来多空都有浮盈平单的能力
                         #     self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
@@ -379,7 +379,7 @@ class MA_trader(object):
             self.profit_total += float(position_info_long_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
             self.close_long(quantity)  # 平多
-        elif float(long_position_amt) == 0.0  and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+        elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
             self.profit_total += float(position_info_short_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
             self.close_short(quantity)  # 平空
