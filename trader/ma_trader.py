@@ -60,6 +60,7 @@ class MA_trader(object):
         self.angle_ma_18 = 0
         self.angle_ma_42 = 0
         self.kline_dimemsion = "1m"
+        self.slope_offset = 5
         pass
 
     def getMoney(self):
@@ -167,13 +168,17 @@ class MA_trader(object):
                 pre_price_for_ma_18 = current_price
             self.demical_length = len(str(current_price).split(".")[1])
 
-            ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
-            ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18)
+            ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
+            ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
 
             # 算斜率
             # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
-            self.angle_ma_18 = abs(math.degrees(math.atan(ma_price_18[1] - ma_price_18[0])))
-            self.angle_ma_42 = abs(math.degrees(math.atan(ma_price_42[1] - ma_price_42[0])))
+            self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
+            if self.angle_ma_18 > 90:
+                self.angle_ma_18 = 180 - self.angle_ma_18
+            self.angle_ma_42 = abs(math.degrees(math.atan(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
+            if self.angle_ma_42 > 90:
+                self.angle_ma_42 = 180 - self.angle_ma_42
 
             print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
             print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
@@ -282,7 +287,7 @@ class MA_trader(object):
                         self.need_get_back_long = False
                     elif float(short_position_amt) > 0 and tag_ma == "tag_ma_42" and self.angle_ma_42 >= 16:
                         if float(position_info_short_profit) <= 0 < (float(position_info_long_profit) + float(
-                                position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 多空都关，为了可以保持将来多空都有浮盈平单的能力
+                                position_info_short_profit)) and not 0 >= float(position_info_long_profit): # 如果要平空的时候，空为负值，多空都关，为了可以保持将来多空都有浮盈平单的能力
                             self.profit_total += abs(float(position_info_long_profit) + float(position_info_short_profit))
                             msg = tag_ma + '多空都平掉, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -290,7 +295,7 @@ class MA_trader(object):
                             Message.dingding_warn(msg)
                             self.close_short(quantity)  # 平空
                             self.close_long(quantity)  # 平多
-                        elif float(position_info_short_profit) > 0:
+                        elif float(position_info_short_profit) > 0 and self.angle_ma_42 >= 16:
                             self.profit_total += float(position_info_short_profit)
                             msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -336,7 +341,7 @@ class MA_trader(object):
                             Message.dingding_warn(msg)
                             self.close_short(quantity)  # 平空
                             self.close_long(quantity)  # 平空
-                        elif float(position_info_long_profit) > 0:
+                        elif float(position_info_long_profit) > 0 and self.angle_ma_42 >= 16:
                             self.profit_total += float(position_info_long_profit)
                             msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)

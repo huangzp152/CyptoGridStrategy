@@ -144,7 +144,7 @@ class CalcIndex:
 
         return [round(last_ma5/5,point), round(next_ma5/5,point)]
 
-    def calcSlopeMA(self, symbol, interval, point, kline_number):
+    def calcSlopeMA(self, symbol, interval, point, kline_number, offset):
         '''
 
         :param symbol:
@@ -153,7 +153,6 @@ class CalcIndex:
         '''
         last_ma = 0
         next_ma = 0
-        offset = 5
         data = self.http_client.get_kline(symbol, interval, limit=kline_number+offset)
 
         # test
