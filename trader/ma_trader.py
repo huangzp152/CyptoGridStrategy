@@ -272,7 +272,7 @@ class MA_trader(object):
                 pre_price = current_price
                 price_touch_count_rise_break = 0
             elif pre_price > ma_price:  # 前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
-                self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin)
+                self.closeInAdvance(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin)
                 print(tag_ma + '前一个的价格存在，但大于' + tag_ma + '，说明pre与cur连成的线在' + tag_ma + '上方，不处理')
                 pre_price = current_price
                 price_touch_count_rise_break = 0
@@ -320,7 +320,7 @@ class MA_trader(object):
                 pre_price = current_price
                 price_touch_count_fall_break = 0
             elif pre_price < ma_price:  # 前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
-                self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit,
+                self.closeInAdvance(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit,
                                     position_info_long_initial_margin, position_info_short_initial_margin)
                 print(tag_ma + '前一个的价格存在，但小于' + tag_ma + '，说明pre与cur连成的线在' + tag_ma + '下方，不处理')
                 pre_price = current_price
@@ -363,19 +363,23 @@ class MA_trader(object):
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price == ma_price:
-            self.closeInAdvance(quantity, position_info_long_profit, position_info_short_profit,
+            self.closeInAdvance(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit,
                                 position_info_long_initial_margin, position_info_short_initial_margin)
             print(tag_ma + 'current_price刚好等于ma_price')
 
         return [pre_price, price_touch_count_rise_break, price_touch_count_fall_break]
 
-    def closeInAdvance(self, quantity, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin):
+    def closeInAdvance(self, quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin):
+        '''
+        单边持仓且达到盈利目标时，出掉，防止回撤时利润回吐
+        双边持仓不能解开，不然会有大风险
+        '''
         msg = ''
-        if float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
+        if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
             self.profit_total += float(position_info_long_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
             self.close_long(quantity)  # 平多
-        elif float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+        elif float(long_position_amt) == 0.0  and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
             self.profit_total += float(position_info_short_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
             self.close_short(quantity)  # 平空
