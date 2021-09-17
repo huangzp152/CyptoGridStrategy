@@ -62,7 +62,7 @@ class MA_trader(object):
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
         self.smooth_line_angle = 16
-        self.my_profit_target = 2 # 100%的盈利目标
+        self.my_profit_target = 5 # 100%的盈利目标
         pass
 
     def getMoney(self):
@@ -299,7 +299,8 @@ class MA_trader(object):
                         #     self.close_short(quantity)  # 平空
                         #     self.close_long(quantity)  # 平多
                         # el
-                        if float(position_info_short_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
+                        # '''float(position_info_short_profit) > 0 and'''
+                        if (tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18"):
                             self.profit_total += float(position_info_short_profit)
                             msg = tag_ma + '平空, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
@@ -348,7 +349,8 @@ class MA_trader(object):
                         #     self.close_short(quantity)  # 平空
                         #     self.close_long(quantity)  # 平多
                         # el
-                        if float(position_info_long_profit) > 0 and ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
+                        # float(position_info_long_profit) > 0 and
+                        if ((tag_ma == "tag_ma_42" and self.angle_ma_42 >= self.smooth_line_angle) or (self.angle_ma_42 < self.smooth_line_angle and tag_ma == "tag_ma_18")):
                             self.profit_total += float(position_info_long_profit)
                             msg = tag_ma + '平多, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(current_price) + ', ma价格：' + str(
                                 ma_price) + ', 盈亏：' + str(self.profit_total)
