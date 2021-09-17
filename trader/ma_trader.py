@@ -61,8 +61,9 @@ class MA_trader(object):
         self.angle_ma_42 = 0
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
-        self.smooth_line_angle = 16
+        self.smooth_line_angle = 12
         self.my_profit_target = 5 # 100%的盈利目标
+        self.touch_times = 2
         pass
 
     def getMoney(self):
@@ -279,8 +280,8 @@ class MA_trader(object):
             elif pre_price < ma_price:  # pre与cur连成的线，下往上地穿过了ma，说明是涨破
                 print(tag_ma + 'pre与cur连成的线，下往上地穿过了' + tag_ma + '，说明是涨破，次数：' + str(price_touch_count_rise_break + 1))
                 price_touch_count_rise_break += 1  # 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-                if price_touch_count_rise_break > 3:  # 暂定碰三次吧
-                    print(tag_ma + '触碰涨破' + tag_ma + '到3次了')
+                if price_touch_count_rise_break > self.touch_times:  # 暂定碰三次吧
+                    print(tag_ma + '触碰涨破' + tag_ma + '到' + self.touch_times + '次了')
                     if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18": #and self.need_get_back_long:  # 没多仓了
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
@@ -311,7 +312,7 @@ class MA_trader(object):
                     price_touch_count_rise_break = 0
                     pre_price = current_price
                 else:
-                    print(tag_ma + '触碰涨破' + tag_ma + '少于3次')
+                    print(tag_ma + '触碰涨破' + tag_ma + '少于' + self.touch_times + '次')
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price < ma_price:  # 当前价格在ma下方
@@ -329,8 +330,8 @@ class MA_trader(object):
             elif pre_price > ma_price:  # pre与cur连成的线，上往下地穿过了ma，说明是跌破
                 print(tag_ma + 'pre与cur连成的线，上往下地穿过了' + tag_ma + '，说明是跌破，次数：' + str(price_touch_count_fall_break + 1))
                 price_touch_count_fall_break += 1  # 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-                if price_touch_count_fall_break > 3:  # 暂定碰三次吧
-                    print(tag_ma + '触碰跌破' + tag_ma + '到3次了')
+                if price_touch_count_fall_break > self.touch_times:  # 暂定碰三次吧
+                    print(tag_ma + '触碰跌破' + tag_ma + '到' + self.touch_times + '次了')
                     if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18": # and self.need_get_back_short:  # 没空仓了
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
@@ -361,7 +362,7 @@ class MA_trader(object):
                     price_touch_count_fall_break = 0
                     pre_price = current_price
                 else:
-                    print(tag_ma + '触碰跌破' + tag_ma + '少于3次')
+                    print(tag_ma + '触碰跌破' + tag_ma + '少于' + self.touch_times + '次')
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price == ma_price:
