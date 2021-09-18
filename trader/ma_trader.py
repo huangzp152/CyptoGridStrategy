@@ -62,7 +62,7 @@ class MA_trader(object):
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
         self.smooth_line_angle = 12
-        self.my_profit_target = 3 # 300%的盈利目标
+        self.my_profit_target = 1.5 # 150%的盈利目标
         self.touch_times = 2
         pass
 
@@ -284,11 +284,11 @@ class MA_trader(object):
                 price_touch_count_rise_break += 1  # 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_rise_break > self.touch_times:  # 暂定碰三次吧
                     print(tag_ma + '触碰涨破' + tag_ma + '到' + str(self.touch_times) + '次了')
-                    if float(long_position_amt) == 0.0 and ((tag_ma == "tag_ma_18" or tag_ma == "tag_ma_42") and ma_price <= ma_price_another):  # 穿过当时价格低的那跟线开多 #and self.need_get_back_long:  # 没多仓了
-                        if tag_ma == "tag_ma_18" and ma_price <= ma_price_another:
-                            print('此刻18日线的值小于42日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
-                        if tag_ma == "tag_ma_42" and ma_price <= ma_price_another:
-                            print('此刻42日线的值小于18日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
+                    if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18":# or tag_ma == "tag_ma_42") and ma_price <= ma_price_another):  # 穿过当时价格低的那跟线开多 #and self.need_get_back_long:  # 没多仓了
+                        # if tag_ma == "tag_ma_18" and ma_price <= ma_price_another:
+                        #     print('此刻18日线的值小于42日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
+                        # if tag_ma == "tag_ma_42" and ma_price <= ma_price_another:
+                        #     print('此刻42日线的值小于18日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
@@ -338,12 +338,11 @@ class MA_trader(object):
                 price_touch_count_fall_break += 1  # 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_fall_break > self.touch_times:  # 暂定碰三次吧
                     print(tag_ma + '触碰跌破' + tag_ma + '到' + str(self.touch_times) + '次了')
-                    if float(short_position_amt) == 0.0 and ((tag_ma == "tag_ma_18" or tag_ma == "tag_ma_42") and ma_price >= ma_price_another):  # 穿过当时价格高的那跟线开空 # and self.need_get_back_short:  # 没空仓了
-                        if tag_ma == "tag_ma_18" and ma_price >= ma_price_another:
-                            print('此刻18日线的值大于42日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
-                        if tag_ma == "tag_ma_42" and ma_price >= ma_price_another:
-                            print('此刻42日线的值大于18日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
-
+                    if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18": # or tag_ma == "tag_ma_42") and ma_price >= ma_price_another):  # 穿过当时价格高的那跟线开空 # and self.need_get_back_short:  # 没空仓了
+                        # if tag_ma == "tag_ma_18" and ma_price >= ma_price_another:
+                        #     print('此刻18日线的值大于42日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
+                        # if tag_ma == "tag_ma_42" and ma_price >= ma_price_another:
+                        #     print('此刻42日线的值大于18日线, ma:' + str(ma_price) + ', ma_price_another:' + str(ma_price_another))
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
                         print(msg)
@@ -393,16 +392,17 @@ class MA_trader(object):
         双边持仓不能解开，不然会有大风险
         '''
         msg = ''
-        if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
-            self.profit_total += float(position_info_long_profit)
-            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
-            self.close_long(quantity)  # 平多
-        elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
-            self.profit_total += float(position_info_short_profit)
-            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
-            self.close_short(quantity)  # 平空
-        print(msg)
-        Message.dingding_warn(msg)
+        if self.angle_ma_42 <= self.smooth_line_angle * 1.5:# 较为平缓时，再操作
+            if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
+                self.profit_total += float(position_info_long_profit)
+                msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
+                self.close_long(quantity)  # 平多
+            elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+                self.profit_total += float(position_info_short_profit)
+                msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
+                self.close_short(quantity)  # 平空
+            print(msg)
+            Message.dingding_warn(msg)
         '''
 
         self.getMoney()
