@@ -191,11 +191,11 @@ class MA_trader(object):
             print('ma_price_42:' + str(ma_price_42[1]))
             print('ma_price_18:' + str(ma_price_18[1]))
 
-            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], pre_price_for_ma_42,
+            tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], ma_price_18[1], pre_price_for_ma_42,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
                                             position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
-            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], pre_price_for_ma_18,
+            tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], ma_price_42[1], pre_price_for_ma_18,
                                             position_info_long[0], position_info_short[0],
                                             price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
                                             position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
@@ -253,9 +253,9 @@ class MA_trader(object):
 
             # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
 
-            time.sleep(5)
+            # time.sleep(5)
 
-    def deal_with_ma(self, tag_ma, current_price, ma_price, pre_price, long_position_amt, short_position_amt,
+    def deal_with_ma(self, tag_ma, current_price, ma_price, ma_price_another, pre_price, long_position_amt, short_position_amt,
                      price_touch_count_rise_break, price_touch_count_fall_break, position_info_long_profit,
                      position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin):
         print(tag_ma + 'deal_with_ma, params:' + str(current_price) + ', ' + str(ma_price) + ', ' + str(
@@ -281,7 +281,7 @@ class MA_trader(object):
                 print(tag_ma + 'pre与cur连成的线，下往上地穿过了' + tag_ma + '，说明是涨破，次数：' + str(price_touch_count_rise_break + 1))
                 price_touch_count_rise_break += 1  # 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_rise_break > self.touch_times:  # 暂定碰三次吧
-                    print(tag_ma + '触碰涨破' + tag_ma + '到' + self.touch_times + '次了')
+                    print(tag_ma + '触碰涨破' + tag_ma + '到' + str(self.touch_times) + '次了')
                     if float(long_position_amt) == 0.0 and tag_ma == "tag_ma_18": #and self.need_get_back_long:  # 没多仓了
                         msg = tag_ma + '没多仓了,开多，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
@@ -312,7 +312,7 @@ class MA_trader(object):
                     price_touch_count_rise_break = 0
                     pre_price = current_price
                 else:
-                    print(tag_ma + '触碰涨破' + tag_ma + '少于' + self.touch_times + '次')
+                    print(tag_ma + '触碰涨破' + tag_ma + '少于' + str(self.touch_times) + '次')
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price < ma_price:  # 当前价格在ma下方
@@ -331,7 +331,7 @@ class MA_trader(object):
                 print(tag_ma + 'pre与cur连成的线，上往下地穿过了' + tag_ma + '，说明是跌破，次数：' + str(price_touch_count_fall_break + 1))
                 price_touch_count_fall_break += 1  # 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
                 if price_touch_count_fall_break > self.touch_times:  # 暂定碰三次吧
-                    print(tag_ma + '触碰跌破' + tag_ma + '到' + self.touch_times + '次了')
+                    print(tag_ma + '触碰跌破' + tag_ma + '到' + str(self.touch_times) + '次了')
                     if float(short_position_amt) == 0.0 and tag_ma == "tag_ma_18": # and self.need_get_back_short:  # 没空仓了
                         msg = tag_ma + '没空仓了,开空，接回来, 前一个价格：' + str(pre_price) + ' +， 现价：' + str(
                             current_price) + ', ma价格：' + str(ma_price)
@@ -362,7 +362,7 @@ class MA_trader(object):
                     price_touch_count_fall_break = 0
                     pre_price = current_price
                 else:
-                    print(tag_ma + '触碰跌破' + tag_ma + '少于' + self.touch_times + '次')
+                    print(tag_ma + '触碰跌破' + tag_ma + '少于' + str(self.touch_times) + '次')
             elif pre_price == ma_price:#todo 碰到线要不要算一次
                 print(tag_ma + 'pre_price刚好等于ma_price')
         elif current_price == ma_price:
