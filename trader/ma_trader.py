@@ -210,7 +210,7 @@ class MA_trader(object):
             price_touch_ma18_count_rise_break = tmp_list_18[1]
             price_touch_ma18_count_fall_break = tmp_list_18[2]
             print('ok,  ' + 'sleep 10 secs')
-            time.sleep(8)
+            time.sleep(16)
 
             # if current_price > ma_price_42: #当前的价格在ma上方
             #     if not pre_price:#没有前一个价格，说明是第一次，不处理
