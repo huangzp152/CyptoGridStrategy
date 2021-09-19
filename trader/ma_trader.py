@@ -167,11 +167,14 @@ class MA_trader(object):
             # print('position_info_short:' + str(position_info_short))
             # print('position_info_long:' + str(position_info_long))
             current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
+            self.demical_length = len(str(current_price).split(".")[1])
+
+
+            ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
             if not pre_price_for_ma_42:
                 pre_price_for_ma_42 = current_price
             if not pre_price_for_ma_18:
                 pre_price_for_ma_18 = current_price
-            self.demical_length = len(str(current_price).split(".")[1])
 
             ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
             ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
