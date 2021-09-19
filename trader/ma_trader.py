@@ -62,7 +62,7 @@ class MA_trader(object):
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
         self.smooth_line_angle = 12
-        self.my_profit_target = 1.5 # 150%的盈利目标
+        self.my_profit_target = 0.25 # 150%的盈利目标
         self.touch_times = 2
         pass
 

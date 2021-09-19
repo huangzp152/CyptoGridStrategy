@@ -144,23 +144,24 @@ class MA_trader(object):
         index = CalcIndex()
         ma_number_18 = 20
         ma_number_42 = 42
-        # begin_time = time.time
+        begin_time = tt.time
         while not fc.stop_singal_from_client:
             print('ma henged loop, count:' + str(loop_count))
 
-            # time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            # print('now time:' + str(time_format))
-            # diff_time = time.time() - begin_time
-            # struct_time = time.gmtime(diff_time)
+            time_format = tt.strftime("%Y-%m-%d %H:%M:%S", tt.localtime())
+            print('now time:' + str(time_format))
+            diff_time = tt.time() - begin_time
+            struct_time = tt.gmtime(diff_time)
 
-            # self.henged_run_time = '均线信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
-            #     struct_time.tm_year - 1970,
-            #     struct_time.tm_mon - 1,
-            #     struct_time.tm_mday - 1,
-            #     struct_time.tm_hour,
-            #     struct_time.tm_min,
-            #     struct_time.tm_sec))
-            # print(self.henged_run_time)
+            self.henged_run_time = '金叉死叉信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                struct_time.tm_year - 1970,
+                struct_time.tm_mon - 1,
+                struct_time.tm_mday - 1,
+                struct_time.tm_hour,
+                struct_time.tm_min,
+                struct_time.tm_sec))
+
+            print(self.henged_run_time)
 
             print('【目前盈利】:' + str(self.profit_total))
 
@@ -201,14 +202,15 @@ class MA_trader(object):
             s1 = maX < maY
             s2 = maX > maY
 
+            death_ex = s1 & s2.shift(1)  # 判定死叉的条件
+            # print('death_ex:' + str(death_ex))
+            death_date = df.loc[death_ex].index  # 死叉对应的日期
+
             golden_ex = ~(s1 | s2.shift(1))  # 判断金叉的条件
             # print('golden_ex:' + str(golden_ex))
             golden_record = df.loc[golden_ex]
             golden_date = golden_record.index # 金叉的日期
 
-            death_ex = s1 & s2.shift(1)  # 判定死叉的条件
-            # print('death_ex:' + str(death_ex))
-            death_date = df.loc[death_ex].index  # 死叉对应的日期
 
             trade_signal = pd.Series(data=self.GOLDEN_PORK, index=golden_date).append(pd.Series(data=self.DEAD_PORK, index=death_date))
             trade_signal.sort_index(ascending=True)  # 排序
@@ -221,8 +223,8 @@ class MA_trader(object):
                     close_time = df.loc[time]['closeTime']
                     inGoldenRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
                     if inGoldenRange:
-                        Message.dingding_warn("in golden pork range, open long or close short")
-                        print("in golden pork range, open long or close short")
+                        Message.dingding_warn(str(tt.time()) + " in golden pork range, open long or close short")
+                        print(str(tt.time()) + " in golden pork range, open long or close short")
                         # self.open_long(quantity)
                         # self.close_short(quantity)
 
@@ -233,12 +235,12 @@ class MA_trader(object):
                     close_time = df.loc[time]['closeTime']
                     inDeadRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
                     if inDeadRange:
-                        Message.dingding_warn("in dead pork range, close long or open short")
-                        print("in dead pork range, close long or open short")
+                        Message.dingding_warn(str(tt.time()) + " in dead pork range, close long or open short")
+                        print(str(tt.time()) + " in dead pork range, close long or open short")
                         # self.open_short(quantity)
                         # self.close_long(quantity)
 
-            tt.sleep(5)
+            tt.sleep(10)
 
             ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
             # if not pre_price_for_ma_42:
