@@ -144,7 +144,7 @@ class MA_trader(object):
         index = CalcIndex()
         ma_number_18 = 20
         ma_number_42 = 42
-        begin_time = tt.time
+        begin_time = tt.time()
         while not fc.stop_singal_from_client:
             print('ma henged loop, count:' + str(loop_count))
 
