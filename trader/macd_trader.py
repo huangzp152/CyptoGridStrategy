@@ -24,6 +24,7 @@ import time
 import time as tt
 import datetime
 
+
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 from utils.config_ma import config
@@ -223,8 +224,10 @@ class MA_trader(object):
                     close_time = df.loc[time]['closeTime']
                     inGoldenRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
                     if inGoldenRange:
-                        Message.dingding_warn(str(tt.time()) + " in golden pork range, open long or close short")
-                        print(str(tt.time()) + " in golden pork range, open long or close short")
+
+                        msg = str(time_format) + " in golden pork range, open long or close short"
+                        Message.dingding_warn(msg)
+                        print(msg)
                         # self.open_long(quantity)
                         # self.close_short(quantity)
 
@@ -235,7 +238,8 @@ class MA_trader(object):
                     close_time = df.loc[time]['closeTime']
                     inDeadRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
                     if inDeadRange:
-                        Message.dingding_warn(str(tt.time()) + " in dead pork range, close long or open short")
+                        msg = str(time_format) + " in dead pork range, close long or open short"
+                        Message.dingding_warn(msg)
                         print(str(tt.time()) + " in dead pork range, close long or open short")
                         # self.open_short(quantity)
                         # self.close_long(quantity)
