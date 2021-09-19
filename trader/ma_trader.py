@@ -57,8 +57,8 @@ class MA_trader(object):
         self.need_get_back_long = False
         self.need_get_back_short = False
         self.profit_total = 0
-        self.angle_ma_18 = 0
-        self.angle_ma_42 = 0
+        self.angle_ma_18 = 99
+        self.angle_ma_42 = 99
         self.kline_dimemsion = "1m"
         self.slope_offset = 5
         self.smooth_line_angle = 12
@@ -181,15 +181,15 @@ class MA_trader(object):
 
             # 算斜率
             # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
-            self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
-            if self.angle_ma_18 > 90:
-                self.angle_ma_18 = 180 - self.angle_ma_18
-            self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
-            if self.angle_ma_42 > 90:
-                self.angle_ma_42 = 180 - self.angle_ma_42
+            # self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
+            # if self.angle_ma_18 > 90:
+            #     self.angle_ma_18 = 180 - self.angle_ma_18
+            # self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
+            # if self.angle_ma_42 > 90:
+            #     self.angle_ma_42 = 180 - self.angle_ma_42
 
-            print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
-            print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
+            # print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
+            # print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
 
             # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
 
@@ -213,7 +213,7 @@ class MA_trader(object):
             price_touch_ma18_count_rise_break = tmp_list_18[1]
             price_touch_ma18_count_fall_break = tmp_list_18[2]
             print('ok,  ' + 'sleep 10 secs')
-            time.sleep(16)
+            time.sleep(15)
 
             # if current_price > ma_price_42: #当前的价格在ma上方
             #     if not pre_price:#没有前一个价格，说明是第一次，不处理
@@ -395,15 +395,15 @@ class MA_trader(object):
         双边持仓不能解开，不然会有大风险
         '''
         msg = ''
-        if self.angle_ma_42 <= self.smooth_line_angle * 1.5:# 较为平缓时，再操作
-            if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
-                self.profit_total += float(position_info_long_profit)
-                msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
-                self.close_long(quantity)  # 平多
-            elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
-                self.profit_total += float(position_info_short_profit)
-                msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
-                self.close_short(quantity)  # 平空
+        # if self.angle_ma_42 <= self.smooth_line_angle * 1.6:# 较为平缓时，再操作
+        if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
+            self.profit_total += float(position_info_long_profit)
+            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
+            self.close_long(quantity)  # 平多
+        elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+            self.profit_total += float(position_info_short_profit)
+            msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
+            self.close_short(quantity)  # 平空
             print(msg)
             Message.dingding_warn(msg)
         '''
