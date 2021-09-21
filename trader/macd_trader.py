@@ -15,25 +15,29 @@ import csv
 import json
 import math
 import os
+
 import random
 import threading
 import sys
+
+
+sys.path.append("/home/code/mac/binance")
+sys.path.append("/home/code/binance")
+sys.path.append("/Users/zipinghuang/Downloads/binance/CyptoGridStrategy")
 import numpy as np
 import pandas as pd
 import time
 import time as tt
 import datetime
+from config_macd import config
 
 
-sys.path.append("/home/code/mac/binance")
-sys.path.append("/home/code/binance")
-from utils.config_ma import config
-from cmd_receive import fc, app
+# from cmd_receive import fc, app
 from gateway import OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
 
-from utils.dingding import Message
+from dingding import Message
 
 
 class MA_trader(object):
@@ -118,18 +122,13 @@ class MA_trader(object):
         loop_count = 1
         # for kkkkk in range(0, 1):
 
-        position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
-        position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
+        # position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
+        # position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
 
-        quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
-        print('quantity origin:' + str(quantity))
-        if float(quantity) == 0.0:  # 都没有单
-            quantity = config.quantity
-        # 市场价开多空相等的两单
-        # if abs(float(position_info_short[0])) == 0.0:
-        #     self.open_short(quantity)
-        # if abs(float(position_info_long[0])) == 0.0:
-        #     self.open_long(quantity)
+        # quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
+        # print('quantity origin:' + str(quantity))
+        # if float(quantity) == 0.0:  # 都没有单
+        #     quantity = config.quantity
 
         pre_price_open_long = ''
         pre_price_close_long = ''
@@ -146,198 +145,339 @@ class MA_trader(object):
         ma_number_18 = 20
         ma_number_42 = 42
         begin_time = tt.time()
-        while not fc.stop_singal_from_client:
-            print('ma henged loop, count:' + str(loop_count))
 
-            time_format = tt.strftime("%Y-%m-%d %H:%M:%S", tt.localtime())
-            print('now time:' + str(time_format))
-            diff_time = tt.time() - begin_time
-            struct_time = tt.gmtime(diff_time)
+        has_notify_golden = False
+        has_notify_dead = False
 
-            self.henged_run_time = '金叉死叉信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
-                struct_time.tm_year - 1970,
-                struct_time.tm_mon - 1,
-                struct_time.tm_mday - 1,
-                struct_time.tm_hour,
-                struct_time.tm_min,
-                struct_time.tm_sec))
-
-            print(self.henged_run_time)
-
-            print('【目前盈利】:' + str(self.profit_total))
-
-            loop_count = loop_count + 1
-
-            position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
-            position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
-            # print('position_info_short:' + str(position_info_short))
-            # print('position_info_long:' + str(position_info_long))
-            current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
-            self.demical_length = len(str(current_price).split(".")[1])
-
-            #start
-
-            ma_x_line = 5
-            ma_y_line = 10
-            kline_list = self.http_client_future.get_kline(config.symbol, str(self.kline_dimemsion), limit=1000)
-            df = self.klinesToDataFrame(kline_list)
-
-            df[["openTime"]] = df[["openTime"]].astype(str)  # int类型 转换 成str类型，否则会被当做时间戳使用，造成时间错误
-            df[["openTime2"]] = df[["openTime2"]].astype(str)  # int类型 转换 成str类型，否则会被当做时间戳使用，造成时间错误
-
-            df['openTime'] = pd.to_datetime(df['openTime'])
-            df['openTime2'] = pd.to_datetime(df['openTime2'])
-
-            df.set_index('openTime2', inplace=True)
-            df = df.sort_index(ascending=True)
-
-            #均线
-            maX = df['closePrice'].rolling(ma_x_line).mean()
-            maY = df['closePrice'].rolling(ma_y_line).mean()
-
-            # print("maX:" + str(maX) + ", maY:" + str(maY))
-            df = df[ma_y_line:]
-            maX = maX[ma_y_line:]
-            maY = maY[ma_y_line:]
-
-            s1 = maX < maY
-            s2 = maX > maY
-
-            death_ex = s1 & s2.shift(1)  # 判定死叉的条件
-            # print('death_ex:' + str(death_ex))
-            death_date = df.loc[death_ex].index  # 死叉对应的日期
-
-            golden_ex = ~(s1 | s2.shift(1))  # 判断金叉的条件
-            # print('golden_ex:' + str(golden_ex))
-            golden_record = df.loc[golden_ex]
-            golden_date = golden_record.index # 金叉的日期
+            # read2 = csv.reader(df)
+            # self.rows = [row for row in read2]
+        # for row in self.rows:
+        #     start_line = df2.readline()
+        #     start_line_elem = start_line.split(',')
+        #     start_line_elem_time = int(int(start_line_elem[4]) / 1000)
+        #     for i in range (start_line_elem_time, start_line_elem_time + 1000):
+        #         line = df2.readline()
+        #         print('读第' + str(i) + '行')
+            # for i in range(0, 2):
+            #     print('读第'+str(i) + '行')
+            #     df2.readline()
 
 
-            trade_signal = pd.Series(data=self.GOLDEN_PORK, index=golden_date).append(pd.Series(data=self.DEAD_PORK, index=death_date))
-            trade_signal.sort_index(ascending=True)  # 排序
 
-            for i in range(0, len(trade_signal)):#trade_signal, 金叉死叉的数据集在里面
 
-                if trade_signal[i] == self.GOLDEN_PORK:
-                    time = trade_signal.index[i]
-                    open_time = df.loc[time]['openTime']
-                    close_time = df.loc[time]['closeTime']
-                    inGoldenRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
-                    if inGoldenRange:
+        for k in range(3, 42):
+            for l in range(5, 20):
 
-                        msg = str(time_format) + " in golden pork range, open long or close short"
-                        Message.dingding_warn(msg)
-                        print(msg)
-                        # self.open_long(quantity)
-                        # self.close_short(quantity)
+                #multi threads run
+                threading.Thread(target=self.macd_execute_main, args=(k, l, )).start()
 
-                if trade_signal[i] == self.DEAD_PORK:
-                    time = trade_signal.index[i]
-                    # close_price = float(df.loc[time]['closePrice'])
-                    open_time = df.loc[time]['openTime']
-                    close_time = df.loc[time]['closeTime']
-                    inDeadRange = self.judgeCurrentTimeWithLastRecordTime(str(open_time), str(close_time))
-                    if inDeadRange:
-                        msg = str(time_format) + " in dead pork range, close long or open short"
-                        Message.dingding_warn(msg)
-                        print(str(tt.time()) + " in dead pork range, close long or open short")
-                        # self.open_short(quantity)
-                        # self.close_long(quantity)
+                        ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
+                        # if not pre_price_for_ma_42:
+                        #     pre_price_for_ma_42 = current_price
+                        # if not pre_price_for_ma_18:
+                        #     pre_price_for_ma_18 = current_price
+                        #
+                        # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
+                        # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
+                        #
+                        # # 算斜率
+                        # # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
+                        # self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
+                        # if self.angle_ma_18 > 90:
+                        #     self.angle_ma_18 = 180 - self.angle_ma_18
+                        # self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
+                        # if self.angle_ma_42 > 90:
+                        #     self.angle_ma_42 = 180 - self.angle_ma_42
+                        #
+                        # print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
+                        # print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
+                        #
+                        # # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
+                        #
+                        # print('ma_price_42:' + str(ma_price_42[1]))
+                        # print('ma_price_18:' + str(ma_price_18[1]))
+                        #
+                        # tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], ma_price_18[1], pre_price_for_ma_42,
+                        #                                 position_info_long[0], position_info_short[0],
+                        #                                 price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
+                        #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
+                        # tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], ma_price_42[1], pre_price_for_ma_18,
+                        #                                 position_info_long[0], position_info_short[0],
+                        #                                 price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
+                        #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
+                        #
+                        # pre_price_for_ma_42 = tmp_list_42[0]
+                        # price_touch_ma42_count_rise_break = tmp_list_42[1]
+                        # price_touch_ma42_count_fall_break = tmp_list_42[2]
+                        #
+                        # pre_price_for_ma_18 = tmp_list_18[0]
+                        # price_touch_ma18_count_rise_break = tmp_list_18[1]
+                        # price_touch_ma18_count_fall_break = tmp_list_18[2]
+                        # print('ok,  ' + 'sleep 10 secs')
+                        # time.sleep(16)
 
-            tt.sleep(10)
+                        # if current_price > ma_price_42: #当前的价格在ma上方
+                        #     if not pre_price:#没有前一个价格，说明是第一次，不处理
+                        #         pre_price = current_price
+                        #         time.sleep(10)
+                        #         continue
+                        #     elif pre_price > ma_price_42:#前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
+                        #         pre_price = current_price
+                        #         time.sleep(10)
+                        #         continue
+                        #     elif pre_price < ma_price_42:#pre与cur连成的线，下往上地穿过了ma，说明是涨破
+                        #         price_touch_count_rise_break += 1# 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
+                        #         if price_touch_count_rise_break > 3:#暂定碰三次吧
+                        #             self.close_short(position_info_short[0])#平空
+                        #             price_touch_count_rise_break = 0
+                        #             pre_price = current_price
+                        #             time.sleep(10)
+                        #         else:
+                        #             pre_price = current_price
+                        #             time.sleep(10)
+                        #             continue
+                        # elif current_price < ma_price_42:#当前价格在ma下方
+                        #     if not pre_price:#没有前一个价格，说明是第一次，不处理
+                        #         pre_price = current_price
+                        #         time.sleep(10)
+                        #         continue
+                        #     elif pre_price > ma_price_42:#前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
+                        #         pre_price = current_price
+                        #         time.sleep(10)
+                        #         continue
+                        #     elif pre_price > ma_price_42:#pre与cur连成的线，上往下地穿过了ma，说明是跌破
+                        #         price_touch_count_fall_break += 1# 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
+                        #         if price_touch_count_fall_break > 3:#暂定碰三次吧
+                        #             self.close_long(position_info_long[0])#平多
+                        #             price_touch_count_fall_break = 0
+                        #             pre_price = current_price
+                        #             time.sleep(10)
+                        #         else:
+                        #             pre_price = current_price
+                        #             time.sleep(10)
+                        #             continue
 
-            ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
-            # if not pre_price_for_ma_42:
-            #     pre_price_for_ma_42 = current_price
-            # if not pre_price_for_ma_18:
-            #     pre_price_for_ma_18 = current_price
-            #
-            # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
-            # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
-            #
-            # # 算斜率
-            # # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
-            # self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
-            # if self.angle_ma_18 > 90:
-            #     self.angle_ma_18 = 180 - self.angle_ma_18
-            # self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
-            # if self.angle_ma_42 > 90:
-            #     self.angle_ma_42 = 180 - self.angle_ma_42
-            #
-            # print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
-            # print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
-            #
-            # # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
-            #
-            # print('ma_price_42:' + str(ma_price_42[1]))
-            # print('ma_price_18:' + str(ma_price_18[1]))
-            #
-            # tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], ma_price_18[1], pre_price_for_ma_42,
-            #                                 position_info_long[0], position_info_short[0],
-            #                                 price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
-            #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
-            # tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], ma_price_42[1], pre_price_for_ma_18,
-            #                                 position_info_long[0], position_info_short[0],
-            #                                 price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
-            #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
-            #
-            # pre_price_for_ma_42 = tmp_list_42[0]
-            # price_touch_ma42_count_rise_break = tmp_list_42[1]
-            # price_touch_ma42_count_fall_break = tmp_list_42[2]
-            #
-            # pre_price_for_ma_18 = tmp_list_18[0]
-            # price_touch_ma18_count_rise_break = tmp_list_18[1]
-            # price_touch_ma18_count_fall_break = tmp_list_18[2]
-            # print('ok,  ' + 'sleep 10 secs')
-            # time.sleep(16)
+                        # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
 
-            # if current_price > ma_price_42: #当前的价格在ma上方
-            #     if not pre_price:#没有前一个价格，说明是第一次，不处理
-            #         pre_price = current_price
-            #         time.sleep(10)
-            #         continue
-            #     elif pre_price > ma_price_42:#前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
-            #         pre_price = current_price
-            #         time.sleep(10)
-            #         continue
-            #     elif pre_price < ma_price_42:#pre与cur连成的线，下往上地穿过了ma，说明是涨破
-            #         price_touch_count_rise_break += 1# 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-            #         if price_touch_count_rise_break > 3:#暂定碰三次吧
-            #             self.close_short(position_info_short[0])#平空
-            #             price_touch_count_rise_break = 0
-            #             pre_price = current_price
-            #             time.sleep(10)
-            #         else:
-            #             pre_price = current_price
-            #             time.sleep(10)
-            #             continue
-            # elif current_price < ma_price_42:#当前价格在ma下方
-            #     if not pre_price:#没有前一个价格，说明是第一次，不处理
-            #         pre_price = current_price
-            #         time.sleep(10)
-            #         continue
-            #     elif pre_price > ma_price_42:#前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
-            #         pre_price = current_price
-            #         time.sleep(10)
-            #         continue
-            #     elif pre_price > ma_price_42:#pre与cur连成的线，上往下地穿过了ma，说明是跌破
-            #         price_touch_count_fall_break += 1# 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-            #         if price_touch_count_fall_break > 3:#暂定碰三次吧
-            #             self.close_long(position_info_long[0])#平多
-            #             price_touch_count_fall_break = 0
-            #             pre_price = current_price
-            #             time.sleep(10)
-            #         else:
-            #             pre_price = current_price
-            #             time.sleep(10)
-            #             continue
+                        # time.sleep(5)
 
-            # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
 
-            # time.sleep(5)
+    def macd_execute_main(self, k, l):
+        self.long_open_price = 13
+        self.long_close_price = 13
+        self.short_open_price = 13
+        self.short_close_price = 13
+        begin_time = tt.time()
 
-    # 判断当前时间，是否在k线时间范围内
-    def judgeCurrentTimeWithLastRecordTime(self, openTime, closeTime):
+        # test
+        self.getklineList()
+        trade_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/ALICEUSDT-trades-2021-08.csv'  # '/home/code/binance/data/ALICEUSDT-trades-2021-08.csv'
+        with open(trade_path, 'r', encoding='utf-8') as df2:
+
+            start_line = df2.readline()
+            start_line_elem = start_line.split(',')
+            pre_line_elem_time = int(int(start_line_elem[4]) / 1000)
+
+            ma_x_line = l
+            ma_y_line = k
+            while True:
+                line2 = df2.readline()
+                if not line2 and '1628155005229' in line2:  # 跑到2021-08-05 17:16:45
+                    print('读完了')
+                    break
+                # print('line2:' + str(line2))
+                line2_elem = line2.split(',')
+                current_timestamp = int(int(line2_elem[4]) / 1000)  # 现在的交易时间
+                if pre_line_elem_time == current_timestamp:
+                    # print('时间重复了，下一条')
+                    continue
+                #     while not fc.stop_singal_from_client:
+                #         print('ma henged loop, count:' + str(loop_count))
+                time_format = tt.strftime("%Y-%m-%d %H:%M:%S", tt.localtime(current_timestamp))
+
+                # print('now time:' + str(time_format))
+                diff_time = tt.time() - begin_time
+                struct_time = tt.gmtime(diff_time)
+
+                self.henged_run_time = '金叉死叉信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                    struct_time.tm_year - 1970,
+                    struct_time.tm_mon - 1,
+                    struct_time.tm_mday - 1,
+                    struct_time.tm_hour,
+                    struct_time.tm_min,
+                    struct_time.tm_sec))
+
+                # print(self.henged_run_time)
+
+                # print('【目前盈利】:' + str(self.profit_total))
+
+                loop_count = loop_count + 1
+
+                # position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
+                # position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
+                # print('position_info_short:' + str(position_info_short))
+                # print('position_info_long:' + str(position_info_long))
+                current_price = line2.split(',')[
+                    1]  # float(self.http_client_future.get_latest_price(config.symbol).get('price'))
+                # print(str(tt.strftime("%Y-%m-%d %H:%M:%S", tt.localtime(int(line2.split(',')[4][:-3])))) + ', 现在的价格是：'+str(current_price))
+                self.demical_length = len(str(current_price).split(".")[1])
+
+                # start
+
+                # current_trade = line2.split(',')
+                # if str(int(int(current_trade[4]) / 1000)) in line:
+                tmp_list = []
+                for i in range(0, len(self.kline_list)):
+                    # str1 = str(int(self.kline_list[i][0]) / 1000)
+                    # str2 = str(int(self.kline_list[i][0]) / 1000 + 60)
+                    # print(str(current_timestamp) + ',' + str1 + ',' + str2)
+                    if current_timestamp >= int(int(self.kline_list[i][0]) / 1000) and current_timestamp <= int(
+                            int(self.kline_list[i][0]) / 1000) + 59:
+                        if i == 0:
+                            tmp_list = self.kline_list[:1]
+                        else:
+                            tmp_list = self.kline_list[:i + 1]
+                        # print('current_timestamp in current minute range, i:' + str(i))
+                        # if i < 1000:
+                        #     if i == 0:
+                        #         # print('self.kline_list[0]:' + str(self.kline_list[0]))
+                        #         tmp_list.append(self.kline_list[0])
+                        #     else:
+                        #         for j in range(1, i):
+                        #             # print('self.kline_list[' + str(j) + ']:' + str(self.kline_list[j]))
+                        #             tmp_list.append(self.kline_list[j])
+                        # else:
+                        #     for j in range(i-1000, i):
+                        #         # print('self.kline_list[' + str(j) + ']:' + str(self.kline_list[j]))
+                        #         tmp_list.append(self.kline_list[j])
+                        break
+
+                kline_list = tmp_list  # self.http_client_future.get_kline(config.symbol, str(self.kline_dimemsion), limit=1000)
+
+                # print('kline_list长度:' + str(len(kline_list)))
+                # for key in kline_list:
+                #     print(tt.strftime("%Y-%m-%d %H:%M:%S", tt.localtime(float(key[0][:-3]))) + ', 收盘价：' + str(key[4]))
+                df = self.klinesToDataFrame(kline_list)
+
+                df[["openTime"]] = df[["openTime"]].astype(str)  # int类型 转换 成str类型，否则会被当做时间戳使用，造成时间错误
+                df[["openTime2"]] = df[["openTime2"]].astype(str)  # int类型 转换 成str类型，否则会被当做时间戳使用，造成时间错误
+
+                df['openTime'] = pd.to_datetime(df['openTime'])
+                df['openTime2'] = pd.to_datetime(df['openTime2'])
+
+                df.set_index('openTime2', inplace=True)
+                df = df.sort_index(ascending=True)
+
+                # 均线
+                maX = df['closePrice'].rolling(ma_x_line, min_periods=1).mean()
+                maY = df['closePrice'].rolling(ma_y_line, min_periods=1).mean()
+
+                df = df[ma_y_line:]
+                maX = maX[ma_y_line:]
+                maY = maY[ma_y_line:]
+
+                # print("maX:" + str(maX) + ", maY:" + str(maY))
+
+                s1 = maX < maY
+                s2 = maX > maY
+
+                death_ex = s1 & s2.shift(1)  # 判定死叉的条件
+                # print('death_ex:' + str(death_ex))
+                death_date = df.loc[death_ex].index  # 死叉对应的日期
+                # print('death_date:' + str(death_date))
+
+                golden_ex = ~(s1 | s2.shift(1))  # 判断金叉的条件
+                # print('golden_ex:' + str(golden_ex))
+                golden_record = df.loc[golden_ex]
+                golden_date = golden_record.index  # 金叉的日期
+
+                trade_signal = pd.Series(data=self.GOLDEN_PORK, index=golden_date).append(
+                    pd.Series(data=self.DEAD_PORK, index=death_date))
+                trade_signal.sort_index(ascending=True)  # 排序
+
+                # self.closeInAdvance(quantity, position_info_long[0], position_info_short[0], position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
+
+                # print("trade_signal, " + str(len(trade_signal)))
+
+                for i in range(0, len(trade_signal)):  # trade_signal, 金叉死叉的数据集在里面
+                    # print("trade_signal, " + 'i:' + str(i) + ', ' + str(trade_signal[i]))
+                    if trade_signal[i] == self.GOLDEN_PORK:
+                        time = trade_signal.index[i]
+                        open_time = df.loc[time]['openTime']
+                        close_time = df.loc[time]['closeTime']
+
+                        inGoldenRange = self.judgeCurrentTimeWithLastRecordTime(current_timestamp, str(open_time),
+                                                                                str(close_time))
+                        if inGoldenRange and not has_notify_golden:
+                            print(str(time_format) + ', 金叉来了')
+                            has_notify_golden = True
+                            has_notify_dead = False
+
+                            self.profit_total += (self.short_close_price - float(current_price)) * int(config.quantity)
+                            self.long_open_price = float(current_price)
+                            self.short_close_price = float(current_price)
+
+                            # if float(position_info_long[0]) == 0.0:
+                            # self.open_long(quantity)
+                            # if not float(position_info_short[0]) == 0.0:
+                            #     self.profit_total += float(position_info_short[2])
+                            # self.close_short(quantity)
+
+                            msg = str(time_format) + " in " + str(ma_x_line) + " and " + str(
+                                ma_y_line) + " golden pork range, open long or close short, 盈利： " + str(
+                                self.profit_total)
+                            # Message.dingding_warn(msg)
+                            print(msg)
+
+                    if trade_signal[i] == self.DEAD_PORK:
+                        time = trade_signal.index[i]
+                        # close_price = float(df.loc[time]['closePrice'])
+                        open_time = df.loc[time]['openTime']
+                        close_time = df.loc[time]['closeTime']
+                        inDeadRange = self.judgeCurrentTimeWithLastRecordTime(current_timestamp, str(open_time),
+                                                                              str(close_time))
+                        if inDeadRange and not has_notify_dead:
+                            print(str(time_format) + ', 死叉来了')
+                            has_notify_dead = True
+                            has_notify_golden = False
+
+                            self.profit_total += (float(current_price) - self.long_open_price) * int(config.quantity)
+                            self.long_open_price = float(current_price)
+                            self.short_close_price = float(current_price)
+
+                            # if float(position_info_short[0]) == 0.0:
+                            #     self.open_short(quantity)
+                            # if not float(position_info_long[0]) == 0.0:
+                            #     self.profit_total += float(position_info_long[2])
+                            #     self.close_long(quantity)
+                            msg = str(time_format) + " in " + str(ma_x_line) + " and " + str(
+                                ma_y_line) + " dead pork range, close long or open short, 盈利： " + str(self.profit_total)
+                            # Message.dingding_warn(msg)
+                            print(msg)
+
+                # tt.sleep(0.1)
+                pre_line_elem_time = current_timestamp
+
+        msg = "ma k:" + str(k) + ", ma l:" + str(l) + ", 总利润：" + str(self.profit_total)
+        Message.dingding_warn(msg)
+        print(msg)
+        self.profit_total = 0
+
+
+    def getklineList(self):
+            kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/ALICEUSDT-1m-2021-08.csv'  # '/home/code/binance/data/ALICEUSDT-1m-2021-08.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+            self.kline_list = []
+            with open(kline_path, 'r', encoding='utf-8') as df:
+                # read = csv.reader(df)
+                # while True:
+                while True:
+                    line = df.readline()
+                    if not line:
+                        break
+                    self.kline_list.append(line.split(','))
+
+                    # 判断当前时间，是否在k线时间范围内
+    def judgeCurrentTimeWithLastRecordTime(self, current_timestamp, openTime, closeTime):
 
         dateTime_interval = pd.to_datetime(closeTime) - pd.to_datetime(openTime)
 
@@ -346,7 +486,7 @@ class MA_trader(object):
         # print(type(seconds_interval))
         # print(seconds_interval)
 
-        now = int(round((time.time() - seconds_interval) * 1000))
+        now = int(round((current_timestamp - seconds_interval) * 1000))
 
         now02 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now / 1000))
 
@@ -550,11 +690,11 @@ class MA_trader(object):
         '''
         msg = ''
         # if self.angle_ma_42 <= self.smooth_line_angle * 2:# 较为平缓时，再操作
-        if float(short_position_amt) == 0.0 and float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
+        if float(position_info_long_initial_margin) > 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= self.my_profit_target:
             self.profit_total += float(position_info_long_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_long_profit) + '， 总利润：' + str(self.profit_total)
             self.close_long(quantity)  # 平多
-        elif float(long_position_amt) == 0.0 and float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
+        elif float(position_info_short_initial_margin) > 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= self.my_profit_target:
             self.profit_total += float(position_info_short_profit)
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
             self.close_short(quantity)  # 平空

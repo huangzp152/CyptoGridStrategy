@@ -195,6 +195,7 @@ class Message:
             return res
     @staticmethod
     def dingding_warn(text):
+        pass
         headers = {'Content-Type': 'application/json;charset=utf-8'}
         api_url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
         # json_text = self._msg(text)
