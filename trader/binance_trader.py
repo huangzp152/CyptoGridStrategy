@@ -226,7 +226,7 @@ class BinanceTrader(object):
         print(f"买价 bid_price: {bid_price}, 卖价 ask_price: {ask_price}")
 
         # print(f"我的账户信息：get account info: {self.http_client.get_account_info()}")
-        print(f"我的这是啥：get exchange info: {self.http_client.get_exchange_info()}")
+        # print(f"我的这是啥：get exchange info: {self.http_client.get_exchange_info()}")
         # print(f"我的交易：get my trades info: {self.http_client.get_my_trades(config.symbol)}")
         # print(f"我的交易：get all trades info: {self.http_client.get_all_orders(config.symbol)}")
         # print("check specific order :" + str(self.http_client.get_order(config.symbol, "x-A6SIDXVS16242842419521000005")))
