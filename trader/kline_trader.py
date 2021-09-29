@@ -139,9 +139,15 @@ class MA_trader(object):
 
         index = CalcIndex()
         ma_number_18 = 20
-        ma_number_42 = 16
+        ma_number_42 = 42
 
         ma_number_3 = 3
+
+        ma_pre_price_3 = 0
+
+        # ma_pre_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
+        #
+        # time.sleep(5)
 
         while not fc.stop_singal_from_client:
             print('ma henged loop, count:' + str(loop_count))
@@ -181,11 +187,21 @@ class MA_trader(object):
                 pre_price_for_ma_18 = current_price
 
             print("aasdasd:"+str(self.kline_dimemsion) + str(self.demical_length) + str(ma_number_42))
+
+            #支撑线
             press_price = index.calc_press(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
 
+            #压力线
             sustain_price = index.calc_sustain(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
 
+            #均线
             ma_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
+
+            if not ma_pre_price_3:
+                ma_pre_price_3 = ma_price_3[1]
+
+            self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
+            self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
 
             print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price) + ', ma_price_3:' + str(ma_price_3))
 
@@ -225,8 +241,12 @@ class MA_trader(object):
             # pre_price_for_ma_18 = tmp_list_18[0]
             # price_touch_ma18_count_rise_break = tmp_list_18[1]
             # price_touch_ma18_count_fall_break = tmp_list_18[2]
-            print('ok,  ' + 'sleep 10 secs')
+
+            ma_pre_price_3 = ma_price_3[1]
+
+            print('ok,  ' + 'sleep 15 secs')
             time.sleep(15)
+
 
             # if current_price > ma_price_42: #当前的价格在ma上方
             #     if not pre_price:#没有前一个价格，说明是第一次，不处理
@@ -272,6 +292,47 @@ class MA_trader(object):
             # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
 
             # time.sleep(5)
+
+
+    def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short):
+        if not line_price:
+            return
+        long_position_amt = position_info_long[0]
+        short_position_amt = position_info_short[0]
+        position_info_long_profit = position_info_long[2]
+        position_info_short_profit = position_info_long[2]
+        quantity = max(abs(float(long_position_amt)), abs(float(short_position_amt)))
+        print(tag_line + 'quantity origin:' + str(quantity))
+        if quantity == 0:
+            quantity = config.quantity
+        print(tag_line + 'quantity final:' + str(quantity))
+        if tag_line == 'press' and ma_price > line_price:
+            if ma_pre_price > line_price:
+                print('这次和上次的ma 都在' + tag_line + '上方')
+            elif ma_pre_price <= line_price:
+                print('ma涨穿' + tag_line + '了')
+                if float(long_position_amt) == 0.0:
+                    self.open_long(quantity)
+                if float(short_position_amt) != 0.0:
+                    self.close_short(quantity)
+                    self.profit_total += float(position_info_short_profit)
+                    msg = tag_line + '平空, 盈亏：' + str(self.profit_total)
+                    print(msg)
+        elif tag_line == 'sustain' and ma_price < line_price:
+            if ma_pre_price < line_price:
+                print('这次和上次的ma都在' + tag_line + '下方')
+            elif ma_pre_price >= line_price:
+                print('ma跌穿' + tag_line + '了')
+                if float(long_position_amt) != 0.0:
+                    self.close_long(quantity)
+                    self.profit_total += float(position_info_long_profit)
+                    msg = tag_line + '平多, 盈亏：' + str(self.profit_total)
+                    print(msg)
+                    Message.dingding_warn(msg)
+                if float(short_position_amt) == 0.0:
+                    self.open_short(quantity)
+        else:
+            print('均线价格刚好跟支撑/压力线相等')
 
     def deal_with_ma(self, tag_ma, current_price, ma_price, ma_price_another, pre_price, long_position_amt, short_position_amt,
                      price_touch_count_rise_break, price_touch_count_fall_break, position_info_long_profit,
