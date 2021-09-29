@@ -179,14 +179,13 @@ class CalcIndex:
                 kline_highest_price = data_list[i][2]
                 highest_index = i
 
-        print('最高的那根线的最高价：' + str(kline_highest_price) + ', 位置：' + str(highest_index))
+        print('最高的那根线的最高价：' + str(kline_highest_price) + ', 位置：' + str(kline_number - highest_index))
 
         lowest_price_three_kline = data_list[highest_index][3]
         lowest_index_kline_index = highest_index
         count_lowset_time = 0
-        for j in range(highest_index, 0):  # 找到三根就返回那个最低的线的价格
-            if lowest_price_three_kline > data_list[j][
-                3] and count_lowset_time < 3 and not self.contain() and self.ten_star():
+        for j in range(highest_index, 0, -1):  # 找到三根就返回那个最低的线的价格
+            if lowest_price_three_kline > data_list[j][3] and count_lowset_time < 3 and not self.contain() and self.ten_star():
                 count_lowset_time += 1
                 lowest_price_three_kline = data_list[j][3]
                 lowest_index_kline_index = j
@@ -194,7 +193,7 @@ class CalcIndex:
             if count_lowset_time > 3:
                 break
 
-        print('支撑线的价格：' + str(lowest_price_three_kline) + ', 位置：' + str(lowest_index_kline_index))
+        print('支撑线的价格：' + str(lowest_price_three_kline) + ', 位置：' + str(kline_number -lowest_index_kline_index))
         return lowest_price_three_kline
 
     def calc_press(self, symbol, interval, point, kline_number):
@@ -207,12 +206,12 @@ class CalcIndex:
                 kline_lowest_price = data_list[i][3]
                 lowest_index = i
 
-        print('最低的那根线的最高价：' + str(kline_lowest_price) + ', 位置：' + str(lowest_index))
+        print('最低的那根线的最高价：' + str(kline_lowest_price) + ', 位置：' + str(kline_number - lowest_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data_list[lowest_index][0]/1000)))
 
         highest_price_three_kline = data_list[lowest_index][2]
         highest_index_kline_index  = lowest_index
         count_highest_time = 0
-        for j in range(lowest_index, 0):  # 找到三根就返回那个最低的线的价格
+        for j in range(lowest_index, 0, -1):  # 找到三根就返回那个最低的线的价格
             if highest_price_three_kline > data_list[j][
                 2] and count_highest_time < 3 and not self.contain() and self.ten_star():
                 count_highest_time += 1
@@ -222,7 +221,7 @@ class CalcIndex:
             if count_highest_time > 3:
                 break
 
-        print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(highest_index_kline_index))
+        print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(kline_number - highest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime((data_list[highest_index_kline_index][0]/1000))))
         return highest_price_three_kline
 
     def contain(self):
