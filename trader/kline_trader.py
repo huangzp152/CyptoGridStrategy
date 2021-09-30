@@ -201,8 +201,9 @@ class MA_trader(object):
             if not ma_pre_price_3:
                 ma_pre_price_3 = ma_price_3[1]
 
-            self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
-            self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
+            if press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
+                self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
+                self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
 
             print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price) + ', ma_price_3:' + str(ma_price_3))
 
