@@ -188,7 +188,7 @@ class CalcIndex:
         lowest_index_kline_index = highest_index
         count_lowset_time = 1
         for j in range(highest_index - 1, 0, -1):  # 找到三根就返回那个最低的线的价格
-            if lowest_price_three_kline > float(data_list[j][3]) and count_lowset_time < 3 and not self.contain() and self.ten_star(data_list[j]):
+            if lowest_price_three_kline > float(data_list[j][3]) and count_lowset_time < 3 and not self.contain() and not self.ten_star(data_list[j]):
                 count_lowset_time += 1
                 lowest_price_three_kline = float(data_list[j][3])
                 lowest_index_kline_index = j
@@ -223,7 +223,7 @@ class CalcIndex:
         highest_index_kline_index = lowest_index
         count_highest_time = 1
         for j in range(lowest_index - 1, 0, -1):  # 找到三根就返回那个最低的线的价格
-            if highest_price_three_kline < float(data_list[j][2]) and count_highest_time < 3 and not self.contain() and self.ten_star(data_list[j]):
+            if highest_price_three_kline < float(data_list[j][2]) and count_highest_time < 3 and not self.contain() and not self.ten_star(data_list[j]):
                 count_highest_time += 1
                 highest_price_three_kline = float(data_list[j][2])
                 highest_index_kline_index = j
@@ -244,11 +244,11 @@ class CalcIndex:
         return False
 
     def ten_star(self, data_list_elem):
-        if (float(data_list_elem[2]) - float(data_list_elem[3])) / float(data_list_elem[1]) <=0.0003:
-            print('十字星')
-            return False
-        else:
+        if (abs(float(data_list_elem[4]) - float(data_list_elem[1]))) / float(data_list_elem[1]) <=0.0003:
+            print('十字星, 跳过')
             return True
+        else:
+            return False
 
     # def calc_press(self):
     #
