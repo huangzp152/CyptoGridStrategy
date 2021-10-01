@@ -850,7 +850,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else (5002 + random.randint(1, 50)), threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
