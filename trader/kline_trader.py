@@ -199,7 +199,7 @@ class MA_trader(object):
             sustain_price = index.calc_sustain(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
 
             print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
-            if press_price > sustain_price:# 因为按规则上穿压力线就要开多平空，下破支撑线就要开空平多，所以价格如果压力线一定要高于支撑线，否则就换一下
+            if press_price < sustain_price:# 因为按规则上穿压力线就要开多平空，下破支撑线就要开空平多，所以价格如果压力线一定要高于支撑线，否则就换一下
                 press_price, sustain_price = sustain_price, press_price
                 print('【交换后】press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
 
