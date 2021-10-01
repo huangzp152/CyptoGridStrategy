@@ -139,11 +139,14 @@ class MA_trader(object):
 
         index = CalcIndex()
         ma_number_18 = 20
-        ma_number_42 = 42
+        ma_number_42 = 40
 
-        ma_number_3 = 3
+        ma_number_35 = 35
+
+        ma_number_3 = 2
 
         ma_pre_price_3 = 0
+
 
 
         # ma_pre_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
@@ -195,17 +198,24 @@ class MA_trader(object):
             #压力线
             sustain_price = index.calc_sustain(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
 
+            print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
+            if press_price > sustain_price:# 因为按规则上穿压力线就要开多平空，下破支撑线就要开空平多，所以价格如果压力线一定要高于支撑线，否则就换一下
+                press_price, sustain_price = sustain_price, press_price
+                print('【交换后】press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
+
             #均线
             ma_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
+
+            ma_price_35 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_35, self.slope_offset)
 
             if not ma_pre_price_3:
                 ma_pre_price_3 = ma_price_3[1]
 
-            if press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
-                self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
-                self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short)
+            # if press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
+            self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35)
+            self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35)
 
-            print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price) + ', ma_price_3:' + str(ma_price_3))
+            print('ma_price_3:' + str(ma_price_3))
 
             # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
             # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
@@ -296,7 +306,7 @@ class MA_trader(object):
             # time.sleep(5)
 
 
-    def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short):
+    def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short, cooperate_ma_price):
 
         if not line_price:
             return
