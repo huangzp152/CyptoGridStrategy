@@ -18,8 +18,6 @@ class flaskConfig(object):
         self.change_every_time_trade_share_signal_from_client=False
         self.update_position_list_signal_from_client=False
         self.long_buy_ratio_scale_signal_from_client=False
-
-
         self.change_position_side_singal_from_client=False
         self.ratio_no_trendency=0.3
         self.ratio_up_or_down=0.6
@@ -33,6 +31,7 @@ class flaskConfig(object):
         self.start_grid = False
         self.terminate = False
         self.ease_position_share = 50 #多空单都超过8个时，掐掉一些，减少持仓数量
+        self.crazy_build = False
 
 
 
@@ -162,6 +161,14 @@ def grid_change_long_buy_ratio_scale():
         fc.long_buy_ratio_scale = float(long_buy_ratio_scale)
         fc.long_buy_ratio_scale_singal_from_client = True
     return 'hzp, /change/long_buy_ratio_scale, long_buy_ratio_scale:' + long_buy_ratio_scale
+
+@app.route('/grid/change/crazy_build', methods=['GET'])
+def crazy_buy():
+    try:
+        fc.crazy_build = True
+    except RuntimeError as e:
+        print(str(e))
+    return 'hzp, /change/crazy_build, crazy_build'
 
 @app.route('/grid/start', methods=['GET'])
 def grid_start():

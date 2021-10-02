@@ -50,6 +50,7 @@ class HengedGrid(object):
         self.open_spot_price = 99999
         self.open_future_price = 1
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
+        self.crazy_build = fc.crazy_build
         pass
 
     def getMoney(self):
@@ -354,12 +355,20 @@ class HengedGrid(object):
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
-                elif spot_open_long_res and not (future_res and future_res['orderId']):
-                    print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 底仓仓位比例：" + str(self.get_long_bottom_position_scale()))
+                elif self.crazy_build and spot_open_long_res and not (future_res and future_res['orderId']):
+                    # 走这里的话，会在同一价位一直买一直买，建议低位时把self.crazy_build设置为True
+                    # 因为狂买模式不要一直触发不然会爆仓，所以还是在建底仓的时候做
+                    msg = "进入狂买模式了"
+                    Message.dingding_warn(msg)
+                    # print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 底仓仓位比例：" + str(self.get_long_bottom_position_scale()))
                 else:
                     # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
-                    #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
-                    self.set_ratio_and_price()
+                    # 修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
+                    # 差异化的多空区间网格，所以多空单格子利润要为不一致
+                    if spot_res:
+                        self.set_ratio_and_price('spot_res')
+                    elif future_res:
+                        self.set_ratio_and_price('future_res')
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))
 
@@ -404,14 +413,22 @@ class HengedGrid(object):
         stop_singal_from_client = False
         time.sleep(10)
 
-    def set_ratio_and_price(self):
+    def set_ratio_and_price(self, set_side = ''):
         self.set_spot_ratio()
         self.set_future_ratio()
-        self.set_spot_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))#考虑列表价格的话，拉升后，要跌很多才能开仓；不考虑的话，有可能同个价位附近有很多仓位
-        self.set_spot_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))
-        self.set_future_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
-        self.set_future_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
+        if set_side == '':
+            self.set_spot_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))#考虑列表价格的话，拉升后，要跌很多才能开仓；不考虑的话，有可能同个价位附近有很多仓位
+            self.set_spot_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))
+            self.set_future_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
+            self.set_future_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
+        elif set_side == 'spot_res':
+            self.set_spot_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))#考虑列表价格的话，拉升后，要跌很多才能开仓；不考虑的话，有可能同个价位附近有很多仓位
+            self.set_spot_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_spot_price())))
+        elif set_side == 'future_res':
+            self.set_future_next_buy_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
+            self.set_future_next_sell_price(float(self.cur_market_future_price))#, float(self.get_last_future_price())))
         self.adjust_prices()
+
 
     def nearly_full_position(self):
         if float(dynamicConfig.total_steps * 100) / (float(self.spot_money) * int(self.leverage)) >= 0.95:
