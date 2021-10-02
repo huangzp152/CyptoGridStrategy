@@ -189,7 +189,7 @@ class HengedGrid(object):
 
 
         print("把上次存下来的卖掉一部分")
-        self.close_previous_position(time_format)
+        #self.close_previous_position(time_format)
 
         print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
         if self.grid_side == 'BOTH':
@@ -623,19 +623,23 @@ class HengedGrid(object):
             return future_res
 
     def save_trade_to_file(self, time_format, trade_info):
-        try:
-            record_market_price_dir = '../data/record'
-            if not os.path.exists(record_market_price_dir):
-                os.mkdir(record_market_price_dir)
-            with open(os.path.join(record_market_price_dir, 'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'),  config.symbol)),
-                      'a+', encoding='utf-8-sig') as ddf:
-                writer_p = csv.writer(ddf, delimiter=',')
-                if os.path.getsize(os.path.join(record_market_price_dir,
-                                                'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'), config.symbol))) == 0:
-                    writer_p.writerow(['datetime', 'price', 'long_buy', 'long_sell', 'short_sell', 'short_buy'])
-                writer_p.writerow(trade_info)
-        except Exception as ee:
-            print('ee:' + str(ee))
+        pass
+        #太费空间了
+        # try:
+        #     record_market_price_dir = '../data/record'
+        #     if not os.path.exists(record_market_price_dir):
+        #         os.mkdir(record_market_price_dir)
+        #     with open(os.path.join(record_market_price_dir, 'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'),  config.symbol)),
+        #               'a+', encoding='utf-8-sig') as ddf:
+        #         writer_p = csv.writer(ddf, delimiter=',')
+        #         if os.path.getsize(os.path.join(record_market_price_dir,
+        #                                         'record_market_price_%s_%s.csv' % (time_format.replace(' ', '-'), config.symbol))) == 0:
+        #             writer_p.writerow(['datetime', 'price', 'long_buy', 'long_sell', 'short_sell', 'short_buy'])
+        #         writer_p.writerow(trade_info)
+        # except Exception as ee:
+        #     print('ee:' + str(ee))
+
+
 
     def set_spot_ratio(self):
         '''
