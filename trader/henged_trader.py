@@ -249,11 +249,18 @@ class HengedGrid(object):
                     continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
-                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
-                print('网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price])))
-                print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
-                print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share))
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn)
+                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit
+                msg3 = '网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price]))
+                msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
+                msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
+
+                # if struct_time.tm_min == 0 or struct_time.tm_min == 30:
+                print(msg1) #保留账户模拟数据
+                print(msg2)
+                print(msg3)
+                print(msg4)
+                print(msg5)
 
                 # 判断一下趋势(做多拉升时or做空暴跌时，认为趋势来了)
                 symbol_to_check_trend = config.symbol
@@ -268,7 +275,9 @@ class HengedGrid(object):
 
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
-                print("目前【市场价】：" + str(self.cur_market_future_price))
+
+                msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
+                print(msg6)
 
                 #清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
@@ -308,8 +317,15 @@ class HengedGrid(object):
                     else:
                         print('最亏的那份空单损益:' + str(future_lost_ratio))
 
-                print("下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price))
-                print("下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price))
+                msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price)
+                msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
+
+                print(msg7)
+                print(msg8)
+
+                if struct_time.tm_min == 0 or struct_time.tm_min == 30:
+                    msg = '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8
+                    Message.dingding_warn(msg)
 
                 #设定仓位
                 # quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
