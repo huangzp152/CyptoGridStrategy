@@ -338,7 +338,7 @@ class MA_trader(object):
         print('self.last_time_profit：' + str(self.last_time_profit))
         # 挽救震荡磨损的办法，上次如果亏损了，这次就双份，一份是为了覆盖上次亏损之后止盈出场的，但出场后，剩下的（比如某次双份是8倍，止盈后应该降为1倍）应该缩减为1倍；控制风险
         if self.last_time_profit < 0.0:
-            self.quantity = self.quantity * 2
+            self.quantity = float(config.quantity) * (int(self.quantity / float(config.quantity)) + 1)  # 翻倍成本太高了，每次递增一倍吧
             msg = '上次亏了，这次要加倍：' + str(self.quantity)
             Message.dingding_warn(msg)
             print(msg)
@@ -379,8 +379,8 @@ class MA_trader(object):
                     msg = tag_line + '平空, 总盈亏：' + str(self.profit_total) + ', 本次盈亏：' + str(self.last_time_profit)
                     print(msg)
                 if float(long_position_amt) == 0.0:
-                    self.set_quantity() # 亏了下次加倍
-                    self.open_long(quantity)
+                    self.set_quantity()  # 亏了下次加倍
+                    self.open_long(self.quantity)
         elif tag_line == 'sustain' and ma_price < line_price:
             if ma_pre_price < line_price:
                 print('这次和上次的ma都在' + tag_line + '下方')
@@ -395,8 +395,8 @@ class MA_trader(object):
                     print(msg)
                     Message.dingding_warn(msg)
                 if float(short_position_amt) == 0.0:
-                    self.set_quantity() # 亏了下次加倍
-                    self.open_short(quantity)
+                    self.set_quantity()  # 亏了下次加倍
+                    self.open_short(self.quantity)
         elif ma_price == line_price:
             print('均线价格刚好跟支撑/压力线相等,均线：' + str(ma_price) + ', 压力线or均线：' + str(line_price))
 
@@ -873,14 +873,27 @@ class MA_trader(object):
         save_profit_quantity = float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (int(float(quantity) / float(config.quantity))))
         after_quantity = int(float(quantity) - save_profit_quantity)
 
-        if float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) * int(save_profit_quantity / float(quantity)) > abs(self.last_time_profit) * 1.005: # 0.005 为手续费
+        # print('config.quantity:' + str(config.quantity))
+        # print('self.quantity:' + str(self.quantity))
+        # print('quantity:' + str(quantity))
+        # print('save_profit_quantity:' + str(save_profit_quantity))
+        # print('after_quantity:' + str(after_quantity))
+        # print('short_position_amt:' + str(short_position_amt))
+        # print('long_position_amt:' + str(long_position_amt))
+        # print('position_info_long_profit:' + str(position_info_long_profit))
+        # print('position_info_short_profit:' + str(position_info_short_profit))
+        # print('int(save_profit_quantity / float(quantity)):' + str(int(save_profit_quantity / float(quantity))))
+        # print('self.last_time_profit:' + str(self.last_time_profit))
+        # self.last_time_profit = -0.33
+
+        if float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) * float(save_profit_quantity / float(quantity)) > abs(self.last_time_profit) * 1.005: # 0.005 为手续费
             msg = '本次多单盈利: ' + str(position_info_long_profit) + ' 覆盖上次的亏损( ' + str(self.last_time_profit) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(save_profit_quantity) + ', 减了之后的： ' + str(after_quantity)
             print(msg)
             self.close_long(save_profit_quantity)  # 平多
             self.quantity = after_quantity # 减了之后的
             self.last_time_profit = 0
             Message.dingding_warn(msg)
-        elif float(long_position_amt) == 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) * int(save_profit_quantity / float(quantity)) > abs(self.last_time_profit) * 1.005: # 0.005 为手续费
+        elif float(long_position_amt) == 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) * float(save_profit_quantity / float(quantity)) > abs(self.last_time_profit) * 1.005: # 0.005 为手续费
             msg = '本次空单盈利: ' + str(position_info_short_profit) + ' 覆盖上次的亏损( ' + str(self.last_time_profit) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(save_profit_quantity) + ', 减了之后的： ' + str(after_quantity)
             print(msg)
             self.close_short(save_profit_quantity)  # 平空
