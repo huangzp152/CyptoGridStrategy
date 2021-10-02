@@ -203,6 +203,8 @@ class HengedGrid(object):
 
         time.sleep(5)
 
+        has_report = False
+
         while not fc.stop_singal_from_client:
             print('loop, count:' + str(loop_count))
             loop_count = loop_count + 1
@@ -323,7 +325,7 @@ class HengedGrid(object):
                 print(msg7)
                 print(msg8)
 
-                if struct_time.tm_min == 0 or struct_time.tm_min == 30:
+                if time.time() % 1800 == 0:#  半小时汇报一次
                     msg = '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8
                     Message.dingding_warn(msg)
 

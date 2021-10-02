@@ -64,6 +64,11 @@ class MA_trader(object):
         self.smooth_line_angle = 12
         self.my_profit_target = 0.25 # 150%的盈利目标
         self.touch_times = 2
+
+        self.last_time_profit = 0
+
+        self.quantity = ''
+
         pass
 
     def getMoney(self):
@@ -116,8 +121,8 @@ class MA_trader(object):
         position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
         position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
 
-        quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
-        print('quantity origin:' + str(quantity))
+        self.quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
+        print('quantity origin:' + str(self.quantity))
         # if float(quantity) == 0.0:  # 都没有单
         #     quantity = config.quantity
         # 市场价开多空相等的两单
@@ -147,6 +152,7 @@ class MA_trader(object):
 
         ma_pre_price_3 = 0
 
+        self.quantity = config.quantity
 
 
         # ma_pre_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
@@ -161,16 +167,16 @@ class MA_trader(object):
             diff_time = time.time() - begin_time
             struct_time = time.gmtime(diff_time)
 
-            self.henged_run_time = '均线信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
-                struct_time.tm_year - 1970,
-                struct_time.tm_mon - 1,
-                struct_time.tm_mday - 1,
-                struct_time.tm_hour,
-                struct_time.tm_min,
-                struct_time.tm_sec))
-            print(self.henged_run_time)
-
-            print('【目前盈利】:' + str(self.profit_total))
+            # self.henged_run_time = '均线信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+            #     struct_time.tm_year - 1970,
+            #     struct_time.tm_mon - 1,
+            #     struct_time.tm_mday - 1,
+            #     struct_time.tm_hour,
+            #     struct_time.tm_min,
+            #     struct_time.tm_sec))
+            # print(self.henged_run_time)
+            #
+            # print('【目前盈利】:' + str(self.profit_total))
 
             loop_count = loop_count + 1
 
@@ -180,6 +186,15 @@ class MA_trader(object):
             # print('position_info_long:' + str(position_info_long))
             current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
             self.demical_length = len(str(current_price).split(".")[1])
+
+            print('quantity last time:' + str(self.quantity))
+            # 挽救震荡磨损的办法，上次如果亏损了，这次就双份，一份是为了覆盖上次亏损之后止盈出场的，但出场后，剩下的（比如某次双份是8倍，止盈后应该降为1倍）应该缩减为1倍；控制风险
+            if self.last_time_profit < 0.0:
+                self.quantity = self.quantity * 2
+                print('上次亏了，这次要加倍：' + str(self.quantity))
+            else:  # 恢复
+                self.quantity = config.quantity
+            print('this time quantity：' + str(self.quantity))
 
             #等信号，到了再开单
 
@@ -211,11 +226,17 @@ class MA_trader(object):
             if not ma_pre_price_3:
                 ma_pre_price_3 = ma_price_3[1]
 
+
+
             # if press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
-            self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35)
-            self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35)
+            if position_info_long and position_info_short and position_info_long[0] and position_info_long[0] and position_info_long[2] and position_info_long[2]:
+                self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
+                self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
 
             print('ma_price_3:' + str(ma_price_3))
+
+            # 压力线之上还有空单，就要清掉；支撑线之下还有多单，也要清掉，那如果是用来抄底的呢？？
+            # 暂时不加
 
             # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
             # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
@@ -306,7 +327,7 @@ class MA_trader(object):
             # time.sleep(5)
 
 
-    def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short, cooperate_ma_price):
+    def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short, cooperate_ma_price, quantity):
 
         if not line_price:
             return
@@ -322,35 +343,35 @@ class MA_trader(object):
         if not position_info_short and not position_info_short[0] and not position_info_short[2]:
             short_position_amt = position_info_short[0]
             position_info_short_profit = position_info_short[2]
-        if not long_position_amt and not short_position_amt:
-            quantity = max(abs(float(long_position_amt)), abs(float(short_position_amt)))
-        else:
-            quantity = 0
-        print(tag_line + 'quantity origin:' + str(quantity))
-        if quantity == 0:
-            quantity = config.quantity
-        print(tag_line + 'quantity final:' + str(quantity))
+        # if not long_position_amt and not short_position_amt:
+        #     quantity = max(abs(float(long_position_amt)), abs(float(short_position_amt)))
+        # else:
+
         if tag_line == 'press' and ma_price > line_price:
             if ma_pre_price > line_price:
                 print('这次和上次的ma 都在' + tag_line + '上方')
+                self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit)
             elif ma_pre_price <= line_price:
                 print('ma涨穿' + tag_line + '了')
                 if float(long_position_amt) == 0.0:
                     self.open_long(quantity)
                 if float(short_position_amt) != 0.0:
+                    self.last_time_profit = float(position_info_short_profit)
                     self.close_short(quantity)
                     self.profit_total += float(position_info_short_profit)
-                    msg = tag_line + '平空, 盈亏：' + str(self.profit_total)
+                    msg = tag_line + '平空, 总盈亏：' + str(self.profit_total) + ', 本次盈亏：' + str(self.last_time_profit)
                     print(msg)
         elif tag_line == 'sustain' and ma_price < line_price:
             if ma_pre_price < line_price:
                 print('这次和上次的ma都在' + tag_line + '下方')
+                self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit)
             elif ma_pre_price >= line_price:
                 print('ma跌穿' + tag_line + '了')
                 if float(long_position_amt) != 0.0:
+                    self.last_time_profit = float(position_info_long_profit)
                     self.close_long(quantity)
                     self.profit_total += float(position_info_long_profit)
-                    msg = tag_line + '平多, 盈亏：' + str(self.profit_total)
+                    msg = tag_line + '平多, 总盈亏：' + str(self.profit_total) + ', 本次盈亏：' + str(self.last_time_profit)
                     print(msg)
                     Message.dingding_warn(msg)
                 if float(short_position_amt) == 0.0:
@@ -503,6 +524,347 @@ class MA_trader(object):
             msg = '达到盈利目标了，收工bye,利润:' + str(position_info_short_profit) + '， 总利润：' + str(self.profit_total)
             self.close_short(quantity)  # 平空
             print(msg)
+            Message.dingding_warn(msg)
+        '''
+
+        self.getMoney()
+        # while(True):
+
+        #test
+        # kline_path = '/home/code/binance/data/BTCUSDT-5m-2021-06.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+        # with open(kline_path, 'r', encoding='utf-8') as df:
+            #test
+            # read = csv.reader(df)
+            # self.rows = [row for row in read]
+            # index = CalcIndex(self.rows)
+            # self.cur_market_price = self.rows[0][2]
+
+        index = CalcIndex()
+
+        # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
+        #self.init_record_price_list()
+        #获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
+        # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
+        self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
+        # 设定精度，无所谓现货或者合约
+        self.demical_length = len(str(self.cur_market_future_price).split(".")[1])
+        # 设定买卖数量
+        quantity_basic = round((fc.every_time_trade_share / float(self.cur_market_future_price)), 3)
+        self.quantity = self._format(quantity_basic)
+
+        # 设定仓位
+        # dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
+        # dynamicConfig.future_step = self.get_future_share() #self.get_step_by_position(False) 一样的
+        self.set_spot_share(int(len(dynamicConfig.record_spot_price)))
+        self.set_future_step(len(dynamicConfig.record_future_price))
+
+        if self.spot_step != int(float(self.http_client_spot.get_future_position_info(config.symbol)) / float(self.quantity)):
+            print(f"现货：接口中获取的仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.spot_step}，你自己处理掉吧")
+        if self.future_step != self.get_step_by_position(False):
+            print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
+
+        # test check value
+        # print('check account exchangeinfo: ' + str(self.http_client_spot.exchangeInfo(config.symbol)))  # 保留账户模拟数据
+        # print('check account assets spot: ' + str(self.http_client_spot.get_future_position_info(config.symbol)))  # 保留账户模拟数据
+        print('check account assets future: ' + str(self.http_client_future.get_future_asset(config.symbol)))
+        # print('check account: ' + str(self.http_client_spot.get_account_info(config.symbol)))# 查询现货指定货币的仓位
+        print('check market price: ' + str(round(float(self.cur_market_future_price), 2)))
+        print('check quantity: ' + str(self.quantity))
+
+        #设置为双向持仓
+        if self.http_client_future.check_position_side().get('dualSidePosition') is False:
+            self.http_client_future.set_henged_position_mode()
+        print('check positionSide:' + str(self.http_client_future.check_position_side()))
+
+        # future_res = self.http_client_future.place_order('BTCUSDT', OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
+        # spot_res = self.http_client_spot.place_order('BTCUSDT', OrderSide.BUY, OrderType.MARKET, quantity=self.quantity, price=round(float(self.cur_market_spot_price), 2), time_inforce="")
+        # if future_res['orderId']:
+        #     print("开空单成功")
+        #     print(f"future_res:{future_res}")
+        # print("orders:" + str(self.http_client_future.get_positionInfo('BTCUSDT')))#现货查不了
+        # print("orders:" + str(self.http_client_spot.get))
+        self.leverage = str(self.set_leverage(fc.leverage))
+        print('目前杠杆:' + self.leverage)
+        print("设置初始的盈利点数")
+        self.set_spot_ratio()
+        self.set_future_ratio()
+        print("设置初始的多单 空单买入卖出价格，仓位")
+        self.spot_step = dynamicConfig.spot_step
+        self.set_spot_next_buy_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
+        self.set_spot_next_sell_price(float(self.cur_market_future_price))
+        self.future_step = dynamicConfig.future_step
+        self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
+        self.set_future_next_buy_price(float(self.cur_market_future_price))
+        self.spot_money = float(self.getAsset()[0])
+        self.ease_position_share = fc.ease_position_share
+
+        ascending = True
+        descending = False
+
+        print("--------------初始准备阶段完成！---------------")
+
+        begin_time = time.time()
+        loop_count = 1
+        # for kkkkk in range(0, 1):
+
+        time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        print('now time:' + str(time_format))
+        diff_time = time.time() - begin_time
+        struct_time = time.gmtime(diff_time)
+
+        self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+            struct_time.tm_year - 1970,
+            struct_time.tm_mon - 1,
+            struct_time.tm_mday - 1,
+            struct_time.tm_hour,
+            struct_time.tm_min,
+            struct_time.tm_sec))
+        print(self.grid_run_time)
+
+
+        print("把上次存下来的卖掉一部分")
+        self.close_previous_position(time_format)
+
+        print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
+        if self.grid_side == 'BOTH':
+            self.open_long(time_format)
+            self.open_short(time_format)
+        elif self.grid_side == 'LONG':
+            self.open_long(time_format)
+        elif self.grid_side == 'SHORT':
+            self.open_short(time_format)
+
+        time.sleep(5)
+
+        while not fc.stop_singal_from_client:
+            print('loop, count:' + str(loop_count))
+            loop_count = loop_count + 1
+
+            #test
+        # for i in range(6, len(self.rows)):
+            # print('check account: ' + str(self.getMoney()))
+            # print("kline:" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(self.rows[i][0])/1000)) + ", price:" + self.rows[i][2])
+            # self.cur_market_price = self.rows[i][2]
+
+
+
+            spot_res = None
+            spot_open_long_res = None
+            future_res = None
+
+            try:
+                # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
+
+                time.sleep(0.01)
+                diff_time = time.time() - begin_time
+                struct_time = time.gmtime(diff_time)
+
+                time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                print('now time:' + str(time_format))
+
+                self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                     struct_time.tm_year-1970,
+                     struct_time.tm_mon-1,
+                     struct_time.tm_mday-1,
+                     struct_time.tm_hour,
+                     struct_time.tm_min,
+                     struct_time.tm_sec))
+                print(self.grid_run_time)
+                # str(self.http_client_future.get_future_asset(config.symbol))
+                # tmp = self.http_client_future.get_positionInfo(config.symbol)
+                # print(f"查看杠杆效果:{tmp}")
+                # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
+                try:
+                    self.spot_money = float(self.getAsset()[0])
+                except Exception as e:
+                    print('exception:' + str(e))
+                    time.sleep(5)
+                    continue
+                # print('check account: ' + str(self.getAsset()))
+                self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
+                print('目前盈利：' + str(dynamicConfig.total_earn)) #保留账户模拟数据
+                print('目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格毛利润率：' + self.gross_profit)
+                print('网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price])))
+                print('总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step))
+                print('仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share))
+
+                # 判断一下趋势(做多拉升时or做空暴跌时，认为趋势来了)
+                symbol_to_check_trend = config.symbol
+                if symbol_to_check_trend.endswith('BUSD'):
+                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
+                if fc.position_side == 'LONG':
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
+                elif fc.position_side == 'SHORT':
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+                else:
+                    isTrendComing = False
+
+                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
+                    'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                print("目前【市场价】：" + str(self.cur_market_future_price))
+
+                #清仓操作
+                if len(dynamicConfig.record_spot_price) > 0:
+                    spot_lost_ratio = (float(dynamicConfig.record_spot_price[0]) - float(self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0])
+                    if spot_lost_ratio > self.cut_position_threshold:
+                        msg = '要清掉一份仓位，不然要容易爆仓'
+                        print(msg)
+                        self.open_spot_price = dynamicConfig.record_spot_price[0]
+                        self.close_long(time_format, True)
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_spot_price))
+                        del dynamicConfig.record_spot_price[0]
+                    else:
+                        print('最亏的那份多单损益:' + str(spot_lost_ratio))
+
+                position_delta = min(len(dynamicConfig.record_spot_price) - self.ease_position_share, len(dynamicConfig.record_future_price) - self.ease_position_share)
+                if len(dynamicConfig.record_spot_price) == len(dynamicConfig.record_future_price) and len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
+                    msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
+                    print(msg)
+                    for i in range(0, position_delta):
+                        self.close_long(time_format, True)
+                        Message.dingding_warn('这份多单平掉了:' + str(dynamicConfig.record_spot_price[i]))
+                        self.close_short(time_format, True)
+                        Message.dingding_warn('这份空单平掉了:' + str(dynamicConfig.record_future_price[i]))
+                        del dynamicConfig.record_spot_price[i]
+                        del dynamicConfig.record_future_price[i]
+
+
+                if len(dynamicConfig.record_future_price) > 0:
+                    future_lost_ratio = (float(self.cur_market_future_price) - float(dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
+                    if future_lost_ratio > self.cut_position_threshold:
+                        msg = '要清掉一份仓位，不然要容易爆仓'
+                        print(msg)
+                        self.open_future_price = dynamicConfig.record_future_price[0]
+                        self.close_short(time_format, True)
+                        Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_future_price))
+                        del dynamicConfig.record_future_price[0]
+                    else:
+                        print('最亏的那份空单损益:' + str(future_lost_ratio))
+
+                print("下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price))
+                print("下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price))
+
+                #设定仓位
+                # quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
+                # self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
+                # spot_res = None
+                # future_res = None
+
+                # if max(float(self.cur_market_future_price), float(self.cur_market_future_price)) < config.min_border_price or min(float(self.cur_market_future_price), float(self.cur_market_future_price)) > config.max_border_price:
+                #     print("市场价超过网格区间上下限啦")
+                #     time.sleep(50)
+                # el
+                # if isTrendComing:
+                #     print('趋势来了，多仓空仓拿好，不买不卖')
+                #     time.sleep(10)
+                # else:
+
+                #开多单（买入持仓）
+                #多单市场价要低于你的买入价，才能成交
+                if not isTrendComing and float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
+                    if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(self.cur_market_future_price):
+                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                    # if not spot_open_long_res:#不需要建仓
+                    spot_res = self.open_long(time_format) #不管是否建仓，都要买一份
+
+
+                #平掉多单（卖出获利）
+                #多单市场价要高于你的卖出价，才能成交
+                #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price):
+                    spot_res = self.close_long(time_format)
+
+                #开空单（卖出借仓）
+                #空单市场价要高于你的卖出价，才能成交
+                if not isTrendComing and float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
+                    future_res = self.open_short(time_format)
+
+                #平掉空单（买入获利）
+                #空单市场价要低于你的买回价，才能成交
+                #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price):
+                    future_res = self.close_short(time_format)
+
+                if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
+                    print("这个价格这轮没有买卖成功，开启下一轮")
+                    self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
+                elif spot_open_long_res and not (future_res and future_res['orderId']):
+                    print("这个价格建仓了，目前仓位列表：" + str(dynamicConfig.long_bottom_position_price) + ", 底仓仓位比例：" + str(self.get_long_bottom_position_scale()))
+                else:
+                    # 多单或者空单开单成功后，均需要修改整体双向的买卖价格
+                    #修改价格应在所有流程结束之后做，否则在多单开完之后立马修改所有的价格的话，这时候空单就平不了了
+                    self.set_ratio_and_price()
+                    # self.set_spot_price(float(self.cur_market_future_price))
+                    # self.set_future_price(float(self.cur_market_future_price))
+
+                print('休息5s')
+                time.sleep(5)
+
+                # 这几个其实有点多余（未验证）
+                self.spot_buy_price = dynamicConfig.spot_buy_price
+                self.spot_sell_price = dynamicConfig.spot_sell_price
+                self.spot_step = dynamicConfig.spot_step
+
+                self.future_buy_price = dynamicConfig.future_buy_price
+                self.future_sell_price = dynamicConfig.future_sell_price
+                self.future_step = dynamicConfig.future_step
+
+                print("----------------------------------------------------------")
+
+            except Exception as eloop:
+                print('loop时出错了！，error：' + str(eloop))
+                Message.dingding_warn(str(eloop))
+
+        print('loop结束了')
+        all_invests = sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]) + sum([float(tmp_future) for tmp_future in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0])
+        msg1 = '总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str(float(all_invests) * float(self.quantity)) + '， 曾经最多投资额数：' + str(dynamicConfig.total_invest)
+        msg2 = ''
+        msg3 = ''
+        print(msg1)
+        tmp_list2 = [float(tmp) for tmp in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]
+        tmp_list_result2 = 0
+        for ttt in tmp_list2:
+            tmp_list_result2 += ttt
+        if len(dynamicConfig.record_spot_price) > 0:
+            msg2 = '，多单浮动盈亏：' + str((float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(self.quantity))
+            print(msg2)
+        tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0]
+        tmp_list_result = 0
+        for ttt in tmp_list:
+            tmp_list_result += ttt
+        if len(dynamicConfig.record_future_price) > 0:
+            msg3 = ', 空单浮动盈亏：' + str((tmp_list_result / len(dynamicConfig.record_future_price) - float(self.cur_market_future_price)) * float(self.quantity))
+        Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
+        stop_singal_from_client = False
+        time.sleep(10)
+
+        '''
+        # time.sleep(10)
+
+    def saveLastTimeLoss(self, quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit):
+        '''
+        单边持仓的盈利大于上次的亏损时，持仓降为1倍，算是解救亏损成功
+        比如这次买了4倍，如果 盈利 * 3/4 > 上次的亏损，那就卸掉这3/4的仓位
+        双边持仓不能解开，不然会有大风险
+        '''
+        msg = ''
+        # if self.angle_ma_42 <= self.smooth_line_angle * 1.6:# 较为平缓时，再操作
+        save_profit_share = float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (int(float(quantity) / float(config.quantity))))
+        after_share = float(quantity) * (1 - save_profit_share)
+
+        if float(short_position_amt) == 0.0 and float(position_info_long_profit) * save_profit_share > self.last_time_profit:
+            msg = '本次多单盈利覆盖上次的亏损了，减仓! 原仓：' + str(save_profit_share) + ', 减了之后的： ' + str(after_share)
+            print(msg)
+            self.close_long(float(quantity) * save_profit_share)  # 平多
+            self.quantity = after_share # 减了之后的
+            self.last_time_profit = 0
+            Message.dingding_warn(msg)
+        elif float(long_position_amt) == 0.0 and float(position_info_short_profit) * save_profit_share > self.last_time_profit:
+            msg = '本次空单盈利覆盖上次的亏损了，减仓! 原仓：' + str(save_profit_share) + ', 减了之后的： ' + str(after_share)
+            print(msg)
+            self.close_short(float(quantity) * save_profit_share)  # 平空
+            self.quantity = after_share # 减了之后的
+            self.last_time_profit = 0
             Message.dingding_warn(msg)
         '''
 
