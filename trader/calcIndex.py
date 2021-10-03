@@ -261,7 +261,7 @@ class CalcIndex:
 
     def ten_star(self, data_list_elem):
         if ((abs(float(data_list_elem[4]) - float(data_list_elem[1]))) / (abs(float(data_list_elem[2]) - float(data_list_elem[3]))) <= 0.33) and ((abs(float(data_list_elem[4]) - float(data_list_elem[1]))) / float(data_list_elem[1]) <= 0.0003):
-            print('十字星, 跳过')
+            # print('十字星, 跳过')
             return True
         else:
             return False

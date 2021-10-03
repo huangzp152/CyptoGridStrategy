@@ -144,7 +144,7 @@ class MA_trader(object):
 
         index = CalcIndex()
         ma_number_18 = 20
-        ma_number_42 = 40
+        ma_number_42 = 32
 
         ma_number_35 = 35
 
@@ -160,7 +160,8 @@ class MA_trader(object):
         # time.sleep(5)
 
         while not fc.stop_singal_from_client:
-            print('ma henged loop, count:' + str(loop_count))
+
+            # print('ma henged loop, count:' + str(loop_count))
 
             time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             print('now time:' + str(time_format))
@@ -196,7 +197,7 @@ class MA_trader(object):
             if not pre_price_for_ma_18:
                 pre_price_for_ma_18 = current_price
 
-            print("aasdasd:"+str(self.kline_dimemsion) + str(self.demical_length) + str(ma_number_42))
+            # print("aasdasd:"+str(self.kline_dimemsion) + str(self.demical_length) + str(ma_number_42))
 
             #压力线
             press_price = index.calc_press(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42)
@@ -218,7 +219,7 @@ class MA_trader(object):
                 ma_pre_price_3 = ma_price_3[1]
 
 
-            print('ma_price_3:' + str(ma_price_3))
+            # print('ma_price_3:' + str(ma_price_3))
 
             if not position_info_long:
                 print("position_info_long is null")
@@ -284,8 +285,8 @@ class MA_trader(object):
 
             ma_pre_price_3 = ma_price_3[1]
 
-            print('ok,  ' + 'sleep 15 secs')
-            time.sleep(15)
+            # print('ok,  ' + 'sleep 10 secs')
+            time.sleep(10)
 
 
             # if current_price > ma_price_42: #当前的价格在ma上方
@@ -334,7 +335,7 @@ class MA_trader(object):
             # time.sleep(5)
 
     def set_quantity(self):
-        print('quantity last time:' + str(self.quantity))
+        # print('quantity last time:' + str(self.quantity))
         print('self.last_time_profit：' + str(self.last_time_profit))
         # 挽救震荡磨损的办法，上次如果亏损了，这次就双份，一份是为了覆盖上次亏损之后止盈出场的，但出场后，剩下的（比如某次双份是8倍，止盈后应该降为1倍）应该缩减为1倍；控制风险
         if self.last_time_profit < 0.0:
@@ -344,7 +345,7 @@ class MA_trader(object):
             print(msg)
         else:  # 恢复
             self.quantity = config.quantity
-        print('this time quantity：' + str(self.quantity))
+        # print('this time quantity：' + str(self.quantity))
 
     def deal_with_line(self, tag_line, line_price, ma_pre_price, ma_price, position_info_long, position_info_short, cooperate_ma_price, quantity):
 
@@ -368,12 +369,12 @@ class MA_trader(object):
 
         if tag_line == 'press' and ma_price > line_price:
             if ma_pre_price > line_price:
-                print('这次和上次的ma 都在' + tag_line + '上方')
+                # print('这次和上次的ma 都在' + tag_line + '上方')
                 self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit)
             elif ma_pre_price <= line_price:
                 print('ma涨穿' + tag_line + '了')
                 if float(short_position_amt) != 0.0:
-                    self.last_time_profit = float(position_info_short_profit) # 记录盈亏
+                    self.last_time_profit += float(position_info_short_profit) # 记录盈亏
                     self.close_short(quantity)
                     self.profit_total += float(position_info_short_profit)
                     msg = tag_line + '平空, 总盈亏：' + str(self.profit_total) + ', 本次盈亏：' + str(self.last_time_profit)
@@ -384,12 +385,12 @@ class MA_trader(object):
                     self.open_long(self.quantity)
         elif tag_line == 'sustain' and ma_price < line_price:
             if ma_pre_price < line_price:
-                print('这次和上次的ma都在' + tag_line + '下方')
+                # print('这次和上次的ma都在' + tag_line + '下方')
                 self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, position_info_long_profit, position_info_short_profit)
             elif ma_pre_price >= line_price:
                 print('ma跌穿' + tag_line + '了')
                 if float(long_position_amt) != 0.0:
-                    self.last_time_profit = float(position_info_long_profit) # 记录盈亏
+                    self.last_time_profit += float(position_info_long_profit) # 记录盈亏
                     self.close_long(quantity)
                     self.profit_total += float(position_info_long_profit)
                     msg = tag_line + '平多, 总盈亏：' + str(self.profit_total) + ', 本次盈亏：' + str(self.last_time_profit)
@@ -408,7 +409,7 @@ class MA_trader(object):
             pre_price) + ', ' + str(long_position_amt) + ', ' + str(short_position_amt) + ', ' + str(
             price_touch_count_rise_break) + ', ' + str(price_touch_count_fall_break))
         quantity = max(abs(float(long_position_amt)), abs(float(short_position_amt)))
-        print(tag_ma + 'quantity origin:' + str(quantity))
+        # print(tag_ma + 'quantity origin:' + str(quantity))
         if quantity == 0:
             quantity = config.quantity
         print(tag_ma + 'quantity final:' + str(quantity))
