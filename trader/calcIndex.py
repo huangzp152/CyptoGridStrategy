@@ -174,10 +174,9 @@ class CalcIndex:
         支撑线
         '''
 
-        have_find_out_sustain = False
-
+        finish_find_out_sustain = False
         data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
-        while not have_find_out_sustain:
+        while not finish_find_out_sustain:
             # highest_data_list = [data[2] for data in data_list]
             kline_highest_price = float(data_list[0][2])
             highest_index = 0
@@ -198,28 +197,32 @@ class CalcIndex:
                     lowest_index_kline_index = j
 
                 if count_lowset_time >= 3:
-                    have_find_out_sustain = True
+                    finish_find_out_sustain = True
                     break
 
             # print('count_lowset_time:' + str(count_lowset_time))
             if count_lowset_time < 3:
                 # print('最高点左边不足三根，画不出支撑线, 缩小范围, 继续给我搜')
                 if len(data_list) > 3:
-                    data_list = data_list[1:]
-                # else:
-                    # print('努力了还是搜不到，算了')
-                continue
+                    data_list = data_list[2:]
+                    print('缩表，长度：' + str(len(data_list)))
+                    continue
+                else:
+                    print('努力了还是搜不到，算了')
+                    finish_find_out_sustain = True
+                    break
 
+        if finish_find_out_sustain and lowest_price_three_kline:
             print('支撑线的价格：' + str(lowest_price_three_kline) + ', 位置：' + str(kline_number -lowest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data_list[lowest_index_kline_index][0]/1000)))
-            return lowest_price_three_kline
+        return lowest_price_three_kline
 
     def calc_press(self, symbol, interval, point, kline_number):
         '''
         压力线
         '''
-        have_find_out_press = False
+        finish_find_out_press = False
         data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
-        while not have_find_out_press:
+        while not finish_find_out_press:
             # lowest_data_list = [data[3] for data in data_list]
             kline_lowest_price = float(data_list[0][3])
             lowest_index = 0
@@ -240,20 +243,24 @@ class CalcIndex:
                     highest_index_kline_index = j
 
                 if count_highest_time >= 3:
-                    have_find_out_press = True
+                    finish_find_out_press = True
                     break
 
             # print('count_highest_time:' + str(count_highest_time))
             if count_highest_time < 3:
                 # print('最低点左边不足三根，画不出压力线, 缩小范围, 继续给我搜')
                 if len(data_list) > 3:
-                    data_list = data_list[1:]
-                # else:
-                    # print('努力了还是搜不到，算了')
-                continue
+                    data_list = data_list[2:]
+                    print('缩表，长度：' + str(len(data_list)))
+                    continue
+                else:
+                    print('努力了还是搜不到，算了')
+                    finish_find_out_press = True
+                    break
 
 
-        print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(kline_number - highest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime((data_list[highest_index_kline_index][0]/1000))))
+        if finish_find_out_press and highest_price_three_kline:
+            print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(kline_number - highest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime((data_list[highest_index_kline_index][0]/1000))))
         return highest_price_three_kline
 
     def contain(self):
