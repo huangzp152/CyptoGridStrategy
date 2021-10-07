@@ -17,6 +17,9 @@ class CalcIndex:
                                            proxy_host=config.proxy_host, proxy_port=config.proxy_port)
         self.test_data = test_data
 
+        self.kline_list = []
+        self.getklineList()
+
     def calcMA(self,symbol,interval,point):
         '''
         :param symbol: 交易对
@@ -144,7 +147,7 @@ class CalcIndex:
 
         return [round(last_ma5/5,point), round(next_ma5/5,point)]
 
-    def calcSlopeMA(self, symbol, interval, point, kline_number, offset):
+    def calcSlopeMA(self, symbol, interval, point, kline_number, offset, current_time_for_test=None):
         '''
 
         :param symbol:
@@ -153,7 +156,16 @@ class CalcIndex:
         '''
         last_ma = 0
         next_ma = 0
-        data = self.http_client.get_kline(symbol, interval, limit=kline_number+offset)
+
+        if config.test:
+            for i in range(0, len(self.kline_list)):
+                # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
+                if int(int(str(current_time_for_test)[:-3]) / 60) == int(int(str(self.kline_list[i][0])[:-3])/ 60):
+                    data = self.kline_list[i - kline_number - 1: i]
+                    # print('yes:' + str(current_time_for_test) + ', i:' + str(i) + ', k线集合:' + str(data))
+                    break
+        else:
+            data = self.http_client.get_kline(symbol, interval, limit=kline_number+offset)
 
         # test
         # data = self.test_data[j - 6:j]
@@ -169,13 +181,23 @@ class CalcIndex:
 
         return [round(last_ma/kline_number,point), round(next_ma/kline_number,point)]
 
-    def calc_sustain(self, symbol, interval, point, kline_number):
+    def calc_sustain(self, symbol, interval, point, kline_number, current_time_for_test):
         '''
         支撑线
         '''
 
         finish_find_out_sustain = False
-        data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
+        if config.test:
+            # print('len(self.kline_list):' + str(len(self.kline_list)))
+            for i in range(0, len(self.kline_list)):
+                # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
+                if int(int(str(current_time_for_test)[:-3]) / 60) == int(int(str(self.kline_list[i][0])[:-3])/ 60):
+                    # print('yes:' + str(current_time_for_test) + ', i:' + str(i) + ', kline_number:' + str(kline_number))
+                    data_list = self.kline_list[i - kline_number : i]
+                    break
+            print('calc_sustain data_list~:' + str(len(data_list)))
+        else:
+            data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
         while not finish_find_out_sustain:
             # highest_data_list = [data[2] for data in data_list]
             kline_highest_price = float(data_list[0][2])
@@ -205,7 +227,7 @@ class CalcIndex:
                 # print('最高点左边不足三根，画不出支撑线, 缩小范围, 继续给我搜')
                 if len(data_list) > 3:
                     data_list = data_list[2:]
-                    print('缩表，长度：' + str(len(data_list)))
+                    # print('缩表，长度：' + str(len(data_list)))
                     continue
                 else:
                     print('努力了还是搜不到，算了')
@@ -213,16 +235,42 @@ class CalcIndex:
                     break
 
         if finish_find_out_sustain and lowest_price_three_kline:
-            print('支撑线的价格：' + str(lowest_price_three_kline) + ', 位置：' + str(kline_number -lowest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data_list[lowest_index_kline_index][0]/1000)))
+            print('支撑线的价格：' + str(lowest_price_three_kline) + ', 位置：' + str(kline_number -lowest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(data_list[lowest_index_kline_index][0])/1000)))
         return lowest_price_three_kline
 
-    def calc_press(self, symbol, interval, point, kline_number):
+    def getklineList(self):
+            kline_path = '/home/code/binance/data/DOTUSDT-1m-2021-10-04.csv'  # '/home/code/binance/data/ALICEUSDT-1m-2021-08.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+            self.kline_list = []
+            with open(kline_path, 'r', encoding='utf-8') as df:
+                # read = csv.reader(df)
+                # while True:
+                while True:
+                    line = df.readline()
+                    if not line:
+                        break
+                    self.kline_list.append(line.split(','))
+
+                    # 判断当前时间，是否在k线时间范围内
+
+    def calc_press(self, symbol, interval, point, kline_number, current_time_for_test):
         '''
         压力线
         '''
+        #
         finish_find_out_press = False
-        data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
+        if config.test:
+            # print('len(self.kline_list):' + str(len(self.kline_list)))
+            for i in range(0, len(self.kline_list)):
+                # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
+                if int(int(str(current_time_for_test)[:-3]) / 60) == int(int(str(self.kline_list[i][0])[:-3])/ 60):
+                    # print('yes:' + str(current_time_for_test) + ', i:' + str(i) + ', kline_number:' + str(kline_number))
+                    data_list = self.kline_list[i - kline_number : i]
+                    break
+            print('calc_press data_list~:' + str(len(data_list)))
+        else:
+            data_list = self.http_client.get_kline(symbol, interval, limit=kline_number)
         while not finish_find_out_press:
+
             # lowest_data_list = [data[3] for data in data_list]
             kline_lowest_price = float(data_list[0][3])
             lowest_index = 0
@@ -230,9 +278,7 @@ class CalcIndex:
                 if kline_lowest_price > float(data_list[i][3]):
                     kline_lowest_price = float(data_list[i][3])
                     lowest_index = i
-
             # print('最低的那根线的最低价：' + str(kline_lowest_price) + ', 位置：' + str(kline_number - lowest_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data_list[lowest_index][0]/1000)))
-
             highest_price_three_kline = float(data_list[lowest_index][2])
             highest_index_kline_index = lowest_index
             count_highest_time = 1
@@ -251,7 +297,7 @@ class CalcIndex:
                 # print('最低点左边不足三根，画不出压力线, 缩小范围, 继续给我搜')
                 if len(data_list) > 3:
                     data_list = data_list[2:]
-                    print('缩表，长度：' + str(len(data_list)))
+                    # print('缩表，长度：' + str(len(data_list)))
                     continue
                 else:
                     print('努力了还是搜不到，算了')
@@ -260,7 +306,7 @@ class CalcIndex:
 
 
         if finish_find_out_press and highest_price_three_kline:
-            print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(kline_number - highest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime((data_list[highest_index_kline_index][0]/1000))))
+            print('压力线的价格：' + str(highest_price_three_kline) + ', 位置：' + str(kline_number - highest_index_kline_index) + ', 时间：' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime((int(data_list[highest_index_kline_index][0])/1000))))
         return highest_price_three_kline
 
     def contain(self):

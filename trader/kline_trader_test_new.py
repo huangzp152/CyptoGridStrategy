@@ -60,7 +60,7 @@ class MA_trader(object):
         self.angle_ma_18 = 99
         self.angle_ma_42 = 99
         self.kline_dimemsion = "1m"
-        self.slope_offset = 5
+        self.slope_offset = 1
         self.smooth_line_angle = 12
         self.my_profit_target = 0.25 # 150%的盈利目标
         self.touch_times = 2
@@ -73,12 +73,14 @@ class MA_trader(object):
 
         self.fail_times = 0 #连续亏本次数，连续亏的次数太多时，放慢一下操作节奏
 
-        self.pause_time = 30
+        self.pause_time = 10
 
-        self.has_earn_handling_charge_long = False
-        self.has_earn_handling_charge_short = False
-        self.has_earn_target_long = False
-        self.has_earn_target_short = False
+        if config.test:
+            self.positionAmt = self.quantity
+            self.entryPrice = '0'
+            self.unrealizedProfit = '0'
+            self.initialMargin = '0'
+
 
         pass
 
@@ -122,257 +124,313 @@ class MA_trader(object):
 
         try:
             print("MA_trader, run()")
+            if config.test:
+                print("回测！！！！！！")
             print("--------------初始准备阶段开始！---------------")
-            time.sleep(3)
+            # time.sleep(3)
             print("--------------初始准备阶段完成！---------------")
 
-            begin_time = time.time()
+            if config.test:
+                pass
+            else:
+                begin_time = time.time()
             loop_count = 1
             # for kkkkk in range(0, 1):
 
-            position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
-            position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
+            trade_path = '/home/code/binance/data/DOTUSDT-aggTrades-2021-10-04.csv'  # '/home/code/binance/data/ALICEUSDT-trades-2021-08.csv'
+            with open(trade_path, 'r', encoding='utf-8') as df2:
 
-            self.quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
-            print('quantity origin:' + str(self.quantity))
-            # if float(quantity) == 0.0:  # 都没有单
-            #     quantity = config.quantity
-            # 市场价开多空相等的两单
-            # if abs(float(position_info_short[0])) == 0.0:
-            #     self.open_short(quantity)
-            # if abs(float(position_info_long[0])) == 0.0:
-            #     self.open_long(quantity)
+                start_line = df2.readline()
+                start_line_elem = start_line.split(',')
+                pre_line_elem_time = int(int(start_line_elem[5]) / 1000)
 
-            pre_price_open_long = ''
-            pre_price_close_long = ''
-            pre_price_open_short = ''
-            pre_price_for_ma_42 = ''
-            pre_price_for_ma_18 = ''
+                if config.test:
+                    begin_time = pre_line_elem_time
 
-            price_touch_ma42_count_fall_break = 0
-            price_touch_ma42_count_rise_break = 0
-            price_touch_ma18_count_fall_break = 0
-            price_touch_ma18_count_rise_break = 0
+                # 初始
+                position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT', self.quantity, self.current_price, self.entryPrice)
+                position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG', self.quantity, self.current_price, self.entryPrice)
 
-            index = CalcIndex()
-            ma_number_18 = 20
-            ma_number_42 = 30
+                self.quantity = max(abs(float(position_info_short[0])), abs(float(position_info_long[0])))
+                print('quantity origin:' + str(self.quantity))
+                # if float(quantity) == 0.0:  # 都没有单
+                #     quantity = config.quantity
+                # 市场价开多空相等的两单
+                # if abs(float(position_info_short[0])) == 0.0:
+                #     self.open_short(quantity)
+                # if abs(float(position_info_long[0])) == 0.0:
+                #     self.open_long(quantity)
 
-            ma_number_35 = 35
+                pre_price_open_long = ''
+                pre_price_close_long = ''
+                pre_price_open_short = ''
+                pre_price_for_ma_42 = ''
+                pre_price_for_ma_18 = ''
 
-            ma_number_3 = 2
+                price_touch_ma42_count_fall_break = 0
+                price_touch_ma42_count_rise_break = 0
+                price_touch_ma18_count_fall_break = 0
+                price_touch_ma18_count_rise_break = 0
 
-            ma_pre_price_3 = 0
+                index = CalcIndex()
+                ma_number_18 = 20
+                ma_number_42 = 30
 
-            self.quantity = config.quantity
+                ma_number_35 = 35
 
-            # ma_pre_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
-            #
-            # time.sleep(5)
-            press_price = 0
-            sustain_price = 0
+                ma_number_3 = 2
 
-            #临时参数,可注释
-            self.quantity = '1'
-            self.current_loss_profit = 0
-            self.profit_total = 0
-            self.last_time_profit = 0
+                ma_pre_price_3 = 0
 
-            while not fc.stop_singal_from_client:
+                self.quantity = config.quantity
 
-                print('ma henged loop, count:' + str(loop_count))
+                # ma_pre_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
+                #
+                # time.sleep(5)
+                press_price = 0
+                sustain_price = 0
 
-                time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                print('now time:' + str(time_format))
-                diff_time = time.time() - begin_time
-                struct_time = time.gmtime(diff_time)
+                #临时参数,可注释
+                self.quantity = '4'
+                self.current_loss_profit = -0.8
+                self.profit_total = -0.8
+                self.last_time_profit = -0.8
 
-                self.henged_run_time = '均线信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
-                    struct_time.tm_year - 1970,
-                    struct_time.tm_mon - 1,
-                    struct_time.tm_mday - 1,
-                    struct_time.tm_hour,
-                    struct_time.tm_min,
-                    struct_time.tm_sec))
+                # if config.test:
+                #     trade_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/ALICEUSDT-trades-2021-08.csv'  # '/home/code/binance/data/ALICEUSDT-trades-2021-08.csv'
+                #     with open(trade_path, 'r', encoding='utf-8') as df2:
+                # else:
+                #     while not fc.stop_singal_from_client:
 
-                msg = str(self.henged_run_time) + ',【目前盈利】:' + str(self.profit_total) + ', 上次亏损：' + str(self.last_time_profit) + ', 当前操作数量：' + str(self.quantity) + ', ' + (
-                            '， 最新的压力线：' + str(press_price) + ', 最新的支撑线：' + str(sustain_price)) if (
-                            float(press_price) != 0 or float(sustain_price) != 0) else ""
-                print(msg)
+                while True:
+                    line2 = df2.readline()
+                    # print('line2:' + str(line2))
+                    line2_elem = line2.split(',')
+                    if not line2 or int(line2_elem[5]) < int('1633307827000'):# 半小时以内k线的不取
+                        continue
+                    if not line2 or '1633333838021' in line2:  # 跑到2021-08-05 17:16:45
+                        print('读完了')
+                        break
+                    print('line2_elem[5]:' + str(line2_elem[5]))
+                    current_timestamp = line2_elem[5]  # 现在的交易时间
+                    self.current_price = line2_elem[2]
+                    # if pre_line_elem_time == current_timestamp:
+                    #     # print('时间重复了，下一条')
+                    #     continue
 
-                loop_count = loop_count + 1
+                # while not fc.stop_singal_from_client:
+                    print('ma henged loop, count:' + str(loop_count))
+                    if config.test:
+                        time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(int(line2_elem[5]) / 1000)))
+                    else:
+                        time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                    print('now time:' + str(time_format))
+                    diff_time = time.time() - begin_time
+                    struct_time = time.gmtime(diff_time)
 
-                if loop_count * self.pause_time % 60 == 15:
+                    self.henged_run_time = '均线信号对冲运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
+                        struct_time.tm_year - 1970,
+                        struct_time.tm_mon - 1,
+                        struct_time.tm_mday - 1,
+                        struct_time.tm_hour,
+                        struct_time.tm_min,
+                        struct_time.tm_sec))
 
-                    Message.dingding_warn(msg)
+                    msg = str(self.henged_run_time) + ',【目前盈利】:' + str(self.profit_total) + ', 上次亏损：' + str(self.last_time_profit) + ', 当前操作数量：' + str(self.quantity) + ', ' + (
+                                '， 最新的压力线：' + str(press_price) + ', 最新的支撑线：' + str(sustain_price)) if (
+                                float(press_price) != 0 or float(sustain_price) != 0) else ""
+                    print(msg)
 
-                position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
-                position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
+                    loop_count = loop_count + 1
 
-                if position_info_long == -1 or position_info_short == -1:
-                    print('interface request maybe error')
-                    time.sleep(5)
-                    continue
+                    if loop_count * self.pause_time % 60 == 15:
 
-                print('position_info_short:' + str(position_info_short))
-                print('position_info_long:' + str(position_info_long))
-                self.current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
-                self.demical_length = len(str(self.current_price).split(".")[1])
+                        Message.dingding_warn(msg)
 
-                #等信号，到了再开单
+                    if config.test:
+                        self.current_price = float(line2_elem[1])
+                        print('self.current_price:' + str(self.current_price))
+                    else:
+                        self.current_price = float(self.http_client_future.get_latest_price(config.symbol).get('price'))
 
-                ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
-
-                if not pre_price_for_ma_42:
-                    pre_price_for_ma_42 = self.current_price
-                if not pre_price_for_ma_18:
-                    pre_price_for_ma_18 = self.current_price
-
-                # print("aasdasd:"+str(self.kline_dimemsion) + str(self.demical_length) + str(ma_number_42))
-
-                #压力线
-                press_price = index.calc_press(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, time.time())
-
-                #支撑线
-                sustain_price = index.calc_sustain(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, time.time())
-
-                print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
-                if press_price < sustain_price:# 因为按规则上穿压力线就要开多平空，下破支撑线就要开空平多，所以价格如果压力线一定要高于支撑线，否则就换一下
-                   press_price, sustain_price = sustain_price, press_price
-                   print('【交换后】press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
-
-                #均线
-                ma_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset)
-
-                ma_price_35 = ''#index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_35, self.slope_offset)
-
-                if not ma_pre_price_3:
-                    ma_pre_price_3 = ma_price_3[1]
-
-                # print('ma_price_3:' + str(ma_price_3))
-
-                if not position_info_long:
-                    print("position_info_long is null")
-                if not position_info_short:
-                    print("position_info_short is null")
-                if not position_info_long[0]:
-                    print("position_info_long[0] is null")
-                if not position_info_long[1]:
-                    print("position_info_long[1] is null")
-                if not position_info_short[0]:
-                    print("position_info_short[0] is null")
-                if not position_info_short[1]:
-                    print("position_info_short[1] is null")
-
-                if press_price and sustain_price and press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
-                # if position_info_long and position_info_short and position_info_long[0] and position_info_long[0] and position_info_long[2] and position_info_long[2]:
-                    self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
-
-                    # 需要更新
-                    position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT')
-                    position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG')
+                    position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT', self.quantity, self.current_price, self.entryPrice)
+                    position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG', self.quantity, self.current_price, self.entryPrice)
 
                     if position_info_long == -1 or position_info_short == -1:
                         print('interface request maybe error')
-                        time.sleep(5)
+                        if config.test:
+                            pass
+                        else:
+                            time.sleep(5)
                         continue
 
                     print('position_info_short:' + str(position_info_short))
                     print('position_info_long:' + str(position_info_long))
 
-                    self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
+                    self.demical_length = len(str(self.current_price).split(".")[1])
 
-                # else:
-                #     print("sth is null")
+                    #等信号，到了再开单
 
-                # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
-                # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
+                    ########42和20日均线法，震荡时亏损有点受不鸟，暂时放弃##############################
 
-                # 算斜率
-                # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
-                # self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
-                # if self.angle_ma_18 > 90:
-                #     self.angle_ma_18 = 180 - self.angle_ma_18
-                # self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
-                # if self.angle_ma_42 > 90:
-                #     self.angle_ma_42 = 180 - self.angle_ma_42
+                    if not pre_price_for_ma_42:
+                        pre_price_for_ma_42 = self.current_price
+                    if not pre_price_for_ma_18:
+                        pre_price_for_ma_18 = self.current_price
 
-                # print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
-                # print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
+                    # print("aasdasd:"+str(self.kline_dimemsion) + str(self.demical_length) + str(ma_number_42))
 
-                # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
+                    #压力线
+                    press_price = index.calc_press(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, current_timestamp)
 
-                # print('ma_price_42:' + str(ma_price_42[1]))
-                # print('ma_price_18:' + str(ma_price_18[1]))
+                    #支撑线
+                    sustain_price = index.calc_sustain(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, current_timestamp)
 
-                # tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], ma_price_18[1], pre_price_for_ma_42,
-                #                                 position_info_long[0], position_info_short[0],
-                #                                 price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
-                #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
-                # tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], ma_price_42[1], pre_price_for_ma_18,
-                #                                 position_info_long[0], position_info_short[0],
-                #                                 price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
-                #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
-                #
-                # pre_price_for_ma_42 = tmp_list_42[0]
-                # price_touch_ma42_count_rise_break = tmp_list_42[1]
-                # price_touch_ma42_count_fall_break = tmp_list_42[2]
-                #
-                # pre_price_for_ma_18 = tmp_list_18[0]
-                # price_touch_ma18_count_rise_break = tmp_list_18[1]
-                # price_touch_ma18_count_fall_break = tmp_list_18[2]
+                    print('press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
+                    if press_price < sustain_price:# 因为按规则上穿压力线就要开多平空，下破支撑线就要开空平多，所以价格如果压力线一定要高于支撑线，否则就换一下
+                       press_price, sustain_price = sustain_price, press_price
+                       print('【交换后】press_price:' + str(press_price) + ', sustain_price:' + str(sustain_price))
 
-                ma_pre_price_3 = ma_price_3[1]
+                    #均线
+                    ma_price_3 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_3, self.slope_offset, current_timestamp)
+
+                    ma_price_35 = ''#index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_35, self.slope_offset)
+
+                    if not ma_pre_price_3:
+                        ma_pre_price_3 = ma_price_3[1]
+
+                    print('ma_price_3:' + str(ma_price_3))
+
+                    if not position_info_long:
+                        print("position_info_long is null")
+                    if not position_info_short:
+                        print("position_info_short is null")
+                    if not position_info_long[0]:
+                        print("position_info_long[0] is null")
+                    if not position_info_long[1]:
+                        print("position_info_long[1] is null")
+                    if not position_info_short[0]:
+                        print("position_info_short[0] is null")
+                    if not position_info_short[1]:
+                        print("position_info_short[1] is null")
+
+                    if press_price and sustain_price and press_price > sustain_price:# 压力线要大于支撑线，不然按规则，上穿压力线开多然后向下时，会有风险
+                    # if position_info_long and position_info_short and position_info_long[0] and position_info_long[0] and position_info_long[2] and position_info_long[2]:
+
+                        self.deal_with_line("sustain", sustain_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
+
+                        # 需要更新
+
+                        position_info_short = self.http_client_future.get_future_position_info_ma(config.symbol, 'SHORT', self.quantity, self.current_price, self.entryPrice)
+                        position_info_long = self.http_client_future.get_future_position_info_ma(config.symbol, 'LONG', self.quantity, self.current_price, self.entryPrice)
+
+                        if position_info_long == -1 or position_info_short == -1:
+                            print('interface request maybe error')
+                            if config.test:
+                               pass
+                            else:
+                                time.sleep(5)
+                            continue
+
+                        print('position_info_short:' + str(position_info_short))
+                        print('position_info_long:' + str(position_info_long))
+                        begin = time.time()
+                        self.deal_with_line("press", press_price, ma_pre_price_3, ma_price_3[1], position_info_long, position_info_short, ma_price_35, self.quantity)
+                        print('test cost:' + str(time.time() - begin))
+                    # else:
+                    #     print("sth is null")
+
+                    # ma_price_42 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_42, self.slope_offset)
+                    # ma_price_18 = index.calcSlopeMA(config.symbol, self.kline_dimemsion, self.demical_length, ma_number_18, self.slope_offset)
+
+                    # 算斜率
+                    # https: // blog.csdn.net / weixin_39585675 / article / details / 111078182
+                    # self.angle_ma_18 = abs(math.degrees(math.atan2(ma_price_18[1] - ma_price_18[0], self.slope_offset)) * 100)
+                    # if self.angle_ma_18 > 90:
+                    #     self.angle_ma_18 = 180 - self.angle_ma_18
+                    # self.angle_ma_42 = abs(math.degrees(math.atan2(ma_price_42[1] - ma_price_42[0], self.slope_offset)) * 100)
+                    # if self.angle_ma_42 > 90:
+                    #     self.angle_ma_42 = 180 - self.angle_ma_42
+
+                    # print('angle_ma_18:' + str(self.angle_ma_18) + ', ma_price_18:' + str(ma_price_18[1]) + ', last_ma_price_18:'+ str(ma_price_18[0]))
+                    # print('angle_ma_42:' + str(self.angle_ma_42) + ', ma_price_42:' + str(ma_price_42[1]) + ', last_ma_price_42:'+ str(ma_price_42[0]))
+
+                    # ma_42_cross_kline = index.ma_cross_current_Kline_Half(ma_price_42)
+
+                    # print('ma_price_42:' + str(ma_price_42[1]))
+                    # print('ma_price_18:' + str(ma_price_18[1]))
+
+                    # tmp_list_42 = self.deal_with_ma("tag_ma_42", current_price, ma_price_42[1], ma_price_18[1], pre_price_for_ma_42,
+                    #                                 position_info_long[0], position_info_short[0],
+                    #                                 price_touch_ma42_count_rise_break, price_touch_ma42_count_fall_break,
+                    #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
+                    # tmp_list_18 = self.deal_with_ma("tag_ma_18", current_price, ma_price_18[1], ma_price_42[1], pre_price_for_ma_18,
+                    #                                 position_info_long[0], position_info_short[0],
+                    #                                 price_touch_ma18_count_rise_break, price_touch_ma18_count_fall_break,
+                    #                                 position_info_long[2], position_info_short[2], position_info_long[3], position_info_short[3])
+                    #
+                    # pre_price_for_ma_42 = tmp_list_42[0]
+                    # price_touch_ma42_count_rise_break = tmp_list_42[1]
+                    # price_touch_ma42_count_fall_break = tmp_list_42[2]
+                    #
+                    # pre_price_for_ma_18 = tmp_list_18[0]
+                    # price_touch_ma18_count_rise_break = tmp_list_18[1]
+                    # price_touch_ma18_count_fall_break = tmp_list_18[2]
+
+                    ma_pre_price_3 = ma_price_3[1]
 
 
-                sleep_time = self.pause_time
-                time.sleep(sleep_time)
-                print('ok,  ' + 'sleep ' + str(sleep_time) + ' secs')
+                    sleep_time = self.pause_time
+                    if config.test:
+                        pass
+                    else:
+                        time.sleep(sleep_time)
+                        print('ok,  ' + 'sleep ' + str(sleep_time) + ' secs')
 
-                # if current_price > ma_price_42: #当前的价格在ma上方
-                #     if not pre_price:#没有前一个价格，说明是第一次，不处理
-                #         pre_price = current_price
-                #         time.sleep(10)
-                #         continue
-                #     elif pre_price > ma_price_42:#前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
-                #         pre_price = current_price
-                #         time.sleep(10)
-                #         continue
-                #     elif pre_price < ma_price_42:#pre与cur连成的线，下往上地穿过了ma，说明是涨破
-                #         price_touch_count_rise_break += 1# 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-                #         if price_touch_count_rise_break > 3:#暂定碰三次吧
-                #             self.close_short(position_info_short[0])#平空
-                #             price_touch_count_rise_break = 0
-                #             pre_price = current_price
-                #             time.sleep(10)
-                #         else:
-                #             pre_price = current_price
-                #             time.sleep(10)
-                #             continue
-                # elif current_price < ma_price_42:#当前价格在ma下方
-                #     if not pre_price:#没有前一个价格，说明是第一次，不处理
-                #         pre_price = current_price
-                #         time.sleep(10)
-                #         continue
-                #     elif pre_price > ma_price_42:#前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
-                #         pre_price = current_price
-                #         time.sleep(10)
-                #         continue
-                #     elif pre_price > ma_price_42:#pre与cur连成的线，上往下地穿过了ma，说明是跌破
-                #         price_touch_count_fall_break += 1# 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
-                #         if price_touch_count_fall_break > 3:#暂定碰三次吧
-                #             self.close_long(position_info_long[0])#平多
-                #             price_touch_count_fall_break = 0
-                #             pre_price = current_price
-                #             time.sleep(10)
-                #         else:
-                #             pre_price = current_price
-                #             time.sleep(10)
-                #             continue
+                    # if current_price > ma_price_42: #当前的价格在ma上方
+                    #     if not pre_price:#没有前一个价格，说明是第一次，不处理
+                    #         pre_price = current_price
+                    #         time.sleep(10)
+                    #         continue
+                    #     elif pre_price > ma_price_42:#前一个的价格存在，但大于ma，说明pre与cur连成的线在ma上方，不处理
+                    #         pre_price = current_price
+                    #         time.sleep(10)
+                    #         continue
+                    #     elif pre_price < ma_price_42:#pre与cur连成的线，下往上地穿过了ma，说明是涨破
+                    #         price_touch_count_rise_break += 1# 累计在ma上方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
+                    #         if price_touch_count_rise_break > 3:#暂定碰三次吧
+                    #             self.close_short(position_info_short[0])#平空
+                    #             price_touch_count_rise_break = 0
+                    #             pre_price = current_price
+                    #             time.sleep(10)
+                    #         else:
+                    #             pre_price = current_price
+                    #             time.sleep(10)
+                    #             continue
+                    # elif current_price < ma_price_42:#当前价格在ma下方
+                    #     if not pre_price:#没有前一个价格，说明是第一次，不处理
+                    #         pre_price = current_price
+                    #         time.sleep(10)
+                    #         continue
+                    #     elif pre_price > ma_price_42:#前一个的价格存在，但小于ma，说明pre与cur连成的线在ma下方，不处理
+                    #         pre_price = current_price
+                    #         time.sleep(10)
+                    #         continue
+                    #     elif pre_price > ma_price_42:#pre与cur连成的线，上往下地穿过了ma，说明是跌破
+                    #         price_touch_count_fall_break += 1# 累计在ma下方停留的次数，像插针这种也许只停留一次的肯定不能马上开单，要碰多几次
+                    #         if price_touch_count_fall_break > 3:#暂定碰三次吧
+                    #             self.close_long(position_info_long[0])#平多
+                    #             price_touch_count_fall_break = 0
+                    #             pre_price = current_price
+                    #             time.sleep(10)
+                    #         else:
+                    #             pre_price = current_price
+                    #             time.sleep(10)
+                    #             continue
 
-                # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
+                    # if float(position_info_short[2]) / float(position_info_short[3]) >= 0.5:
 
-                # time.sleep(5)
+                    # time.sleep(5)
         except Exception as e:
             error_msg = '异常发生了，赶紧上一个对冲单：' + str(e)
             print(error_msg)
@@ -394,7 +452,6 @@ class MA_trader(object):
                 self.close_short(self.quantity)
 
     def position_check_and_clear(self, tag_line, ma_price_3, press_price, sustain_price, position_info_long, position_info_short):
-        print('ma_price_3:' + str(ma_price_3))
         if tag_line == 'press' and ma_price_3 > press_price and float(position_info_short[0]) != 0.0:
             msg = 'ma3价格涨破压力线了，空单还在，要清掉，不然很危险'
             short_loss = float(position_info_short[2]) - float(position_info_short[1]) * float(
@@ -472,16 +529,18 @@ class MA_trader(object):
         # else:
 
         print('1111:' + str(ma_price))
-        # if tag_line == 'press' and
-        if ma_price > line_price:
+        if tag_line == 'press' and ma_price > line_price:
             print('2222:')
             # if ma_price > line_price:
             if ma_pre_price > line_price:
                 print('3333:')
-                print('这次和上次的ma 都在' + tag_line + '上方')
+                # print('这次和上次的ma 都在' + tag_line + '上方')
                 self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, long_position_price, short_position_price, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin)
                 # 压力线之上还有空单，就要清掉；支撑线之下还有多单，也要清掉，那如果是用来抄底的呢？？,而且可能ma还没穿过压力线
-                time.sleep(3)
+                if config.test:
+                    pass
+                else:
+                    time.sleep(3)
                 self.position_check_and_clear(ma_price, tag_line, line_price, line_price, position_info_long, position_info_short)
                 print('6666:')
             elif ma_pre_price <= line_price:
@@ -498,27 +557,30 @@ class MA_trader(object):
                         self.fail_times = 0
                     self.close_short(quantity)
                     self.profit_total = self.profit_total + short_loss
-                    self.has_earn_handling_charge_short = False
-                    self.has_earn_target_short = False
                     msg = tag_line + '平空, 总盈亏：' + str(self.profit_total) + (', 本次盈亏：' + str(self.current_loss_profit)) if self.current_loss_profit != 0 else ''
                     print(msg)
                     Message.dingding_warn(msg)
                     if self.fail_times >= 3:
                         Message.dingding_warn('操作亏本超过3次，说明现在可能是震荡行情，开单之前，休息一下:' + str((self.fail_times - 2) * self.pause_time))
                         sleep_time = 10 * self.pause_time
-                        time.sleep(sleep_time)
+                        if config.test:
+                            pass
+                        else:
+                            time.sleep(sleep_time)
                         self.fail_times = 0
                         return
                 if float(long_position_amt) == 0.0:
                     self.set_quantity()  # 亏了下次加倍
                     self.open_long(self.quantity)
-        # elif tag_line == 'sustain' and
-        if ma_price < line_price:
+        elif tag_line == 'sustain' and ma_price < line_price:
         #elif ma_price < line_price:
             if ma_pre_price < line_price:
-                print('这次和上次的ma都在' + tag_line + '下方')
+                # print('这次和上次的ma都在' + tag_line + '下方')
                 self.saveLastTimeLoss(quantity, long_position_amt, short_position_amt, long_position_price, short_position_price, position_info_long_profit, position_info_short_profit, position_info_long_initial_margin, position_info_short_initial_margin)
-                time.sleep(3)
+                if config.test:
+                    pass
+                else:
+                    time.sleep(3)
                 self.position_check_and_clear(ma_price, tag_line, line_price, line_price, position_info_long, position_info_short)
             elif ma_pre_price >= line_price:
                 print('5555:')
@@ -534,15 +596,16 @@ class MA_trader(object):
                         self.fail_times = 0
                     self.close_long(quantity)
                     self.profit_total = self.profit_total + long_loss
-                    self.has_earn_handling_charge_long = False
-                    self.has_earn_target_long = False
                     msg = tag_line + '平多, 总盈亏：' + str(self.profit_total) + (', 本次盈亏：' + str(self.current_loss_profit)) if self.current_loss_profit != 0 else ''
                     print(msg)
                     Message.dingding_warn(msg)
                     if self.fail_times >= 3:
                         Message.dingding_warn('操作亏本超过3次，说明现在可能是震荡行情，开单之前，休息一下:' + str((self.fail_times - 2) * self.pause_time))
                         sleep_time = (self.fail_times - 2) * self.pause_time
-                        time.sleep(sleep_time)
+                        if config.test:
+                            pass
+                        else:
+                            time.sleep(sleep_time)
                         return
                 if float(short_position_amt) == 0.0:
                     self.set_quantity()  # 亏了下次加倍
@@ -1019,7 +1082,7 @@ class MA_trader(object):
         '''
         msg = ''
         # if self.angle_ma_42 <= self.smooth_line_angle * 1.6:# 较为平缓时，再操作
-        save_profit_quantity = float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (float(quantity) / float(config.quantity)))
+        save_profit_quantity = float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (int(float(quantity) / float(config.quantity))))
         after_quantity = int(float(quantity) - save_profit_quantity)
         handling_charge_long = float(long_position_price) * float(quantity) * 0.0008 # 大约4次交易的手续费
         handling_charge_short = float(short_position_price) * float(quantity) * 0.0008 # 大约4次交易的手续费
@@ -1039,12 +1102,7 @@ class MA_trader(object):
 
         save_share_current_profit_long = float(position_info_long_profit) * float(save_profit_quantity / float(quantity))
         save_share_current_profit_short = float(position_info_short_profit) * float(save_profit_quantity / float(quantity))
-        print('position_info_long_profit:' + str(position_info_long_profit))
-        print("save_share_current_profit_long:" + str(save_share_current_profit_long))
-        print("self.current_loss_profit:" + str(self.current_loss_profit))
-        print("self.profit_total:" + str(self.profit_total))
-        print("(save_share_current_profit_long > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_long):" + str((save_share_current_profit_long > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_long)))
-        if float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and (save_share_current_profit_long > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_long): # 0.005 为手续费
+        if float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and save_share_current_profit_long > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_long: # 0.005 为手续费
             msg = '本次多单盈利: ' + str(position_info_long_profit) + ' 覆盖上次的亏损( ' + str(self.current_loss_profit) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(save_profit_quantity) + ', 减了之后的： ' + str(after_quantity)
             self.close_long(save_profit_quantity)  # 平多
             self.quantity = after_quantity # 减了之后的
@@ -1056,16 +1114,7 @@ class MA_trader(object):
             print(msg)
             print('多单手续费：' + str(handling_charge_long))
             Message.dingding_warn(msg)
-        if self.has_earn_handling_charge_long is False and float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) > handling_charge_long * 2: # 0.005 为手续费
-            self.has_earn_handling_charge_long = True
-            msg = '本次多单盈利: ' + str(position_info_long_profit) + ' 覆盖本次和上次的手续费( ' + str(handling_charge_long) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(quantity * 0.2) + ', 减了之后的： ' + str(quantity * 0.8)
-            self.close_long(quantity * 0.2)  # 平多
-            self.quantity = quantity * 0.8 # 减了之后的
-            msg += ', 总盈利：' + str(self.profit_total)
-            print(msg)
-            print('多单手续费：' + str(handling_charge_long))
-            Message.dingding_warn(msg)
-        if float(long_position_amt) == 0.0 and float(position_info_short_profit) > 0 and save_share_current_profit_short > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_short: # 0.005 为手续费
+        elif float(long_position_amt) == 0.0 and float(position_info_short_profit) > 0 and save_share_current_profit_short > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0) + handling_charge_short: # 0.005 为手续费
             msg = '本次空单盈利: ' + str(position_info_short_profit) + ' 覆盖上次的亏损( ' + str(self.current_loss_profit) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(save_profit_quantity) + ', 减了之后的： ' + str(after_quantity)
             self.close_short(save_profit_quantity)  # 平空
             self.quantity = after_quantity # 减了之后的
@@ -1077,20 +1126,10 @@ class MA_trader(object):
             print(msg)
             print('空单手续费：' + str(handling_charge_short))
             Message.dingding_warn(msg)
-        if self.has_earn_handling_charge_short is False and float(long_position_amt) == 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) > handling_charge_short * 2: # 0.005 为手续费
-            self.has_earn_handling_charge_short  = True
-            msg = '本次空单盈利: ' + str(position_info_short_profit) + ' 覆盖本次和上次的手续费( ' + str(handling_charge_short) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(quantity * 0.2) + ', 减了之后的： ' + str(quantity * 0.8)
-            self.close_short(quantity * 0.2)  # 平多
-            self.quantity = quantity * 0.8 # 减了之后的
-            msg += ', 总盈利：' + str(self.profit_total)
-            print(msg)
-            print('空单手续费：' + str(handling_charge_long))
-            Message.dingding_warn(msg)
 
         #翻倍就撤，回收本金
 
-        if self.has_earn_target_long is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.1:
-            self.has_earn_target_long = True
+        if float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.02:
             self.profit_total += float(position_info_long_profit)
             msg = '多单利润都翻倍了，减为半仓！总盈利：' + str(self.profit_total)
             self.close_long(float(quantity) / 2)
@@ -1098,8 +1137,7 @@ class MA_trader(object):
             print(msg)
             Message.dingding_warn(msg)
 
-        if self.has_earn_target_short is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.1:
-            self.has_earn_target_short = True
+        if float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.02:
             self.profit_total += float(position_info_short_profit)
             msg = '空单利润都翻倍了，减为半仓！总盈利：' + str(self.profit_total)
             self.close_short(float(quantity) / 2)
@@ -1444,6 +1482,9 @@ class MA_trader(object):
 
     def open_long(self, quantity):
         print("进入开多单流程, 数量：" + str(quantity))
+        if config.test:
+            self.entryPrice = self.current_price
+            return
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
@@ -1467,6 +1508,9 @@ class MA_trader(object):
         print("进入平多单流程")
         spot_res = {}
 
+        if config.test:
+            self.entryPrice = self.current_price
+            return
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
@@ -1505,6 +1549,9 @@ class MA_trader(object):
     def open_short(self, quantity):
         future_res = {}
         print("进入开空单流程, 数量：" + str(quantity))
+        if config.test:
+            self.entryPrice = self.current_price
+            return
         # future_res
         # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(future_res)
@@ -1523,7 +1570,9 @@ class MA_trader(object):
 
     def close_short(self, quantity):
         print("进入平空单流程")
-
+        if config.test:
+            self.entryPrice = self.current_price
+            return
         order_type = OrderType.MARKET
         time_inforce = ''
         future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, quantity,

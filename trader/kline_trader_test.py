@@ -469,7 +469,7 @@ class MA_trader(object):
 
 
     def getklineList(self):
-            kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/ALICEUSDT-1m-2021-08.csv'  # '/home/code/binance/data/ALICEUSDT-1m-2021-08.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
+            kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/DOTUSDT-1m-2021-10-04.csv' #  '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/ALICEUSDT-1m-2021-08.csv'  # '/home/code/binance/data/ALICEUSDT-1m-2021-08.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
             self.kline_list = []
             with open(kline_path, 'r', encoding='utf-8') as df:
                 # read = csv.reader(df)

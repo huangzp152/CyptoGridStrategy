@@ -6,6 +6,7 @@ import requests,json
 # from app.authorization import dingding_token, recv_window,api_secret,api_key
 # from app.BinanceAPI import BinanceAPI
 # linux
+from utils.config_ma import config
 
 
 class Message:
@@ -195,11 +196,13 @@ class Message:
             return res
     @staticmethod
     def dingding_warn(text):
-        pass
-        headers = {'Content-Type': 'application/json;charset=utf-8'}
-        api_url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
-        # json_text = self._msg(text)
-        requests.post(api_url, headers=headers).content
+        if config.test:
+            pass
+        else:
+            headers = {'Content-Type': 'application/json;charset=utf-8'}
+            api_url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
+            # json_text = self._msg(text)
+            requests.post(api_url, headers=headers).content
 
     def _msg(self,text):
         json_text = {

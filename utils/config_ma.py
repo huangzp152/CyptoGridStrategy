@@ -27,6 +27,7 @@ class Config:
         self.grid_number = 0
         self.max_border_price = 0
         self.min_border_price = 0
+        self.test:bool = False
 
 
     def loads(self, config_file=None):
