@@ -17,7 +17,7 @@ class Config:
         self.api_key_future_testnet: str = None
         self.api_secret_future_testnet: str = None
         self.pass_phrase = None
-        self.quantity:float = 1
+        self.quantity:float = 2
         self.min_price =  0.0001
         self.min_qty = 0.01
         self.max_orders = 1
