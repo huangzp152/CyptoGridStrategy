@@ -69,7 +69,7 @@ class MA_trader(object):
         self.last_time_profit = 0
 
         self.current_price = 0
-        self.quantity = '2'
+        self.quantity = 2
 
         self.fail_times = 0 #连续亏本次数，连续亏的次数太多时，放慢一下操作节奏
 
@@ -173,7 +173,7 @@ class MA_trader(object):
             sustain_price = 0
 
             #临时参数,可注释
-            self.quantity = '2'
+            self.quantity = 2
             self.current_loss_profit = 0
             self.profit_total = 0
             self.last_time_profit = 0
