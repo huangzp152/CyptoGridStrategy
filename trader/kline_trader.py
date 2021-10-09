@@ -1017,7 +1017,7 @@ class MA_trader(object):
         '''
         msg = ''
         # if self.angle_ma_42 <= self.smooth_line_angle * 1.6:# 较为平缓时，再操作
-        save_profit_quantity = round(float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (float(quantity) / float(config.quantity))), 1)
+        save_profit_quantity = round(float(quantity) * ((int(float(quantity) / float(config.quantity)) - 1) / (float(quantity))), 1)
         after_quantity = round(int(float(quantity) - save_profit_quantity), 1)
         handling_charge_long = float(long_position_price) * float(quantity) * 0.0008 # 大约4次交易的手续费
         handling_charge_short = float(short_position_price) * float(quantity) * 0.0008 # 大约4次交易的手续费
@@ -1087,21 +1087,21 @@ class MA_trader(object):
 
         #翻倍就撤，回收本金
 
-        if self.has_earn_target_long is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.1:
+        if self.has_earn_target_long is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.015:
             self.has_earn_target_long = True
             self.profit_total += float(position_info_long_profit)
             msg = '多单利润都翻倍了，减为半仓！总盈利：' + str(self.profit_total)
-            self.close_long(float(quantity) / 2)
-            self.quantity = float(quantity) / 2
+            self.close_long(quantity)
+            self.quantity = quantity
             print(msg)
             Message.dingding_warn(msg)
 
-        if self.has_earn_target_short is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.1:
+        if self.has_earn_target_short is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.015:
             self.has_earn_target_short = True
             self.profit_total += float(position_info_short_profit)
             msg = '空单利润都翻倍了，减为半仓！总盈利：' + str(self.profit_total)
-            self.close_short(float(quantity) / 2)
-            self.quantity = float(quantity) / 2
+            self.close_short(quantity)
+            self.quantity = quantity
             print(msg)
             Message.dingding_warn(msg)
 
