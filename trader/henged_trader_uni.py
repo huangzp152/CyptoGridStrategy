@@ -24,7 +24,7 @@ sys.path.append("/home/code/binance")
 from cmd_receive_uni import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
-ß
+
 from utils.config_uni import config, dynamicConfig
 from trader.calcIndex import CalcIndex
 from utils.dingding import Message
