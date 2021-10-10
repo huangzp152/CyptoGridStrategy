@@ -21,14 +21,16 @@ import random
 import threading
 import time
 import sys
+
+from utils.config_eth import config, dynamicConfig
+
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
-from cmd_receive_second import fc, app
+from cmd_receive_eth import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
-from utils import config
-from utils.config import dynamicConfig
+
 from utils.dingding import Message
 
 
@@ -1056,7 +1058,7 @@ if __name__ == "__main__":
     error_raw = ''
     hengedGrid = None
     try:
-        config.loads('../config_second.json')
+        config.loads('../config_eth.json')
         # dynamicConfig.loads('./config.json')
 
         hengedGrid = HengedGrid()
