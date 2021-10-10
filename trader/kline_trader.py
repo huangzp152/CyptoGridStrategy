@@ -435,8 +435,8 @@ class MA_trader(object):
             msg = '上次亏了，这次要加倍：' + str(self.quantity)
             print(msg)
             Message.dingding_warn(msg)
-        elif self.current_loss_profit < 0.0:
-            print('目前还是亏损的但上次赚了： ' + str(self.current_loss_profit) + '，数量不用加倍，继续保持')
+        elif self.current_loss_profit < 0.0 and float(self.quantity) > float(config.quantity):
+            print('目前还是亏损的但上次赚了： ' + str(self.current_loss_profit) + '，数量为' + str(self.quantity) + '不用加倍，继续保持')
         else:  # 恢复
             self.quantity = config.quantity
         # print('this time quantity：' + str(self.quantity))
