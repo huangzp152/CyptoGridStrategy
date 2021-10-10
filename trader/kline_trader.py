@@ -1045,12 +1045,10 @@ class MA_trader(object):
         print("总盈亏:" + str(self.profit_total))
         print("多单赚手续费需要:" + str(handling_charge_long * 10))
         print("空单赚手续费需要:" + str(handling_charge_short * 10))
-        print("多单止盈需要:" + str(0.004 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity)))))
-        print("空单止盈需要:" + str(0.004 * (float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity)))))
         if not float(position_info_long_initial_margin) == 0.0 and not float(self.quantity) == 0.0:
-            print("多单止盈需要赚:" + str(0.006 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity)))))
+            print("多单止盈需要赚:" + str(0.004 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity)))))
         if not float(position_info_short_initial_margin) == 0.0 and not float(self.quantity) == 0.0:
-            print("空单止盈需要赚:" + str(0.006 * (float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity)))))
+            print("空单止盈需要赚:" + str(0.004 * (float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity)))))
         if float(short_position_amt) == 0.0 and float(position_info_long_profit) > 0 and (save_share_current_profit_long > max(abs(self.current_loss_profit), abs(self.profit_total) if self.profit_total < 0 else 0)): # 0.005 为手续费
             msg = '本次多单盈利: ' + str(position_info_long_profit) + ' 覆盖上次的亏损( ' + str(self.current_loss_profit) + ' )了，减仓! 原仓: ' + str(quantity) + ', 减的仓：' + str(save_profit_quantity) + ', 减了之后的： ' + str(after_quantity)
             self.close_long(round(save_profit_quantity, 1))  # 平多
