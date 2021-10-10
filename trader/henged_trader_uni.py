@@ -19,13 +19,13 @@ import threading
 import time
 import sys
 
-from utils.config_uni import config, dynamicConfig
-
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 from cmd_receive_uni import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
+ß
+from utils.config_uni import config, dynamicConfig
 from trader.calcIndex import CalcIndex
 from utils.dingding import Message
 
@@ -890,7 +890,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5004, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)

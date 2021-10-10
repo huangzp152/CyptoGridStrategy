@@ -22,7 +22,6 @@ import threading
 import time
 import sys
 
-from utils.config_eth import config, dynamicConfig
 
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
@@ -30,7 +29,7 @@ from cmd_receive_eth import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
-
+from utils.config_eth import config, dynamicConfig
 from utils.dingding import Message
 
 
