@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 '''
-
-给其它币种做对冲的脚本
-
 自己学习理解的策略
 带趋势判断的多空对冲网格
 
@@ -22,15 +19,14 @@ import threading
 import time
 import sys
 
-from utils.config_eth import config, dynamicConfig
+from utils.config_uni import config, dynamicConfig
 
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
-from cmd_receive_eth import fc, app
+from cmd_receive_uni import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
-
 from utils.dingding import Message
 
 
@@ -331,7 +327,7 @@ class HengedGrid(object):
                 print(msg8)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
-                    msg = '【' + str(config.symbol) + '】汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8
+                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8
                     Message.dingding_warn(msg)
 
                 #设定仓位
@@ -894,7 +890,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5003, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
@@ -1058,7 +1054,7 @@ if __name__ == "__main__":
     error_raw = ''
     hengedGrid = None
     try:
-        config.loads('../config_eth.json')
+        config.loads('../config_uni.json')
         # dynamicConfig.loads('./config.json')
 
         hengedGrid = HengedGrid()
