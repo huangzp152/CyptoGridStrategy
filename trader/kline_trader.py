@@ -79,6 +79,8 @@ class MA_trader(object):
         self.has_earn_handling_charge_short = False
         self.has_earn_target_long = False
         self.has_earn_target_short = False
+        self.has_earn_target_long_again = False
+        self.has_earn_target_short_again = False
 
         pass
 
@@ -435,8 +437,8 @@ class MA_trader(object):
             msg = '上次亏了，这次要加倍：' + str(self.quantity)
             print(msg)
             Message.dingding_warn(msg)
-        elif self.current_loss_profit < 0.0 and float(self.quantity) > float(config.quantity):
-            print('目前还是亏损的但上次赚了： ' + str(self.current_loss_profit) + '，数量为' + str(self.quantity) + '不用加倍，继续保持')
+        # elif self.current_loss_profit < 0.0 and float(self.quantity) > float(config.quantity):
+        #     print('目前还是亏损的但上次赚了： ' + str(self.current_loss_profit) + '，数量为' + str(self.quantity) + '不用加倍，继续保持')
         else:  # 恢复
             self.quantity = config.quantity
         # print('this time quantity：' + str(self.quantity))
@@ -499,6 +501,7 @@ class MA_trader(object):
                     self.profit_total = self.profit_total + short_loss
                     self.has_earn_handling_charge_short = False
                     self.has_earn_target_short = False
+                    self.has_earn_target_short_again = False
                     msg = tag_line + '平空, 总盈亏：' + str(self.profit_total) + (', 本次盈亏：' + str(self.last_time_profit)) if self.last_time_profit != 0 else ''
                     print(msg)
                     Message.dingding_warn(msg)
@@ -534,6 +537,7 @@ class MA_trader(object):
                     self.profit_total = self.profit_total + long_loss
                     self.has_earn_handling_charge_long = False
                     self.has_earn_target_long = False
+                    self.has_earn_target_long_again = False
                     msg = tag_line + '平多, 总盈亏：' + str(self.profit_total) + (', 本次盈亏：' + str(self.last_time_profit)) if self.last_time_profit != 0 else ''
                     print(msg)
                     Message.dingding_warn(msg)
@@ -1119,8 +1123,8 @@ class MA_trader(object):
             Message.dingding_warn(msg)
 
         #先简单处理，二次止盈
-        if float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.01 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
-            self.has_earn_target_long = True
+        if self.has_earn_target_long_again is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.01 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
+            self.has_earn_target_long_again = True
             self.profit_total += float(position_info_long_profit)
             self.close_long(round(float(self.quantity) * 0.5, 1))
             self.current_loss_profit -= float(position_info_long_profit)
@@ -1130,9 +1134,10 @@ class MA_trader(object):
             self.quantity = round(float(self.quantity) * 0.5, 1)
             print(msg)
             Message.dingding_warn(msg)
+            return
 
-        if float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.01 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
-            self.has_earn_target_short = True
+        if  self.has_earn_target_short_again is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.01 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
+            self.has_earn_target_short_again = True
             self.profit_total += float(position_info_short_profit)
             self.close_short(round(float(self.quantity) * 0.5, 1))
             self.current_loss_profit -= float(position_info_short_profit)
@@ -1142,10 +1147,10 @@ class MA_trader(object):
             msg = '在' + str(self.current_price) + ', 空单二次利润达到目标了，清仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
             print(msg)
             Message.dingding_warn(msg)
+            return
 
         #先简单处理，三次止盈
-        if float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.01 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
-            self.has_earn_target_long = True
+        if float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.02 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
             self.profit_total += float(position_info_long_profit)
             self.close_long(round(float(self.quantity), 1))
             self.current_loss_profit -= float(position_info_long_profit)
@@ -1156,8 +1161,7 @@ class MA_trader(object):
             print(msg)
             Message.dingding_warn(msg)
 
-        if float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.01 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
-            self.has_earn_target_short = True
+        if float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.02 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
             self.profit_total += float(position_info_short_profit)
             self.close_short(round(float(quantity), 1))
             self.current_loss_profit -= float(position_info_short_profit)
