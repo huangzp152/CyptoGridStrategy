@@ -1105,54 +1105,54 @@ class MA_trader(object):
             print('空单手续费：' + str(handling_charge_long))
             Message.dingding_warn(msg)
 
-        #部分止盈
-
-        if self.has_earn_target_long is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.004 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
-            self.has_earn_target_long = True
-            self.profit_total += float(position_info_long_profit) * 0.5
-            self.close_long(round(float(quantity * 0.5), 1))
-            self.current_loss_profit -= float(position_info_long_profit) * 0.5
-            self.last_time_profit = 0
-            msg = '在' + str(self.current_price) + ', 多单利润达到目标了，减为半仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
-            self.quantity = round(float(quantity * 0.5), 1)
-            print(msg)
-            Message.dingding_warn(msg)
-
-        if self.has_earn_target_short is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.006 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
-            self.has_earn_target_short = True
-            self.profit_total += float(position_info_short_profit) * 0.5
-            self.close_short(round(float(quantity * 0.5), 1))
-            self.current_loss_profit -= float(position_info_short_profit) * 0.5
-            self.last_time_profit = 0
-            self.quantity = round(float(quantity * 0.5), 1)
-            msg = '在' + str(self.current_price) + ', 空单利润达到目标了，减为半仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
-            print(msg)
-            Message.dingding_warn(msg)
-
-        #先简单处理，二次止盈
-        if self.has_earn_target_long_again is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.01 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
-            self.has_earn_target_long_again = True
-            self.profit_total += float(position_info_long_profit) * 0.5
-            self.close_long(round(float(self.quantity) * 0.5, 1))
-            self.current_loss_profit -= float(position_info_long_profit) * 0.5
-            self.last_time_profit = 0
-            msg = '在' + str(self.current_price) + ', 多单二次利润达到目标了，清仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
-            self.quantity = round(float(self.quantity) * 0.5, 1)
-            print(msg)
-            Message.dingding_warn(msg)
-            return
-
-        if  self.has_earn_target_short_again is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.01 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
-            self.has_earn_target_short_again = True
-            self.profit_total += float(position_info_short_profit) * 0.5
-            self.close_short(round(float(self.quantity) * 0.5, 1))
-            self.current_loss_profit -= float(position_info_short_profit) * 0.5
-            self.last_time_profit = 0
-            self.quantity = round(float(self.quantity) * 0.5, 1)
-            msg = '在' + str(self.current_price) + ', 空单二次利润达到目标了，清仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
-            print(msg)
-            Message.dingding_warn(msg)
-            return
+        # #部分止盈
+        #
+        # if self.has_earn_target_long is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.004 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
+        #     self.has_earn_target_long = True
+        #     self.profit_total += float(position_info_long_profit) * 0.5
+        #     self.close_long(round(float(quantity * 0.5), 1))
+        #     self.current_loss_profit -= float(position_info_long_profit) * 0.5
+        #     self.last_time_profit = 0
+        #     msg = '在' + str(self.current_price) + ', 多单利润达到目标了，减为半仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
+        #     self.quantity = round(float(quantity * 0.5), 1)
+        #     print(msg)
+        #     Message.dingding_warn(msg)
+        #
+        # if self.has_earn_target_short is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.006 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
+        #     self.has_earn_target_short = True
+        #     self.profit_total += float(position_info_short_profit) * 0.5
+        #     self.close_short(round(float(quantity * 0.5), 1))
+        #     self.current_loss_profit -= float(position_info_short_profit) * 0.5
+        #     self.last_time_profit = 0
+        #     self.quantity = round(float(quantity * 0.5), 1)
+        #     msg = '在' + str(self.current_price) + ', 空单利润达到目标了，减为半仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
+        #     print(msg)
+        #     Message.dingding_warn(msg)
+        #
+        # #先简单处理，二次止盈
+        # if self.has_earn_target_long_again is False and float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.01 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
+        #     self.has_earn_target_long_again = True
+        #     self.profit_total += float(position_info_long_profit) * 0.5
+        #     self.close_long(round(float(self.quantity) * 0.5, 1))
+        #     self.current_loss_profit -= float(position_info_long_profit) * 0.5
+        #     self.last_time_profit = 0
+        #     msg = '在' + str(self.current_price) + ', 多单二次利润达到目标了，清仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
+        #     self.quantity = round(float(self.quantity) * 0.5, 1)
+        #     print(msg)
+        #     Message.dingding_warn(msg)
+        #     return
+        #
+        # if  self.has_earn_target_short_again is False and float(position_info_short_initial_margin) != 0.0 and float(position_info_short_profit) > 0 and float(position_info_short_profit) / float(position_info_short_initial_margin) >= 0.01 * abs(float(short_position_price) / (float(position_info_short_initial_margin) / float(self.quantity))):
+        #     self.has_earn_target_short_again = True
+        #     self.profit_total += float(position_info_short_profit) * 0.5
+        #     self.close_short(round(float(self.quantity) * 0.5, 1))
+        #     self.current_loss_profit -= float(position_info_short_profit) * 0.5
+        #     self.last_time_profit = 0
+        #     self.quantity = round(float(self.quantity) * 0.5, 1)
+        #     msg = '在' + str(self.current_price) + ', 空单二次利润达到目标了，清仓！总盈利：' + str(self.profit_total) + '， 剩余仓位：' + str(round(float(quantity * 0.5), 1))
+        #     print(msg)
+        #     Message.dingding_warn(msg)
+        #     return
 
         #先简单处理，三次止盈
         # if float(position_info_long_initial_margin) != 0.0 and float(position_info_long_profit) > 0 and float(position_info_long_profit) / float(position_info_long_initial_margin) >= 0.02 * (float(long_position_price) / (float(position_info_long_initial_margin) / float(self.quantity))):
