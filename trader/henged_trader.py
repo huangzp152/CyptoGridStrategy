@@ -408,6 +408,7 @@ class HengedGrid(object):
             except Exception as eloop:
                 print('loop时出错了！，error：' + str(eloop))
                 Message.dingding_warn(str(eloop))
+                break
 
         print('loop结束了')
         all_invests = sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]) + sum([float(tmp_future) for tmp_future in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0])
@@ -539,8 +540,8 @@ class HengedGrid(object):
                 self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "",
                                                       self.cur_market_future_price, "", ""])
 
-                last_get_profit_time_struct = time.gmtime(self.last_get_profit_time - time.time())
-                self.last_get_profit_time_delta =  '距离上一次套利有多久了:' + str("{2}日{3}小时{4}分钟{5}秒".format(
+                last_get_profit_time_struct = time.gmtime(time.time() - self.last_get_profit_time)
+                self.last_get_profit_time_delta = '距离上一次套利有多久了:' + str("{0}日{1}小时{2}分钟{3}秒".format(
                     last_get_profit_time_struct.tm_mday - 1,
                     last_get_profit_time_struct.tm_hour,
                     last_get_profit_time_struct.tm_min,
@@ -646,9 +647,9 @@ class HengedGrid(object):
                     self.future_step))
                 self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "",
                                                       self.cur_market_future_price])
-
-                last_get_profit_time_struct = time.gmtime(self.last_get_profit_time - time.time())
-                self.last_get_profit_time =  '距离上一次套利有多久了:' + str("{2}日{3}小时{4}分钟{5}秒".format(
+                print('check time.time() - self.last_get_profit_time：' + str(time.time() - self.last_get_profit_time))
+                last_get_profit_time_struct = time.gmtime(time.time() - self.last_get_profit_time)
+                self.last_get_profit_time_delta = '距离上一次套利有多久了:' + str("{0}日{1}小时{2}分钟{3}秒".format(
                     last_get_profit_time_struct.tm_mday - 1,
                     last_get_profit_time_struct.tm_hour,
                     last_get_profit_time_struct.tm_min,
@@ -804,7 +805,7 @@ class HengedGrid(object):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
         dynamicConfig.spot_sell_price = round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)
-        self.spot_sell_price = max(dynamicConfig.spot_sell_price, float(dynamicConfig.record_spot_price[-1])) # 如果多单平仓价比列表里最小的还小，那交易时就亏本了啊
+        self.spot_sell_price = max(dynamicConfig.spot_sell_price, float(dynamicConfig.record_spot_price[-1]) if len(dynamicConfig.record_spot_price) > 0 else 0) # 如果多单平仓价比列表里最小的还小，那交易时就亏本了啊
         # print("设置接下来多单卖出的价格:" + str(self.spot_sell_price))
 
     def set_future_next_sell_price(self, deal_price):
@@ -818,7 +819,7 @@ class HengedGrid(object):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
         dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.future_rising_ratio / 100), demical_point)  #空单涨的时候补仓 # 保留2位小数
-        self.future_buy_price = min(dynamicConfig.future_buy_price, float(dynamicConfig.record_future_price[-1])) # 如果空单平仓价比列表里最大的还大，那交易时就亏本了啊
+        self.future_buy_price = min(dynamicConfig.future_buy_price, float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 999999) # 如果空单平仓价比列表里最大的还大，那交易时就亏本了啊
         # print("设置接下来空单的买回价格:" + str(self.future_buy_price))
 
     def adjust_prices(self):
