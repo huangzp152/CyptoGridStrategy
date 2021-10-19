@@ -252,8 +252,8 @@ class HengedGrid(object):
                     continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 1800), 2)) + ')') if float(diff_time / 1800) != 0 else ''
-                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 1800) * 100, 2)) + '%)') if float(diff_time / 1800) != 0 else ''
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
+                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100, 2)) + '%)') if float(diff_time / 3600) != 0 else ''
                 msg3 = '网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price]))
                 msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
                 msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
