@@ -412,7 +412,7 @@ class HengedGrid(object):
 
         print('loop结束了')
         all_invests = sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]) + sum([float(tmp_future) for tmp_future in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0])
-        msg1 = '总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str(float(all_invests) * float(self.quantity)) + '， 曾经最多投资额数：' + str(dynamicConfig.total_invest)
+        msg1 = '总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str(float(all_invests) * float(self.quantity)) + '， 曾经最多投资额数：' + str(dynamicConfig.total_invest) + self.grid_run_time
         msg2 = ''
         msg3 = ''
         print(msg1)
@@ -931,17 +931,18 @@ class HengedGrid(object):
         print(f"get_step_by_position, direction：{direction}")
         tmp = self.http_client_future.get_positionInfo(config.symbol)
         print(f"positionInfo:{tmp}")
-        for item in tmp:  # 遍历所有仓位
-            if direction:  # 多头持仓均价
-                if item['positionSide'] == "LONG":#这是合约才有的
-                    res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  本来结果是负数
-                    print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
-                    return res
-            else:        # 空头持仓均价
-                if item['positionSide'] == "SHORT":
-                    res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  为何买了空单后，positionamt为空
-                    print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
-                    return res
+        if tmp and len(tmp) > 0:
+            for item in tmp:  # 遍历所有仓位
+                if direction:  # 多头持仓均价
+                    if item['positionSide'] == "LONG":#这是合约才有的
+                        res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  本来结果是负数
+                        print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
+                        return res
+                else:        # 空头持仓均价
+                    if item['positionSide'] == "SHORT":
+                        res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  为何买了空单后，positionamt为空
+                        print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
+                        return res
 
     def init_record_price_list(self):
         print("init_record_price_list")
