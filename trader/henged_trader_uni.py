@@ -846,7 +846,7 @@ class HengedGrid(object):
         print("设置多单仓位： " + str(self.spot_step))
 
     def _format(self, quantity):
-        return "{:.2}".format(round(quantity, 3))
+        return int(quantity)
 
     def normal_exit(self):
         while not fc.stop_singal_from_client:
