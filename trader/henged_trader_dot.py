@@ -51,6 +51,8 @@ class HengedGrid(object):
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
         self.crazy_build = fc.crazy_build
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
+        self.gross_profit = 0
+        self.grid_run_time = ""
         pass
 
     def getMoney(self):

@@ -84,7 +84,7 @@ class DynamicConfig(object):
 
         # test
         self.order_list = []
-        self.total_earn = 0
+        self.total_earn = 172
         self.total_invest = 0
         self.total_earn_grids = 0
         self.total_steps = 0

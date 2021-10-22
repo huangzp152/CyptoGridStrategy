@@ -51,6 +51,8 @@ class HengedGrid(object):
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
         self.crazy_build = fc.crazy_build
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
+        self.gross_profit = 0
+        self.grid_run_time = ""
         pass
 
     def getMoney(self):
@@ -546,9 +548,9 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_min,
                     last_get_profit_time_struct.tm_sec))
 
-                Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份多单了！")
+                # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份多单了！")
                 msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(self.open_spot_price
-                    ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
+                    ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
                 self.last_get_profit_time = time.time()
@@ -622,7 +624,7 @@ class HengedGrid(object):
                 print('price:' + price + '挂平仓空单了')
                 return {}
             if future_res and future_res['orderId']:
-                Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份空单了！")
+                # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份空单了！")
                 self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
@@ -977,6 +979,25 @@ class HengedGrid(object):
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
         with open('../data/trade_info_%s.json' % config.symbol, "w") as df:
             json.dump(record_price_dict_to_file, df)
+
+            self.save_trade_benefit()
+
+    def save_trade_benefit(self):
+        '''
+            "货币对": ["运行时间", "总获利", "总利润率", "总格子数", "总仓位数", "多仓", "空仓", "底仓"]
+        :return:
+        '''
+        record_benefit_list_to_file = [self.grid_run_time, str(dynamicConfig.total_earn), self.gross_profit,
+                                       str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps),
+                                       str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
+        trade_benefit_path = '../data/trade_benefit.json'
+        with open(trade_benefit_path, "r") as df_read:
+            load_dict = json.load(df_read)
+            print(load_dict)
+            if load_dict and config.symbol in load_dict.keys():
+                load_dict[config.symbol] = record_benefit_list_to_file
+                with open(trade_benefit_path, "w") as df_write:
+                    json.dump(load_dict, df_write)
 
     def close_previous_position(self, time_format):
         print("清掉盈利的多单和空单仓位，未盈利的留着")
