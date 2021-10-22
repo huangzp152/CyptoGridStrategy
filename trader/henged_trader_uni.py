@@ -20,7 +20,7 @@ import time
 import sys
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
-from cmd_receive import fc, app
+from cmd_receive_uni import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
@@ -387,7 +387,7 @@ class HengedGrid(object):
                     # 差异化的多空区间网格，所以多空单格子利润要为不一致
                     if spot_res:
                         self.set_ratio_and_price('spot_res')
-                    elif future_res:
+                    if future_res:
                         self.set_ratio_and_price('future_res')
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))

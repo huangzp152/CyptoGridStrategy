@@ -1,4 +1,5 @@
 # author-wechat：findpanpan
+import time
 
 import requests,json
 
@@ -200,9 +201,12 @@ class Message:
             pass
         else:
             headers = {'Content-Type': 'application/json;charset=utf-8'}
-            api_url = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
+            api_url_dingding = "https://oapi.dingtalk.com/robot/send?timestamp=%s&access_token=%s" % (str(round(time.time() * 1000)), '4fa42dfced14210f79fde669863f72de96ef969ef74cc2de0f52d08bf845136a')
+            d = json.dumps({"msgtype": "text", "text": {"content": text}})
+            api_url_telegram = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % ('1858698079:AAEo4iunenZ3mZSVUICqVAKFoiHU4LGnO6U', '1540332281', text)
             # json_text = self._msg(text)
-            requests.post(api_url, headers=headers).content
+            requests.post(api_url_dingding, data=d, headers=headers).content
+            requests.post(api_url_telegram, headers=headers).content
 
     def _msg(self,text):
         json_text = {
@@ -221,4 +225,5 @@ class Message:
 
 if __name__ == "__main__":
     msg = Message()
-    print(msg.buy_limit_future_msg("EOSUSDT",3,2))
+    msg.dingding_warn("hzp~~~")
+    # print(msg.buy_limit_future_msg("EOSUSDT",3,2))

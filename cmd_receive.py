@@ -19,8 +19,8 @@ class flaskConfig(object):
         self.update_position_list_signal_from_client=False
         self.long_buy_ratio_scale_signal_from_client=False
         self.change_position_side_singal_from_client=False
-        self.ratio_no_trendency=0.4
-        self.ratio_up_or_down=0.8
+        self.ratio_no_trendency=0.5
+        self.ratio_up_or_down=1
         self.long_buy_ratio_scale=0.2 # 0.25 多空格子利率的比例，0.25即1:4,就是比如做多网格的利率是0.3的话，做空就是0.3 / 0.25= 1.2,通过多空格子大小的差异来形成对冲获利
         self.every_time_trade_share = 250 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.cut_position_threshold = 0.8 # 0.2为亏损到本金的2成仓位时，割肉

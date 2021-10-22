@@ -388,7 +388,7 @@ class HengedGrid(object):
                     # 差异化的多空区间网格，所以多空单格子利润要为不一致
                     if spot_res:
                         self.set_ratio_and_price('spot_res')
-                    elif future_res:
+                    if future_res:
                         self.set_ratio_and_price('future_res')
                     # self.set_spot_price(float(self.cur_market_future_price))
                     # self.set_future_price(float(self.cur_market_future_price))
@@ -811,14 +811,14 @@ class HengedGrid(object):
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_falling_ratio / 100), demical_point)
+        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_rising_ratio / 100), demical_point)
         self.future_sell_price = dynamicConfig.future_sell_price
         # print("设置接下来新开空单卖出的价格, " + str(self.future_sell_price))
 
     def set_future_next_buy_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.future_rising_ratio / 100), demical_point)  #空单涨的时候补仓 # 保留2位小数
+        dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.future_falling_ratio / 100), demical_point)  #空单涨的时候补仓 # 保留2位小数
         self.future_buy_price = min(dynamicConfig.future_buy_price, float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 999999) # 如果空单平仓价比列表里最大的还大，那交易时就亏本了啊
         # print("设置接下来空单的买回价格:" + str(self.future_buy_price))
 
