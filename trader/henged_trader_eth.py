@@ -49,7 +49,7 @@ class HengedGrid(object):
         self.open_spot_price = 99999
         self.open_future_price = 1
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
-        self.crazy_build = fc.crazy_build
+        self.crazy_buy = fc.crazy_buy
         self.open_trend_trade = fc.open_trend_trade
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
         self.gross_profit = 0
@@ -376,8 +376,8 @@ class HengedGrid(object):
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
-                elif self.crazy_build and spot_open_long_res and not (future_res and future_res['orderId']):
-                    # 走这里的话，会在同一价位一直买一直买，建议低位时把self.crazy_build设置为True
+                elif self.crazy_buy and spot_open_long_res and not (future_res and future_res['orderId']):
+                    # 走这里的话，会在同一价位一直买一直买，建议低位时把self.crazy_buy设置为True
                     # 因为狂买模式不要一直触发不然会爆仓，所以还是在建底仓的时候做
                     msg = "进入狂买模式了"
                     Message.dingding_warn(msg)
@@ -884,7 +884,7 @@ class HengedGrid(object):
             if fc.long_buy_ratio_scale_signal_from_client:
                 self.long_buy_ratio_scale=fc.long_buy_ratio_scale
                 fc.long_buy_ratio_scale_signal_from_client=False
-            self.crazy_build = fc.crazy_build
+            self.crazy_buy = fc.crazy_buy
             self.open_trend_trade = fc.open_trend_trade
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
