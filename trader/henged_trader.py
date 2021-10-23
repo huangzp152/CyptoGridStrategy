@@ -51,6 +51,7 @@ class HengedGrid(object):
         self.open_future_price = 1
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
         self.crazy_build = fc.crazy_build
+        self.open_trend_trade = fc.open_trend_trade
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
         self.gross_profit = 0
         self.grid_run_time = ""
@@ -271,12 +272,17 @@ class HengedGrid(object):
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
                     symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
-                if fc.position_side == 'LONG':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
-                elif fc.position_side == 'SHORT':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+
+                if self.open_trend_trade is True:
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", ascending, self.demical_length)
                 else:
                     isTrendComing = False
+                # if fc.position_side == 'LONG':
+                #     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", ascending, self.demical_length)
+                # elif fc.position_side == 'SHORT':
+                #     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", descending, self.demical_length)
+                # else:
+                #     isTrendComing = False
 
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -882,13 +888,15 @@ class HengedGrid(object):
             if fc.long_buy_ratio_scale_signal_from_client:
                 self.long_buy_ratio_scale=fc.long_buy_ratio_scale
                 fc.long_buy_ratio_scale_signal_from_client=False
+            self.crazy_build = fc.crazy_build
+            self.open_trend_trade = fc.open_trend_trade
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
             #     current_share_previous_market_price = float(self.future_sell_price) / (1 + float(current_rising_ratio))
             #     self.set_future_price(current_share_previous_market_price) #恢复回当时的市场价，然后根据传入的比率重新设置
             #     fc.change_ratio_singal_from_client = False
-            time.sleep(1)
+            time.sleep(3)
         self.save_trade_info()
         # self.place_left_orders()
         msg = 'stop by myself!'

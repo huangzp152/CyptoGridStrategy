@@ -32,6 +32,7 @@ class flaskConfig(object):
         self.terminate = False
         self.ease_position_share = 50 #多空单都超过8个时，掐掉一些，减少持仓数量
         self.crazy_build = False
+        self.open_trend_trade = False
 
 
 
@@ -169,6 +170,14 @@ def crazy_buy():
     except RuntimeError as e:
         print(str(e))
     return 'hzp, /change/crazy_build, crazy_build'
+
+@app.route('/grid/change/open_trend_trade', methods=['GET'])
+def crazy_buy():
+    try:
+        fc.open_trend_trade = True
+    except RuntimeError as e:
+        print(str(e))
+    return 'hzp, /change/open_trend_trade, open_trend_trade'
 
 @app.route('/grid/start', methods=['GET'])
 def grid_start():

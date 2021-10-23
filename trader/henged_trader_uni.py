@@ -50,6 +50,7 @@ class HengedGrid(object):
         self.open_future_price = 1
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
         self.crazy_build = fc.crazy_build
+        self.open_trend_trade = fc.open_trend_trade
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
         self.gross_profit = 9.01
         self.grid_run_time = ""
@@ -883,13 +884,15 @@ class HengedGrid(object):
             if fc.long_buy_ratio_scale_signal_from_client:
                 self.long_buy_ratio_scale=fc.long_buy_ratio_scale
                 fc.long_buy_ratio_scale_signal_from_client=False
+            self.crazy_build = fc.crazy_build
+            self.open_trend_trade = fc.open_trend_trade
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
             #     current_share_previous_market_price = float(self.future_sell_price) / (1 + float(current_rising_ratio))
             #     self.set_future_price(current_share_previous_market_price) #恢复回当时的市场价，然后根据传入的比率重新设置
             #     fc.change_ratio_singal_from_client = False
-            time.sleep(1)
+            time.sleep(3)
         self.save_trade_info()
         # self.place_left_orders()
         msg = 'stop by myself!'
