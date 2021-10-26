@@ -180,8 +180,8 @@ class HengedGrid(object):
 
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
-        diff_time = time.time() - begin_time
-        struct_time = time.gmtime(diff_time)
+        self.diff_time = time.time() - begin_time
+        struct_time = time.gmtime(self.diff_time)
 
         self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
             struct_time.tm_year - 1970,
@@ -228,8 +228,8 @@ class HengedGrid(object):
                 # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
-                diff_time = time.time() - begin_time
-                struct_time = time.gmtime(diff_time)
+                self.diff_time = time.time() - begin_time
+                struct_time = time.gmtime(self.diff_time)
 
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print('now time:' + str(time_format))
@@ -254,8 +254,8 @@ class HengedGrid(object):
                     continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
-                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100, 2)) + '%)') if float(diff_time / 3600) != 0 else ''
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(self.diff_time / 3600), 2)) + ')') if float(self.diff_time / 3600) != 0 else ''
+                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(self.diff_time / 3600) * 100, 2)) + '%)') if float(self.diff_time / 3600) != 0 else ''
                 msg3 = '网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price]))
                 msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
                 msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
@@ -550,7 +550,8 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_sec))
 
                 # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份多单了！")
-                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(self.open_spot_price
+                earn_this_piece = round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)
+                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(earn_this_piece) + "， 卖出价格：" + str(self.cur_market_future_price) + "（设定涨" + str(dynamicConfig.spot_rising_ratio) + "%，实际涨 " + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 买入的价格:" + str(self.open_spot_price
                     ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -656,9 +657,8 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_hour,
                     last_get_profit_time_struct.tm_min,
                     last_get_profit_time_struct.tm_sec))
-
-                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(round((float(self.open_future_price) - float(self.cur_market_future_price)) * float(
-                        self.quantity),2)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
+                earn_this_piece = round((float(self.open_future_price) - float(self.cur_market_future_price)) * float(self.quantity),2)
+                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(earn_this_piece) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + "（设定跌" + str(dynamicConfig.spot_rising_ratio) + "%，实际跌 " + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 卖出的价格:" + str(
                     self.open_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -989,7 +989,7 @@ class HengedGrid(object):
             "货币对": ["运行时间", "总获利", "总利润率", "总格子数", "总仓位数", "多仓", "空仓", "底仓"]
         :return:
         '''
-        record_benefit_list_to_file = [self.grid_run_time, str(dynamicConfig.total_earn), self.gross_profit, str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps), str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
+        record_benefit_list_to_file = [self.diff_time, str(dynamicConfig.total_earn), self.gross_profit, str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps), str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
         trade_benefit_path = '../data/trade_benefit.json'
         with open(trade_benefit_path, "r") as df_read:
             load_dict = json.load(df_read)
