@@ -84,11 +84,12 @@ class DynamicConfig(object):
 
         # from file
         benefit_list_from_file = self.get_trade_benefit()
+        print(str(benefit_list_from_file[config.symbol]))
         self.order_list = []
-        self.total_earn = round(float(benefit_list_from_file[1]), 2) if benefit_list_from_file and benefit_list_from_file[1] else 0
+        self.total_earn = round(float(benefit_list_from_file[config.symbol][1]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][1] else 0
         self.total_invest = 0
-        self.total_earn_grids = round(float(benefit_list_from_file[3]), 2) if benefit_list_from_file and benefit_list_from_file[3] else 0
-        self.total_steps = round(float(benefit_list_from_file[4]), 2) if benefit_list_from_file and benefit_list_from_file[4] else 0
+        self.total_earn_grids = round(float(benefit_list_from_file[config.symbol][3]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][3] else 0
+        self.total_steps = round(float(benefit_list_from_file[config.symbol][4]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][4] else 0
 
     def loads(self, config_file=None):
         """ Load config file.
