@@ -172,12 +172,14 @@ def crazy_buy():
     return 'hzp, /change/crazy_buy, crazy_buy'
 
 @app.route('/grid/change/open_trend_trade', methods=['GET'])
-def crazy_buy():
+def open_trend_trade():
     try:
-        fc.open_trend_trade = True
+        open_trend_trade = str(request.args.get('open_trend_trade'))
+        fc.open_trend_trade = bool(open_trend_trade)
+        fc.open_trend_trade_singal_from_client = True
     except RuntimeError as e:
         print(str(e))
-    return 'hzp, /change/open_trend_trade, open_trend_trade'
+    return 'hzp, /change/open_trend_trade, open_trend_trade' + str(fc.open_trend_trade)
 
 @app.route('/grid/start', methods=['GET'])
 def grid_start():
