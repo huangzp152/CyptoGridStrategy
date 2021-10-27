@@ -82,12 +82,14 @@ class DynamicConfig(object):
         self.record_future_price = []
         self.long_bottom_position_price = []# 记录做多的底仓的价格列表
 
-        # test
+        # from file
+        benefit_list_from_file = self.get_trade_benefit()
+        print(str(benefit_list_from_file[config.symbol]))
         self.order_list = []
-        self.total_earn = 0
+        self.total_earn = round(float(benefit_list_from_file[config.symbol][1]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][1] else 0
         self.total_invest = 0
-        self.total_earn_grids = 0
-        self.total_steps = 0
+        self.total_earn_grids = round(float(benefit_list_from_file[config.symbol][3]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][3] else 0
+        self.total_steps = round(float(benefit_list_from_file[config.symbol][4]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][4] else 0
 
     def loads(self, config_file=None):
         """ Load config file.
@@ -108,6 +110,16 @@ class DynamicConfig(object):
                 print("config json file error!")
                 exit(0)
         self._update(configures)
+
+    def get_trade_benefit(self):
+        '''
+            "货币对": ["运行时间", "总获利", "总利润率", "总格子数", "总仓位数", "多仓", "空仓", "底仓"]
+        :return:
+        '''
+        trade_benefit_path = '../data/trade_benefit.json'
+        with open(trade_benefit_path, "r") as df_read:
+            load_dict = json.load(df_read)
+            return load_dict
 
     def _update(self, update_fields):
         """
