@@ -1105,8 +1105,8 @@ def get_trade_benefit():
 
 if __name__ == "__main__":
 
-    trade_benefit_dict = get_trade_benefit()
     while True:
+        trade_benefit_dict = get_trade_benefit()
         sum = 0
         msg2 = ''
         for key in trade_benefit_dict.keys():
