@@ -197,6 +197,8 @@ class Message:
             return res
     @staticmethod
     def dingding_warn(text):
+        time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        text = text + ', 时间：' + time_format
         if config.test:
             pass
         else:

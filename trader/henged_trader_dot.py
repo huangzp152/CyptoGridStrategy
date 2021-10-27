@@ -174,14 +174,14 @@ class HengedGrid(object):
 
         print("--------------初始准备阶段完成！---------------")
 
-        begin_time = int(dynamicConfig.get_trade_benefit()[config.symbol][0])
+        begin_time = time.time() # int(dynamicConfig.get_trade_benefit()[config.symbol][0])
         self.last_get_profit_time = begin_time
         loop_count = 1
         # for kkkkk in range(0, 1):
 
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
-        self.diff_time = time.time() - begin_time
+        self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
         struct_time = time.gmtime(self.diff_time)
 
         self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
@@ -229,7 +229,7 @@ class HengedGrid(object):
                 # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
-                self.diff_time = time.time() - begin_time
+                self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
                 struct_time = time.gmtime(self.diff_time)
 
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -326,13 +326,13 @@ class HengedGrid(object):
                 msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price)
                 msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
 
-                msg9 = "网格大小：多单：" + str(dynamicConfig.spot_rising_ratio) + "%, 空单：" + str(dynamicConfig.future_rising_ratio) + "%"
-
+                msg9 = "网格大小：多单：" + str(round(dynamicConfig.spot_rising_ratio, 2)) + "%, 空单：" + str(round(dynamicConfig.future_rising_ratio,2)) + "%"
+                msg10 = "开平仓数量：" + str(self.quantity)
                 print(msg7)
                 print(msg8)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
-                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + msg9 + self.grid_run_time
+                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + msg9 + ', ' + msg10 + self.grid_run_time
                     Message.dingding_warn(msg)
 
                 #设定仓位
