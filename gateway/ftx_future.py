@@ -74,12 +74,23 @@ class ftx_future:
                 return float(result.get('last'))
         return 0
 
+    def submit_lending_offers(self, coin, size, rate):
+        return self._post('spot_margin/offers', {'coin': coin, 'size': size, 'rate': rate})
+
+    def get_lending_offers(self):
+        return self._get('spot_margin/lending_info')
+
     def get_ticker_24hour(self, symbol) -> float:
         response = self._get('markets')
         for result in response:
             if result.get('name') == symbol:
                 return result.get('change24h') * 100
         return 0
+
+    def set_future_leverage(self, leverage):
+        path = "account/leverage"
+        params = {"leverage": leverage}
+        return self._post(path, params)
 
     def get_orderbook(self, market: str, depth: int = None) -> dict:
         return self._get(f'markets/{market}/orderbook', {'depth': depth})
