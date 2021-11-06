@@ -4,21 +4,23 @@ import os,json,time
 import numpy as np
 
 from gateway import BinanceSpotHttp, BinanceFutureHttp
-from utils import config
-from utils.dingding import Message
-
-msg = Message()
+from gateway.ftx_future import ftx_future
+from utils import config, config_ftt
 
 class CalcIndex:
 
     def __init__(self, test_data=None):
         self.coinType = config.symbol  # 交易币种
-        self.http_client = BinanceFutureHttp(api_key=config.api_key, secret=config.api_secret,
-                                           proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        if config.platform == "binance_future_test":
+            self.http_client = BinanceFutureHttp(api_key=config.api_key, secret=config.api_secret,
+                                                 proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        else:
+            self.http_client = ftx_future(api_key=config_ftt.config.api_key, api_secret=config_ftt.config.api_secret)
+
         self.test_data = test_data
 
         self.kline_list = []
-        self.getklineList()
+        # self.getklineList()
 
     def calcMA(self,symbol,interval,point):
         '''
@@ -340,14 +342,15 @@ class CalcIndex:
         tmp_list_ma5 = []
         if data and len(data) > 0:
             for i in range(len(data)):
+                close_price = float(data[i][4] if isinstance(data[i], list) else data[i]['close'])
                 if i==0:
-                    last_ma5+=float(data[i][4])
+                    last_ma5+=close_price
                 elif i==5:
-                    next_ma5+=float(data[i][4])
+                    next_ma5+=close_price
                 else:
-                    last_ma5+=float(data[i][4])
-                    next_ma5+=float(data[i][4])
-                tmp_list_ma5.append(float(data[i][4]))
+                    last_ma5+=close_price
+                    next_ma5+=close_price
+                tmp_list_ma5.append(close_price)
         return tmp_list_ma5
 
 

@@ -215,7 +215,7 @@ def grid_start():
     # finally:
     #     if error_raw:
     #         error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw))
-    #         Message.dingding_warn(str(error_info))
+    #         Message.crazy_buy_warn(str(error_info))
     return 'hzp, /grid/start!'
 
 if __name__ == '__main__':

@@ -1,188 +1,106 @@
-"""
-    1. ftx Future http requests.
-
-"""
-import re
-
-from utils import config
-
-import requests
 import time
+import urllib.parse
+from typing import Optional, Dict, Any, List
+
+from requests import Request, Session, Response
 import hmac
-import hashlib
-from enum import Enum
+# from ciso8601 import parse_datetime
+from gateway import OrderType
 from threading import Thread, Lock
-from datetime import datetime
 
 
-class OrderStatus(object):
-    NEW = "NEW"
-    PARTIALLY_FILLED = "PARTIALLY_FILLED"
-    FILLED = "FILLED"
-    CANCELED = "CANCELED"
-    PENDING_CANCEL = "PENDING_CANCEL"
-    REJECTED = "REJECTED"
-    EXPIRED = "EXPIRED"
+class ftx_future:
+    _ENDPOINT = 'https://ftx.com/api/'
 
+    def __init__(self, api_key=None, api_secret=None, subaccount_name=None) -> None:
+        self._session = Session()
+        self._api_key = api_key
+        self._api_secret = api_secret
+        self._subaccount_name = subaccount_name
 
-class OrderType(Enum):
-    LIMIT = "LIMIT"
-    MARKET = "MARKET"
-    STOP = "STOP"
-
-
-class RequestMethod(Enum):
-    """
-    请求的方法.
-    """
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
-    DELETE = 'DELETE'
-
-
-class Interval(Enum):
-    """
-    请求的K线数据..
-    """
-    MINUTE_1 = '1m'
-    MINUTE_3 = '3m'
-    MINUTE_5 = '5m'
-    MINUTE_15 = '15m'
-    MINUTE_30 = '30m'
-    HOUR_1 = '1h'
-    HOUR_2 = '2h'
-    HOUR_4 = '4h'
-    HOUR_6 = '6h'
-    HOUR_8 = '8h'
-    HOUR_12 = '12h'
-    DAY_1 = '1d'
-    DAY_3 = '3d'
-    WEEK_1 = '1w'
-    MONTH_1 = '1M'
-
-
-class OrderSide(Enum):
-    BUY = "BUY"
-    SELL = "SELL"
-
-
-class BinanceFutureHttp(object):
-
-    def __init__(self, api_key=None, secret=None, host=None, proxy_host="", proxy_port=0, timeout=5, try_counts=5):
-        self.key = api_key
-        self.secret = secret
-        self.host = host if host else "https://testnet.binancefuture.com" if config.platform == 'binance_future_testnet' else "https://fapi.binance.com"
-        self.recv_window = 60000
-        self.timeout = timeout
         self.order_count_lock = Lock()
         self.order_count = 1_000_000
-        self.try_counts = try_counts  # 失败尝试的次数.
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
 
-    @property
-    def proxies(self):
-        if self.proxy_host and self.proxy_port:
-            proxy = f"http://{self.proxy_host}:{self.proxy_port}"
-            return {"http": proxy, "https": proxy}
-        return {}
+    def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        return self._request('GET', path, params=params)
 
-    def build_parameters(self, params: dict):
-        keys = list(params.keys())
-        keys.sort()
-        return '&'.join([f"{key}={params[key]}" for key in params.keys()])
+    def _post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        return self._request('POST', path, json=params)
 
-    def request(self, req_method: RequestMethod, path: str, requery_dict=None, verify=False):
-        url = self.host + path
+    def _delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        return self._request('DELETE', path, json=params)
 
-        if verify:
-            query_str = self._sign(requery_dict)
-            url += '?' + query_str
-        elif requery_dict:
-            url += '?' + self.build_parameters(requery_dict)
-        headers = {"X-MBX-APIKEY": self.key}
+    def _request(self, method: str, path: str, **kwargs) -> Any:
+        request = Request(method, self._ENDPOINT + path, **kwargs)
+        self._sign_request(request)
+        response = self._session.send(request.prepare())
+        return self._process_response(response)
 
-        for i in range(0, self.try_counts):
-            try:
-                response = requests.request(req_method.value, url=url, headers=headers, timeout=self.timeout, proxies=self.proxies)
-                if response.status_code == 200:
-                    return response.json()
-                else:
-                    print(f"请求没有成功: {response.status_code},看下原因：{response.content}, 继续尝试请求")
-            except Exception as error:
-                print(f"请求:{path}, 发生了错误: {error}, 时间: {datetime.now()}")
-                time.sleep(3)
+    def _sign_request(self, request: Request) -> None:
+        ts = int(time.time() * 1000)
+        prepared = request.prepare()
+        signature_payload = f'{ts}{prepared.method}{prepared.path_url}'.encode()
+        if prepared.body:
+            signature_payload += prepared.body
+        signature = hmac.new(self._api_secret.encode(), signature_payload, 'sha256').hexdigest()
+        request.headers['FTX-KEY'] = self._api_key
+        request.headers['FTX-SIGN'] = signature
+        request.headers['FTX-TS'] = str(ts)
+        if self._subaccount_name:
+            request.headers['FTX-SUBACCOUNT'] = urllib.parse.quote(self._subaccount_name)
 
-    def server_time(self):
-        path = '/fapi/v1/time'
-        return self.request(req_method=RequestMethod.GET, path=path)
+    def _process_response(self, response: Response) -> Any:
+        try:
+            data = response.json()
+        except ValueError:
+            response.raise_for_status()
+            raise
+        else:
+            if not data['success']:
+                raise Exception(data['error'])
+            return data['result']
 
-    def get_future_asset(self, symbol):
-        res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
-        if res:
-            assets = res.get('assets')
-            if assets:
-                for asset in assets:
-                    if symbol.endswith(asset.get('asset')):
-                        return [asset.get('walletBalance'), asset.get('marginBalance')]
-        return []
+    def list_futures(self) -> List[dict]:
+        return self._get('futures')
 
-    def set_future_leverage(self, symbol, leverage):
-        path = "/fapi/v1/leverage"
-        params = {"timestamp": self._timestamp(),
-                  "recvWindow": self.recv_window,
-                  "symbol": symbol,
-                  "leverage": leverage}
-        return self.request(RequestMethod.POST, path, params, verify=True)
+    def list_markets(self) -> List[dict]:
+        return self._get('markets')
 
-    def exchangeInfo(self, symbol):
+    def get_latest_price(self, symbol) -> float:
+        response = self._get('markets')
+        # print("markets:"+str(response))
+        for result in response:
+            if result.get('name') == symbol:
+                return float(result.get('last'))
+        return 0
 
-        """
-        {'timezone': 'UTC', 'serverTime': 1570802268092, 'rateLimits':
-        [{'rateLimitType': 'REQUEST_WEIGHT', 'interval': 'MINUTE', 'intervalNum': 1, 'limit': 1200},
-        {'rateLimitType': 'ORDERS', 'interval': 'MINUTE', 'intervalNum': 1, 'limit': 1200}],
-         'exchangeFilters': [], 'symbols':
-         [{'symbol': 'BTCUSDT', 'status': 'TRADING', 'maintMarginPercent': '2.5000', 'requiredMarginPercent': '5.0000',
-         'baseAsset': 'BTC', 'quoteAsset': 'USDT', 'pricePrecision': 2, 'quantityPrecision': 3, 'baseAssetPrecision': 8,
-         'quotePrecision': 8,
-         'filters': [{'minPrice': '0.01', 'maxPrice': '100000', 'filterType': 'PRICE_FILTER', 'tickSize': '0.01'},
-         {'stepSize': '0.001', 'filterType': 'LOT_SIZE', 'maxQty': '1000', 'minQty': '0.001'},
-         {'stepSize': '0.001', 'filterType': 'MARKET_LOT_SIZE', 'maxQty': '1000', 'minQty': '0.001'},
-         {'limit': 200, 'filterType': 'MAX_NUM_ORDERS'},
-         {'multiplierDown': '0.8500', 'multiplierUp': '1.1500', 'multiplierDecimal': '4', 'filterType': 'PERCENT_PRICE'}],
-         'orderTypes': ['LIMIT', 'MARKET', 'STOP'], 'timeInForce': ['GTC', 'IOC', 'FOK', 'GTX']}]}
+    def get_ticker_24hour(self, symbol) -> float:
+        response = self._get('markets')
+        for result in response:
+            if result.get('name') == symbol:
+                return result.get('change24h') * 100
+        return 0
 
-        :return:
-        """
+    def get_orderbook(self, market: str, depth: int = None) -> dict:
+        return self._get(f'markets/{market}/orderbook', {'depth': depth})
 
-        path = '/fapi/v1/exchangeInfo'
-        params = {"symbol": symbol,
-                  "timestamp": self._timestamp()}
-        return self.request(RequestMethod.GET, path, params)
+    def get_trades(self, market: str) -> dict:
+        return self._get(f'markets/{market}/trades')
 
-    def get_positionInfo(self, symbol):
-        '''当前持仓交易对信息'''
-        path = "/fapi/v2/positionRisk"
-        params = {"symbol": symbol,
-                  "timestamp": self._timestamp()}
-        time.sleep(1)
-        res = self.request(RequestMethod.GET, path, params, verify=True)
-        return res
+    def get_account_info(self) -> dict:
+        return self._get(f'account')
 
-    def order_book(self, symbol, limit=5):
-        limits = [5, 10, 20, 50, 100, 500, 1000]
-        if limit not in limits:
-            limit = 5
+    def get_open_orders(self, market: str = None) -> List[dict]:
+        return self._get(f'orders', {'market': market})
 
-        path = "/fapi/v1/depth"
-        query_dict = {"symbol": symbol,
-                      "limit": limit
-                      }
+    def get_order_history(self, market: str = None, side: str = None, order_type: str = None, start_time: float = None, end_time: float = None) -> List[dict]:
+        return self._get(f'orders/history', {'market': market, 'side': side, 'orderType': order_type, 'start_time': start_time, 'end_time': end_time})
 
-        return self.request(RequestMethod.GET, path, query_dict)
+    # GET /conditional_orders/history?market={market}
+    def get_conditional_order_history(self, market: str = None, side: str = None, type: str = None, order_type: str = None, start_time: float = None, end_time: float = None) -> List[dict]:
+        return self._get(f'conditional_orders/history', {'market': market, 'side': side, 'type': type, 'orderType': order_type, 'start_time': start_time, 'end_time': end_time})
 
-    def get_kline(self, symbol, interval: Interval, start_time=None, end_time=None, limit=500, max_try_time=10):
+    def get_kline(self, symbol, interval, start_time=None, end_time=None, limit=500, max_try_time=10):
         """
 
         :param symbol:
@@ -206,54 +124,65 @@ class BinanceFutureHttp(object):
             "17928899.62484339" // 请忽略该参数
         ]
         """
-        path = "/fapi/v1/klines"
+        path = f'/markets/{symbol}/candles'
 
         query_dict = {
-            "symbol": symbol,
-            "interval": interval,
-            "limit": limit
+            "resolution": int(interval)
         }
 
         if start_time:
-            query_dict['startTime'] = start_time
+            query_dict['start_time'] = start_time
 
         if end_time:
-            query_dict['endTime'] = end_time
+            query_dict['end_time'] = end_time
 
         for i in range(max_try_time):
-            data = self.request(RequestMethod.GET, path, query_dict)
+            data = self._get(path, query_dict)
             if isinstance(data, list) and len(data):
-                return data
+                return data[-limit:]
 
-    def get_latest_price(self, symbol):
-        path = "/fapi/v1/ticker/price"
-        query_dict = {"symbol": symbol}
-        return self.request(RequestMethod.GET, path, query_dict)
 
-    def get_ticker(self, symbol):
-        path = "/fapi/v1/ticker/bookTicker"
-        query_dict = {"symbol": symbol}
-        return self.request(RequestMethod.GET, path, query_dict)
+    def modify_order(
+        self, existing_order_id: Optional[str] = None,
+        existing_client_order_id: Optional[str] = None, price: Optional[float] = None,
+        size: Optional[float] = None, client_order_id: Optional[str] = None,
+    ) -> dict:
+        assert (existing_order_id is None) ^ (existing_client_order_id is None), \
+            'Must supply exactly one ID for the order to modify'
+        assert (price is None) or (size is None), 'Must modify price or size of order'
+        path = f'orders/{existing_order_id}/modify' if existing_order_id is not None else \
+            f'orders/by_client_id/{existing_client_order_id}/modify'
+        return self._post(path, {
+            **({'size': size} if size is not None else {}),
+            **({'price': price} if price is not None else {}),
+            ** ({'clientId': client_order_id} if client_order_id is not None else {}),
+        })
 
-    def get_ticker_24hour(self, symbol):
-        """
-        :param symbol: 获取24小时的涨跌幅,好像只有24hr维度的
+    def get_conditional_orders(self, market: str = None) -> List[dict]:
+        return self._get(f'conditional_orders', {'market': market})
 
-        """
-        path = "/fapi/v1/ticker/24hr"
-        query_dict = {"symbol": symbol}
-        return self.request(RequestMethod.GET, path, query_dict)
+    def place_order(self, market: str, side: str, position: str, type: str, size: float,
+                    price: str,
+                    reduce_only: bool = False, ioc: bool = False, post_only: bool = False,
+                    client_id: str = None) -> dict:
+        if type == OrderType.MARKET.value:
+            price = None
+        side = side.lower()
+        type = type.lower()
 
-    ########################### the following request is for private data ########################
+        if client_id is None:
+            client_id = self.get_client_order_id()
 
-    def _timestamp(self):
-        return int(time.time() * 1000)
-
-    def _sign(self, params):
-
-        requery_string = self.build_parameters(params)
-        hexdigest = hmac.new(self.secret.encode('utf8'), requery_string.encode("utf-8"), hashlib.sha256).hexdigest()
-        return requery_string + '&signature=' + str(hexdigest)
+        return self._post('orders', {'market': market,
+                                     'side': side,
+                                     'price': price,
+                                     'size': size,
+                                     'type': type,
+                                     'reduceOnly': reduce_only,
+                                     'ioc': ioc,
+                                     'postOnly': post_only,
+                                     'clientId': client_id,
+                                     })
 
     def get_client_order_id(self):
 
@@ -265,262 +194,79 @@ class BinanceFutureHttp(object):
             self.order_count += 1
             return "x-cLbi5uMH" + str(self._timestamp()) + str(self.order_count)
 
-    def place_order(self, symbol: str, order_side: OrderSide, position_side, order_type: OrderType, quantity, price,
-                    time_inforce="GTC", client_order_id=None, recvWindow=60000, stop_price=0):
+    def _timestamp(self):
+        return int(time.time() * 1000)
 
+    def place_conditional_order(
+        self, market: str, side: str, size: float, type: str = 'stop',
+        limit_price: float = None, reduce_only: bool = False, cancel: bool = True,
+        trigger_price: float = None, trail_value: float = None
+    ) -> dict:
         """
-        下单..
-        :param symbol: BTCUSDT
-        :param side: BUY or SELL
-        :param type: LIMIT MARKET STOP
-        :param quantity: 数量.
-        :param price: 价格
-        :param stop_price: 停止单的价格.
-        :param time_inforce:,空单传""，解决{"code":-1106,"msg":"Parameter \'timeInForce\' sent when not required."}报错
-        :param params: 其他参数
-
-        LIMIT : timeInForce, quantity, price
-        MARKET : quantity
-        STOP: quantity, price, stopPrice
-        :return:
-
+        To send a Stop Market order, set type='stop' and supply a trigger_price
+        To send a Stop Limit order, also supply a limit_price
+        To send a Take Profit Market order, set type='trailing_stop' and supply a trigger_price
+        To send a Trailing Stop order, set type='trailing_stop' and supply a trail_value
         """
+        assert type in ('stop', 'take_profit', 'trailing_stop')
+        assert type not in ('stop', 'take_profit') or trigger_price is not None, \
+            'Need trigger prices for stop losses and take profits'
+        assert type not in ('trailing_stop',) or (trigger_price is None and trail_value is not None), \
+            'Trailing stops need a trail value and cannot take a trigger price'
 
-        path = '/fapi/v1/order'
+        return self._post('conditional_orders',
+                          {'market': market, 'side': side, 'triggerPrice': trigger_price,
+                           'size': size, 'reduceOnly': reduce_only, 'type': 'stop',
+                           'cancelLimitOnTrigger': cancel, 'orderPrice': limit_price})
 
-        if client_order_id is None:
-            client_order_id = self.get_client_order_id()
+    def cancel_order(self, order_id: str) -> dict:
+        return self._delete(f'orders/{order_id}')
 
-        params = {
-            "symbol": symbol,
-            "side": order_side.value,
-            "positionSide": position_side,
-            "type": order_type.value,
-            "quantity": quantity,
-            "price": price,
-            "recvWindow": recvWindow,
-            # "timeInForce": time_inforce,
-            "timestamp": self._timestamp(),
-            "newClientOrderId": client_order_id
-        }
+    def cancel_orders(self, market_name: str = None, conditional_orders: bool = False,
+                      limit_orders: bool = False) -> dict:
+        return self._delete(f'orders', {'market': market_name,
+                                        'conditionalOrdersOnly': conditional_orders,
+                                        'limitOrdersOnly': limit_orders,
+                                        })
 
-        if order_type.value == OrderType.LIMIT.value:
-            params['timeInForce'] = time_inforce
+    def get_fills(self) -> List[dict]:
+        return self._get(f'fills')
 
-        if order_type.value == OrderType.MARKET.value:
-            if params.get('price'):
-                del params['price']
+    def get_balances(self) -> List[dict]:
+        return self._get('wallet/balances')
 
-        if order_type.value == OrderType.STOP.value:
-            if stop_price > 0:
-                params["stopPrice"] = stop_price
-            else:
-                raise ValueError("stopPrice must greater than 0")
-        print("check")
-        print("check params："+str(params))
-        return self.request(RequestMethod.POST, path=path, requery_dict=params, verify=True)
+    def get_future_asset(self, coin):
+        response = self.get_balances()
+        for result in response:
+            if result.get('coin') == coin:
+                return result.get('total')
+        return 0
 
-    def get_order(self, symbol, client_order_id=None):
-        path = "/fapi/v1/order"
-        query_dict = {"symbol": symbol, "timestamp": self._timestamp()}
-        if client_order_id:
-            query_dict["origClientOrderId"] = client_order_id
+    def get_deposit_address(self, ticker: str) -> dict:
+        return self._get(f'wallet/deposit_address/{ticker}')
 
-        return self.request(RequestMethod.GET, path, query_dict, verify=True)
+    def get_positions(self, show_avg_price: bool = False) -> List[dict]:
+        return self._get('positions', {'showAvgPrice': show_avg_price})
 
-    def cancel_order(self, symbol, client_order_id=None):
-        path = "/fapi/v1/order"
-        params = {"symbol": symbol, "timestamp": self._timestamp()}
-        if client_order_id:
-            params["origClientOrderId"] = client_order_id
+    def get_position(self, name: str, show_avg_price: bool = False) -> dict:
+        return next(filter(lambda x: x['future'] == name, self.get_positions(show_avg_price)), None)
 
-        return self.request(RequestMethod.DELETE, path, params, verify=True)
-
-    def get_my_trades(self, symbol=None):
-        path = "/fapi/v1/trades"
-
-        params = {"timestamp": self._timestamp(),
-                  "symbol": symbol,
-                  "limit": 10}
-
-        return self.request(RequestMethod.GET, path, params, verify=True)
-
-    def get_open_orders(self, symbol=None):
-        path = "/fapi/v1/openOrders"
-
-        params = {"timestamp": self._timestamp()}
-        if symbol:
-            params["symbol"] = symbol
-
-        return self.request(RequestMethod.GET, path, params, verify=True)
-
-    def cancel_open_orders(self, symbol):
-        """
-        撤销某个交易对的所有挂单
-        :param symbol: symbol
-        :return: return a list of orders.
-        """
-        path = "/fapi/v1/allOpenOrders"
-
-        params = {"timestamp": self._timestamp(),
-                  "recvWindow": self.recv_window,
-                  "symbol": symbol
-                  }
-
-        return self.request(RequestMethod.DELETE, path, params, verify=True)
-
-    def get_balance(self):
-        """
-        [{'accountId': 18396, 'asset': 'USDT', 'balance': '530.21334791', 'withdrawAvailable': '530.21334791', 'updateTime': 1570330854015}]
-        :return:
-        """
-        path = "/fapi/v1/balance"
-        params = {"timestamp": self._timestamp()}
-
-        return self.request(RequestMethod.GET, path=path, requery_dict=params, verify=True)
-
-    def get_account_info(self, symbol):
-        """
-        {'feeTier': 2, 'canTrade': True, 'canDeposit': True, 'canWithdraw': True, 'updateTime': 0, 'totalInitialMargin': '0.00000000',
-        'totalMaintMargin': '0.00000000', 'totalWalletBalance': '530.21334791', 'totalUnrealizedProfit': '0.00000000',
-        'totalMarginBalance': '530.21334791', 'totalPositionInitialMargin': '0.00000000', 'totalOpenOrderInitialMargin': '0.00000000',
-        'maxWithdrawAmount': '530.2133479100000', 'assets':
-        [{'asset': 'USDT', 'walletBalance': '530.21334791', 'unrealizedProfit': '0.00000000', 'marginBalance': '530.21334791',
-        'maintMargin': '0.00000000', 'initialMargin': '0.00000000', 'positionInitialMargin': '0.00000000', 'openOrderInitialMargin': '0.00000000',
-        'maxWithdrawAmount': '530.2133479100000'}]}
-        :return:
-        """
-        path = "/fapi/v2/account"
-        params = {"timestamp": self._timestamp(),
-                  "recv_window": self.recv_window,
-                  "symbol" : symbol}
-        return self.request(RequestMethod.GET, path, params, verify=True)
-
-    def get_position_info(self):
-        """
-        [{'symbol': 'BTCUSDT', 'positionAmt': '0.000', 'entryPrice': '0.00000', 'markPrice': '8326.40833498', 'unRealizedProfit': '0.00000000', 'liquidationPrice': '0'}]
-        :return:
-        """
-        path = "/fapi/v1/positionRisk"
-        params = {"timestamp": self._timestamp()}
-        return self.request(RequestMethod.GET, path, params, verify=True)
-
-    def set_henged_position_mode(self):
-        """
-            把持仓模式改为双向
-            By default the futures keeps the position mode to One-way. In order to enable the new feature of Hedge Mode, so you can have dual sides positions.
-            enable it by endpoint POST /fapi/v1/positionSide/dual, setting the parameter dualSidePosition = true
-            Open position:
-            Long : positionSide=LONG, side=BUY
-            Short: positionSide=SHORT, side=SELL
-            Close position:
-            Close long position: positionSide=LONG, side=SELL
-            Close short position: positionSide=SHORT, side=BUY
-        """
-        path = "/fapi/v1/positionSide/dual"
-        params = {"dualSidePosition": "true",
-                  "timestamp": self._timestamp()}
-        return self.request(RequestMethod.POST, path, params, verify=True)
-
-    def check_position_side(self):
-        """
-        查询持仓模式，如果是单向的话，本项目多空双开，需要改为双向
-        """
-        path = "/fapi/v1/positionSide/dual"
-        params = {"timestamp": self._timestamp()}
-        res = self.request(RequestMethod.GET, path, params, verify=True)
-        return res
-
-    def get_all_orders(self, symbol=None):
-        """
-        获取所有的订单.
-        :param symbol: BNBUSDT, or BTCUSDT etc.
-        :return:
-        """
-        path = "/fapi/v1/allOrders"
-
-        params = {"timestamp": self._timestamp()}
-        if symbol:
-            params["symbol"] = symbol
-
-        return self.request(RequestMethod.GET, path, params, verify=True)
-
-    def get_future_position_info(self, symbol):
-        res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
-        if res:
-            positions = res.get('positions')
-            if positions:
-                for position in positions:
-                    if symbol == position.get('symbol'):
-                        return position.get('positionAmt')
-        return -1
-
-    def get_future_position_info_ma(self, symbol, positionside, quantity='', current_price='', entryPrice=''):
-        print(str(config.test))
-        if config.test:
-            positionAmt = quantity
-            unrealizedProfit = (float(entryPrice) - float(current_price)) * float(positionAmt) if float(entryPrice) != 0.0 else 0
-            initialMargin = float(positionAmt) * float(entryPrice) # todo levelage
-            return [quantity, entryPrice, unrealizedProfit, initialMargin]
-        else:
-            res = self.get_account_info(symbol)  # 现货与合约同样接口返回的结果不一样
-            if res:
-                # print('test get_account_info:' + str(res))
-                positions = res.get('positions')
-                if positions:
-                    for position in positions:
-                        if symbol == position.get('symbol') and positionside == position.get('positionSide'):
-                            return [position.get('positionAmt'), position.get('entryPrice'),
-                                    position.get('unrealizedProfit'), position.get('initialMargin')]#当前持仓，价格，未实现盈亏，初始保证金？
-        return -1
-
-
-if __name__ == '__main__':
-    # import pandas as pd
-
-    key = "xxxx"
-    secret = 'xxxx'
-    binance = BinanceFutureHttp(api_key=key, secret=secret)
-
-    # import datetime
-    # print(datetime.datetime.now())
-
-    data = binance.get_kline('BTCUSDT', Interval.HOUR_1, limit=100)
-    print(data)
-    print(isinstance(data, list))
-
-    exit()
-    # info = binance.exchangeInfo()
-    # print(info)
-    # exit()
-    # print(binance.order_book(symbol='BTCUSDT', limit=5))
-    # exit()
-
-    # print(binance.latest_price('BTCUSDT'))
-    # kline = binance.kline('BTCUSDT', interval='1m')
-    # print(pd.DataFrame(kline))
-
-    # print(binance.ticker("BTCUSDT"))
-
-    # print(binance.get_ticker('BTCUSDT'))
-    # {'symbol': 'BTCUSDT', 'side': 'SELL', 'type': 'LIMIT', 'quantity': 0.001, 'price': 8360.82, 'recvWindow': 5000, 'timestamp': 1570969995974, 'timeInForce': 'GTC'}
-
-    # data = binance.place_order(symbol="BTCUSDT", side=OrderSide.BUY, order_type=OrderType.MARKET, quantity=0.001, price=8250.82)
-    # print(data)
-
-    # cancel_order = binance.cancel_order("BTCUSDT", order_id="30714952")
-    # print(cancel_order)
-
-    # balance = binance.get_balance()
-    # print(balance)
-
-    # account_info = binance.get_account_info()
-    # print(account_info)
-
-    # account_info = binance.get_position_info()
-    # print(account_info)
-
-    """
-    {'orderId': 30714952, 'symbol': 'BTCUSDT', 'accountId': 18396, 'status': 'NEW', 'clientOrderId': 'ZC3qSbzbODl0GId9idK9hM', 'price': '7900', 'origQty': '0.010', 'executedQty': '0', 'cumQty': '0', 'cumQuote': '0', 'timeInForce': 'GTC', 'type': 'LIMIT', 'reduceOnly': False, 'side': 'BUY', 'stopPrice': '0', 'updateTime': 1569658787083}
-    {'orderId': 30714952, 'symbol': 'BTCUSDT', 'accountId': 18396, 'status': 'NEW', 'clientOrderId': 'ZC3qSbzbODl0GId9idK9hM', 'price': '7900', 'origQty': '0.010', 'executedQty': '0', 'cumQty': '0', 'cumQuote': '0', 'timeInForce': 'GTC', 'type': 'LIMIT', 'reduceOnly': False, 'side': 'BUY', 'stopPrice': '0', 'updateTime': 1569658787083}
-    """
+    def get_all_trades(self, market: str, start_time: float = None, end_time: float = None) -> List:
+        ids = set()
+        limit = 100
+        results = []
+        while True:
+            response = self._get(f'markets/{market}/trades', {
+                'end_time': end_time,
+                'start_time': start_time,
+            })
+            deduped_trades = [r for r in response if r['id'] not in ids]
+            results.extend(deduped_trades)
+            ids |= {r['id'] for r in deduped_trades}
+            print(f'Adding {len(response)} trades with end time {end_time}')
+            if len(response) == 0:
+                break
+            end_time = min(parse_datetime(t['time']) for t in response).timestamp()
+            if len(response) < limit:
+                break
+        return results
