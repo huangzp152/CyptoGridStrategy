@@ -1,0 +1,22 @@
+{
+  "platform": "binance_future_test",
+  "symbol": "DOTUSDT",
+  "coin": "DOT",
+  "api_key": "tqSKJnoem4vL0fYmpVS4PXXMs07EE9YTxMD68qA2K2hpcpocmA14yCvbw1Q0bdig",
+  "api_secret": "ugA1VCyaoxwUdJFEbytNhh4oUN5RjL9Sh3DOYTwTiyUB6ZSvxRdu66p4jOnLGVwp",
+  "api_key_future": "tqSKJnoem4vL0fYmpVS4PXXMs07EE9YTxMD68qA2K2hpcpocmA14yCvbw1Q0bdig",
+  "api_secret_future": "ugA1VCyaoxwUdJFEbytNhh4oUN5RjL9Sh3DOYTwTiyUB6ZSvxRdu66p4jOnLGVwp",
+  "api_key_future_testnet": "tqSKJnoem4vL0fYmpVS4PXXMs07EE9YTxMD68qA2K2hpcpocmA14yCvbw1Q0bdig",
+  "api_secret_future_testnet": "ugA1VCyaoxwUdJFEbytNhh4oUN5RjL9Sh3DOYTwTiyUB6ZSvxRdu66p4jOnLGVwp",
+  "gap_percent": 0.01,
+  "quantity": 0.02,
+  "min_price": 0.00000001,
+  "min_qty": 0.000001,
+  "max_orders": 1,
+  "proxy_host": "",
+  "proxy_port": 0,
+  "initial_price": 37500,
+  "grid_number": 3,
+  "max_border_price": 45000,
+  "min_border_price": 25000
+}

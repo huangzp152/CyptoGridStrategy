@@ -20,13 +20,12 @@ import time
 import sys
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
-
-from cmd_receive_dot import fc, app
+from cmd_receive_for_user import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
-from utils.config_dot import config, dynamicConfig
-from utils.dingding import Message
+from utils.config_for_user import dynamicConfig, config
+from utils.dingding_for_user import Message
 
 
 class HengedGrid(object):
@@ -50,8 +49,8 @@ class HengedGrid(object):
         self.open_spot_price = 99999
         self.open_future_price = 1
         self.long_buy_ratio_scale = fc.long_buy_ratio_scale
-        self.crazy_buy = False
-        self.open_trend_trade = False
+        self.crazy_buy = fc.crazy_buy
+        self.open_trend_trade = fc.open_trend_trade
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
         self.gross_profit = 0
         self.grid_run_time = ""
@@ -174,15 +173,15 @@ class HengedGrid(object):
 
         print("--------------初始准备阶段完成！---------------")
 
-        begin_time = time.time() # int(dynamicConfig.get_trade_benefit()[config.symbol][0])
+        begin_time = time.time()
         self.last_get_profit_time = begin_time
         loop_count = 1
         # for kkkkk in range(0, 1):
 
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
-        self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
-        struct_time = time.gmtime(self.diff_time)
+        diff_time = time.time() - begin_time
+        struct_time = time.gmtime(diff_time)
 
         self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
             struct_time.tm_year - 1970,
@@ -196,14 +195,14 @@ class HengedGrid(object):
         print("把上次存下来的卖掉一部分")
         #self.close_previous_position(time_format)
 
-        # print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
-        # if self.grid_side == 'BOTH':
-        #     self.open_long(time_format)
-        #     self.open_short(time_format)
-        # elif self.grid_side == 'LONG':
-        #     self.open_long(time_format)
-        # elif self.grid_side == 'SHORT':
-        #     self.open_short(time_format)
+        print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
+        if self.grid_side == 'BOTH':
+            self.open_long(time_format)
+            self.open_short(time_format)
+        elif self.grid_side == 'LONG':
+            self.open_long(time_format)
+        elif self.grid_side == 'SHORT':
+            self.open_short(time_format)
 
         time.sleep(5)
 
@@ -229,8 +228,8 @@ class HengedGrid(object):
                 # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
-                self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
-                struct_time = time.gmtime(self.diff_time)
+                diff_time = time.time() - begin_time
+                struct_time = time.gmtime(diff_time)
 
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print('now time:' + str(time_format))
@@ -255,8 +254,8 @@ class HengedGrid(object):
                     continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(self.diff_time / 3600), 2)) + ')') if float(self.diff_time / 3600) != 0 else ''
-                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(self.diff_time / 3600) * 100, 2)) + '%)') if float(self.diff_time / 3600) != 0 else ''
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
+                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100, 2)) + '%)') if float(diff_time / 3600) != 0 else ''
                 msg3 = '网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price]))
                 msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
                 msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
@@ -272,12 +271,17 @@ class HengedGrid(object):
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
                     symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
-                if fc.position_side == 'LONG':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
-                elif fc.position_side == 'SHORT':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+
+                if self.open_trend_trade is True:
+                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", ascending, self.demical_length)
                 else:
                     isTrendComing = False
+                # if fc.position_side == 'LONG':
+                #     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", ascending, self.demical_length)
+                # elif fc.position_side == 'SHORT':
+                #     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "1m", descending, self.demical_length)
+                # else:
+                #     isTrendComing = False
 
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
@@ -326,15 +330,11 @@ class HengedGrid(object):
                 msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price)
                 msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
 
-                msg9 = "网格大小：多单：" + str(round(dynamicConfig.spot_rising_ratio, 2)) + "%, 空单：" + str(round(dynamicConfig.future_rising_ratio,2)) + "%"
-                msg10 = "开平仓数量：" + str(self.quantity)
-                ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']),1)
-                msg11 = "市场行情：" + str(ratio_24hr)
                 print(msg7)
                 print(msg8)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
-                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + msg9 + ', ' + msg10 + ', ' + msg11 + self.grid_run_time
+                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
                     Message.dingding_warn(msg)
 
                 #设定仓位
@@ -555,8 +555,7 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_sec))
 
                 # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份多单了！")
-                earn_this_piece = round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)
-                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(earn_this_piece) + "， 卖出价格：" + str(self.cur_market_future_price) + "（设定涨：" + str(dynamicConfig.spot_rising_ratio) + "%平仓，实际涨：" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 买入的价格:" + str(self.open_spot_price
+                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)) + "， 卖出价格：" + str(self.cur_market_future_price) + ", 买入的价格:" + str(self.open_spot_price
                     ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -640,8 +639,6 @@ class HengedGrid(object):
                     self.open_future_price = self.get_last_future_price()
                     self.remove_last_future_price()
 
-
-
                 self.set_future_step(self.future_step - 1)
                 dynamicConfig.total_steps -= 1
                 # self.set_future_ratio()
@@ -662,9 +659,10 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_hour,
                     last_get_profit_time_struct.tm_min,
                     last_get_profit_time_struct.tm_sec))
-                earn_this_piece = round((float(self.open_future_price) - float(self.cur_market_future_price)) * float(self.quantity),2)
-                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(earn_this_piece) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + "（设定跌:" + str(round(dynamicConfig.future_rising_ratio, 2)) + "%平仓，实际跌:" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 卖出的价格:" + str(
-                    self.open_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
+
+                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(round((float(self.open_future_price) - float(self.cur_market_future_price)) * float(
+                        self.quantity),2)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
+                    self.open_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
                 self.last_get_profit_time = time.time()
@@ -818,14 +816,14 @@ class HengedGrid(object):
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_falling_ratio / 100), demical_point)
+        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_rising_ratio / 100), demical_point)
         self.future_sell_price = dynamicConfig.future_sell_price
         # print("设置接下来新开空单卖出的价格, " + str(self.future_sell_price))
 
     def set_future_next_buy_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.future_rising_ratio / 100), demical_point)  #空单涨的时候补仓 # 保留2位小数
+        dynamicConfig.future_buy_price = round(deal_price * (1 - dynamicConfig.future_falling_ratio / 100), demical_point)  #空单涨的时候补仓 # 保留2位小数
         self.future_buy_price = min(dynamicConfig.future_buy_price, float(dynamicConfig.record_future_price[-1]) if len(dynamicConfig.record_future_price) > 0 else 999999) # 如果空单平仓价比列表里最大的还大，那交易时就亏本了啊
         # print("设置接下来空单的买回价格:" + str(self.future_buy_price))
 
@@ -889,11 +887,8 @@ class HengedGrid(object):
             if fc.long_buy_ratio_scale_signal_from_client:
                 self.long_buy_ratio_scale=fc.long_buy_ratio_scale
                 fc.long_buy_ratio_scale_signal_from_client=False
-            if fc.open_trend_trade_singal_from_client:
-                self.open_trend_trade=fc.open_trend_trade
-                fc.open_trend_trade_singal_from_client=False
-            print("self.crazy_buy")
             self.crazy_buy = fc.crazy_buy
+            self.open_trend_trade = fc.open_trend_trade
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio
             #     self.set_ratio()
@@ -919,7 +914,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5004, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
@@ -990,14 +985,17 @@ class HengedGrid(object):
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
         with open('../data/trade_info_%s.json' % config.symbol, "w") as df:
             json.dump(record_price_dict_to_file, df)
-        self.save_trade_benefit()
+
+            self.save_trade_benefit()
 
     def save_trade_benefit(self):
         '''
             "货币对": ["运行时间", "总获利", "总利润率", "总格子数", "总仓位数", "多仓", "空仓", "底仓"]
         :return:
         '''
-        record_benefit_list_to_file = [self.diff_time, str(dynamicConfig.total_earn), self.gross_profit, str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps), str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
+        record_benefit_list_to_file = [self.grid_run_time, str(dynamicConfig.total_earn), self.gross_profit,
+                                       str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps),
+                                       str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
         trade_benefit_path = '../data/trade_benefit.json'
         with open(trade_benefit_path, "r") as df_read:
             load_dict = json.load(df_read)
@@ -1093,49 +1091,69 @@ class HengedGrid(object):
             return self.open_long(time_format, True)#加入底仓后，需要开单，才算真正加入了底仓
 
 
-
+def get_trade_benefit():
+    '''
+        "货币对": ["运行时间", "总获利", "总利润率", "总格子数", "总仓位数", "多仓", "空仓", "底仓"]
+    :return:
+    '''
+    trade_benefit_path = '/home/code/binance/data/trade_benefit_for_user.json'#'../data/trade_benefit.json'
+    with open(trade_benefit_path, "r") as df_read:
+        load_dict = json.load(df_read)
+        return load_dict
 
 
 if __name__ == "__main__":
-    error_raw = ''
-    hengedGrid = None
 
-    try:
-        config.loads('../config_dot.json')
-        # dynamicConfig.loads('./config.json')
+    while True:
+        trade_benefit_dict = get_trade_benefit()
+        sum = 0
+        msg2 = ''
+        for key in trade_benefit_dict.keys():
+            sum += round(float(trade_benefit_dict[key][1]),2)
+            msg2 = msg2 + key + ':' + str(round(float(trade_benefit_dict[key][1]),2)) + '，'
+        Message.dingding_warn("目前我的总获利：" + str(round(sum,2)) + '\n， 分别获利：' + msg2)
+        time.sleep(3600)
 
-        hengedGrid = HengedGrid()
-        receiver_thread = threading.Thread(target=hengedGrid.open_receiver)
-        receiver_thread.start()
-        exit_thread = threading.Thread(target=hengedGrid.normal_exit)
-        exit_thread.start()
-        run_thread = threading.Thread(target=hengedGrid.run)
-        while not fc.terminate:
-            time.sleep(1)
-            if run_thread:
-                if fc.start_grid:
-                    if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-                        if not run_thread.isAlive():
-                            run_thread.start()
-                    else:
-                        if not run_thread.is_alive():
-                            run_thread.start()
-                    fc.start_grid = False
-                if fc.stop_singal_from_client:
-                    run_thread.join()
-        receiver_thread.join()
-        exit_thread.join()
 
-    except Exception as e:
-        print('出现异常了:' + str(e))
-        error_raw = '出现异常了:' + str(e)
-    except BaseException as be:
-        if isinstance(be, KeyboardInterrupt):
-            print('ctrl + c 程序中断了')
-            error_raw = 'ctrl + c 程序中断了' + str(be)
-    finally:
-        # hengedGrid.save_trade_info()
-        if error_raw:
-            error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
-            Message.dingding_warn(str(error_info))
+    pass
+
+    # error_raw = ''
+    # hengedGrid = None
+    # try:
+    #     config.loads('../config.json')
+    #     # dynamicConfig.loads('./config.json')
+    #
+    #     hengedGrid = HengedGrid()
+    #     receiver_thread = threading.Thread(target=hengedGrid.open_receiver)
+    #     receiver_thread.start()
+    #     exit_thread = threading.Thread(target=hengedGrid.normal_exit)
+    #     exit_thread.start()
+    #     run_thread = threading.Thread(target=hengedGrid.run)
+    #     while not fc.terminate:
+    #         time.sleep(1)
+    #         if run_thread:
+    #             if fc.start_grid:
+    #                 if sys.version_info.major == 3 and sys.version_info.minor >= 8:
+    #                     if not run_thread.isAlive():
+    #                         run_thread.start()
+    #                 else:
+    #                     if not run_thread.is_alive():
+    #                         run_thread.start()
+    #                 fc.start_grid = False
+    #             if fc.stop_singal_from_client:
+    #                 run_thread.join()
+    #     receiver_thread.join()
+    #     exit_thread.join()
+    # except Exception as e:
+    #     print('出现异常了:' + str(e))
+    #     error_raw = '出现异常了:' + str(e)
+    # except BaseException as be:
+    #     if isinstance(be, KeyboardInterrupt):
+    #         print('ctrl + c 程序中断了')
+    #         error_raw = 'ctrl + c 程序中断了' + str(be)
+    # finally:
+    #     # hengedGrid.save_trade_info()
+    #     if error_raw:
+    #         error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
+    #         Message.dingding_warn(str(error_info))
 

@@ -1,0 +1,22 @@
+{
+  "platform": "ftx",
+  "symbol": "FTT-PERP",
+  "coin": "USD",
+  "api_key": "ufYR7mzCNGg1khxf6pmJsCy53z7s__LG7EHSVCdc",
+  "api_secret": "YgvLknNSXbso1VmsDw51keZqqcpSsEWdscw1XOZP",
+  "api_key_future": "ufYR7mzCNGg1khxf6pmJsCy53z7s__LG7EHSVCdc",
+  "api_secret_future": "YgvLknNSXbso1VmsDw51keZqqcpSsEWdscw1XOZP",
+  "api_key_future_testnet": "ufYR7mzCNGg1khxf6pmJsCy53z7s__LG7EHSVCdc",
+  "api_secret_future_testnet": "YgvLknNSXbso1VmsDw51keZqqcpSsEWdscw1XOZP",
+  "gap_percent": 0.01,
+  "quantity": 0.02,
+  "min_price": 0.00000001,
+  "min_qty": 0.000001,
+  "max_orders": 1,
+  "proxy_host": "",
+  "proxy_port": 0,
+  "initial_price": 37500,
+  "grid_number": 3,
+  "max_border_price": 45000,
+  "min_border_price": 25000
+}

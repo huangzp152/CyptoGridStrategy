@@ -21,12 +21,12 @@ import sys
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 
-from cmd_receive_dot import fc, app
+from cmd_receive_for_user import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
 from trader.calcIndex import CalcIndex
-from utils.config_dot import config, dynamicConfig
-from utils.dingding import Message
+from utils.config_for_user import config, dynamicConfig
+from utils.dingding_for_user import Message
 
 
 class HengedGrid(object):
@@ -328,13 +328,11 @@ class HengedGrid(object):
 
                 msg9 = "网格大小：多单：" + str(round(dynamicConfig.spot_rising_ratio, 2)) + "%, 空单：" + str(round(dynamicConfig.future_rising_ratio,2)) + "%"
                 msg10 = "开平仓数量：" + str(self.quantity)
-                ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']),1)
-                msg11 = "市场行情：" + str(ratio_24hr)
                 print(msg7)
                 print(msg8)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
-                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + msg9 + ', ' + msg10 + ', ' + msg11 + self.grid_run_time
+                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + msg9 + ', ' + msg10 + self.grid_run_time
                     Message.dingding_warn(msg)
 
                 #设定仓位
@@ -556,7 +554,7 @@ class HengedGrid(object):
 
                 # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份多单了！")
                 earn_this_piece = round((float(self.cur_market_future_price) - float(self.open_spot_price)) * float(self.quantity), 2)
-                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(earn_this_piece) + "， 卖出价格：" + str(self.cur_market_future_price) + "（设定涨：" + str(dynamicConfig.spot_rising_ratio) + "%平仓，实际涨：" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 买入的价格:" + str(self.open_spot_price
+                msg = '【' + str(config.symbol) + '】多单卖出获利了！获得：' + str(earn_this_piece) + "， 卖出价格：" + str(self.cur_market_future_price) + "（设定涨：" + str(dynamicConfig.spot_rising_ratio) + "%，实际涨：" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 买入的价格:" + str(self.open_spot_price
                     ) + ", 买入的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -663,7 +661,7 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_min,
                     last_get_profit_time_struct.tm_sec))
                 earn_this_piece = round((float(self.open_future_price) - float(self.cur_market_future_price)) * float(self.quantity),2)
-                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(earn_this_piece) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + "（设定跌:" + str(round(dynamicConfig.future_rising_ratio, 2)) + "%平仓，实际跌:" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 卖出的价格:" + str(
+                msg = '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(earn_this_piece) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + "（设定跌:" + str(dynamicConfig.future_rising_ratio) + "%，实际跌:" + str(round((earn_this_piece / float(self.cur_market_future_price)) * 100, 2)) + "%平仓）" + ", 卖出的价格:" + str(
                     self.open_future_price) + ", 买回的数量：" + str(self.quantity) + ', 目前总获利：' + str(round(dynamicConfig.total_earn, 2)) + ', 总格子数：' + str(dynamicConfig.total_earn_grids) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -919,7 +917,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5004, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 9000, threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
@@ -963,7 +961,7 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info_%s.json' % config.symbol, 'r') as df:
+        with open('../data/trade_info_%s_for_user.json' % config.symbol, 'r') as df:
             if os.path.getsize(df.name) == 0:
                 return
             record_price_dict_to_file = json.load(df)
@@ -988,7 +986,7 @@ class HengedGrid(object):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
-        with open('../data/trade_info_%s.json' % config.symbol, "w") as df:
+        with open('../data/trade_info_%s_for_user.json' % config.symbol, "w") as df:
             json.dump(record_price_dict_to_file, df)
         self.save_trade_benefit()
 
@@ -998,7 +996,7 @@ class HengedGrid(object):
         :return:
         '''
         record_benefit_list_to_file = [self.diff_time, str(dynamicConfig.total_earn), self.gross_profit, str(dynamicConfig.total_earn_grids), str(dynamicConfig.total_steps), str(self.future_step), str(len(dynamicConfig.long_bottom_position_price))]
-        trade_benefit_path = '../data/trade_benefit.json'
+        trade_benefit_path = '../data/trade_benefit_for_user.json'
         with open(trade_benefit_path, "r") as df_read:
             load_dict = json.load(df_read)
             print(load_dict)
@@ -1099,9 +1097,8 @@ class HengedGrid(object):
 if __name__ == "__main__":
     error_raw = ''
     hengedGrid = None
-
     try:
-        config.loads('../config_dot.json')
+        config.loads('../config_for_user.json')
         # dynamicConfig.loads('./config.json')
 
         hengedGrid = HengedGrid()
