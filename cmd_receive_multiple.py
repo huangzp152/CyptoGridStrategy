@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("/usr/local/lib/python3.6/dist-packages")
-from utils.config_multiple import Config, User
+from utils.config_multiple import User
 from flask import Flask, request
 app = Flask(__name__)
 
@@ -10,7 +10,13 @@ def index():
     return 'hzp, hello world!'
 
 class flaskConfig(object):
-    def __init__(self):
+
+    def __init__(self, user, platform, symbol):
+
+        self.user = user
+        self.platform = platform
+        self.symbol = symbol
+
         self.stop_singal_from_client=False
         self.change_ratio_singal_from_client=False
         self.change_quantity_singal_from_client=False
@@ -37,17 +43,12 @@ class flaskConfig(object):
         self.crazy_buy = False
         self.open_trend_trade = False
 
-
-fc = flaskConfig()
-
-config = User().
-
 @app.route(f'/grid/{config.symbol}/terminate')
 def grid_terminate():
     fc.terminate=True
     return f'/grid/{config.symbol}/terminate'
 
-@app.route(f'/grid/{config.symbol}/stop')
+@app.route(f'/grid/stop', methods=['GET'])
 def grid_stop():
     fc.stop_singal_from_client=True
     return 'hzp, /grid/stop!'

@@ -19,6 +19,7 @@ import threading
 import time
 import sys
 
+from trader.calcIndex_ftt import CalcIndex
 
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
@@ -27,7 +28,7 @@ from gateway.ftx_future import ftx_future
 from cmd_receive_ftt import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
 
-from trader.calcIndex import CalcIndex
+
 from utils.config_ftt import config, dynamicConfig
 from utils.dingding import Message
 

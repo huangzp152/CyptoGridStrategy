@@ -34,7 +34,14 @@ class ftx_future:
         request = Request(method, self._ENDPOINT + path, **kwargs)
         self._sign_request(request)
         response = self._session.send(request.prepare())
-        return self._process_response(response)
+        for i in range(5):
+            try:
+                result = self._process_response(response)
+                return result
+            except Exception as e:
+                print('Exception:' + str(e))
+                time.sleep(1)
+        return result
 
     def _sign_request(self, request: Request) -> None:
         ts = int(time.time() * 1000)
@@ -147,10 +154,9 @@ class ftx_future:
         if end_time:
             query_dict['end_time'] = end_time
 
-        for i in range(max_try_time):
-            data = self._get(path, query_dict)
-            if isinstance(data, list) and len(data):
-                return data[-limit:]
+        data = self._get(path, query_dict)
+        if isinstance(data, list) and len(data):
+            return data[-limit:]
 
 
     def modify_order(
