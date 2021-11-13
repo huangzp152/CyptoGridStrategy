@@ -5,7 +5,9 @@ import numpy as np
 
 from gateway import BinanceSpotHttp, BinanceFutureHttp
 from gateway.ftx_future import ftx_future
-from utils import config, config_ftt
+from utils import config_ftt
+from utils.config_dot import config
+
 
 class CalcIndex:
 

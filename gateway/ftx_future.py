@@ -135,7 +135,7 @@ class ftx_future:
             "17928899.62484339" // 请忽略该参数
         ]
         """
-        path = f'/markets/{symbol}/candles'
+        path = f'markets/{symbol}/candles'
 
         query_dict = {
             "resolution": int(interval)

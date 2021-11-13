@@ -521,7 +521,7 @@ class HengedGrid(object):
             if price != 'none':
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
-            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
+            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
             if order_type == OrderType.LIMIT:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}

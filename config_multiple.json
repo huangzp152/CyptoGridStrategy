@@ -1,29 +1,118 @@
 {
-  "binance": [{
-    "platform": ["binance"],
-    "symbol": {
-      "BTCBUSD": {
-        "coin":"BUSD",
-        "every_time_trade_share": 250,
-        "ratio_no_trendency": 0.5,
-        "ratio_up_or_down": 1,
-        "long_buy_ratio_scale": 0.25,
-        "cut_position_threshold": 0.8,
-        "position_side": "BOTH",
-        "long_bottom_position_share": 0.1,
-        "ease_position_share": 50,
-
-      },
-      "ETHBUSD": {
-
-      }, "BUSD","DOTUSDT": "USDT","UNIUSDT"},
-  }],
-  , "ftx"],
-  "symbol": ["BTCBUSD","ETHBUSD","DOTUSDT","UNIUSDT","FTT-PERP"],
-  "coin": "DOT",
-  "api_key_binance": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
-  "api_secret_binance": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
-  "api_key_ftx": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",
-  "api_secret_ftx": "ysNnpFvkTzZPr5fwmb0lB5mWYllEA448TNf9W67ICc3h0YqUhnVpUbhn4qpOrEAL",
-  "quantity": 0.02
+  "configs":[
+    {
+      "user" : "hzp",
+      "markets" : [
+          {
+            "platform":"binance",
+            "api_key": "IFOhCu9dRcWVuu8qd3GqoZRiDAvsOjCNEyJzVJuUyG2RL4fzGvRbvitbrGkj5ZdT",
+            "api_secret": "l2TVZRVkUIfi1AYalJb0ohQpgoW2gnDrGKjBMG6o7ix0XUjWE6fOi8DHhnAlE87x",
+            "products" : [
+                {
+                  "symbol": "BTCBUSD",
+                  "coin":"BUSD",
+                  "every_time_trade_share": 250,
+                  "ratio_no_trendency": 0.5,
+                  "ratio_up_or_down": 0.8,
+                  "long_buy_ratio_scale": 0.25,
+                  "cut_position_threshold": 0.8,
+                  "position_side": "BOTH",
+                  "long_bottom_position_share": 0.1,
+                  "ease_position_share": 50,
+                  "crazy_buy":false,
+                  "open_trend_trade": false,
+                  "start_grid": false
+              },
+                {
+                "symbol": "ETHBUSD",
+                "coin":"BUSD",
+                "every_time_trade_share": 150,
+                "ratio_no_trendency": 0.8,
+                "ratio_up_or_down": 1.2,
+                "long_buy_ratio_scale": 0.25,
+                "cut_position_threshold": 0.8,
+                "position_side": "BOTH",
+                "long_bottom_position_share": 0.1,
+                "ease_position_share": 50,
+                "crazy_buy":false,
+                "open_trend_trade": false,
+                "start_grid": false
+            },
+                {
+              "symbol": "DOTUSDT",
+              "coin":"USDT",
+              "every_time_trade_share": 100,
+              "ratio_no_trendency": 0.8,
+              "ratio_up_or_down": 1.2,
+              "long_buy_ratio_scale": 0.25,
+              "cut_position_threshold": 0.8,
+              "position_side": "BOTH",
+              "long_bottom_position_share": 0.1,
+              "ease_position_share": 50,
+              "crazy_buy":false,
+              "open_trend_trade": false,
+              "start_grid": false
+          },
+              {
+          "symbol": "UNIUSDT",
+          "coin":"USDT",
+          "every_time_trade_share": 100,
+          "ratio_no_trendency": 0.8,
+          "ratio_up_or_down": 1.2,
+          "long_buy_ratio_scale": 0.25,
+          "cut_position_threshold": 0.8,
+          "position_side": "BOTH",
+          "long_bottom_position_share": 0.1,
+          "ease_position_share": 50,
+          "crazy_buy":false,
+          "open_trend_trade": false,
+          "start_grid": false
+        }
+            ]
+          },
+          {
+            "platform":"ftx",
+            "api_key": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",
+            "api_secret": "ysNnpFvkTzZPr5fwmb0lB5mWYllEA448TNf9W67ICc3h0YqUhnVpUbhn4qpOrEAL",
+            "products" : [
+            {
+              "symbol": "TSLA-1231",
+              "coin":"USD",
+              "every_time_trade_share": 100,
+              "ratio_no_trendency": 0.5,
+              "ratio_up_or_down": 0.8,
+              "long_buy_ratio_scale": 0.25,
+              "cut_position_threshold": 0.8,
+              "position_side": "BOTH",
+              "long_bottom_position_share": 0.1,
+              "ease_position_share": 50,
+              "crazy_buy":false,
+              "open_trend_trade": false,
+              "start_grid": false
+          },
+            {
+              "symbol": "FTT-PERP",
+              "coin":"USD",
+              "every_time_trade_share": 30,
+              "ratio_no_trendency": 0.8,
+              "ratio_up_or_down": 1.2,
+              "long_buy_ratio_scale": 0.25,
+              "cut_position_threshold": 0.8,
+              "position_side": "BOTH",
+              "long_bottom_position_share": 0.1,
+              "ease_position_share": 50,
+              "crazy_buy":false,
+              "open_trend_trade": false,
+              "start_grid": false
+          }
+          ]
+          }
+        ]
+    },
+    {
+      "user" : "user1",
+      "detail" : [
+      ]
+    }
+  ]
 }

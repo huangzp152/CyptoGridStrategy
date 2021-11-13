@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("/usr/local/lib/python3.6/dist-packages")
-from utils.config_multiple import Config
+from utils.config_multiple import Config, User
 from flask import Flask, request
 app = Flask(__name__)
 
@@ -40,7 +40,7 @@ class flaskConfig(object):
 
 fc = flaskConfig()
 
-config = Config()
+config = User().
 
 @app.route(f'/grid/{config.symbol}/terminate')
 def grid_terminate():
