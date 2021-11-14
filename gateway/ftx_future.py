@@ -8,6 +8,8 @@ import hmac
 from gateway import OrderType
 from threading import Thread, Lock
 
+from utils.dingding import Message
+
 
 class ftx_future:
     _ENDPOINT = 'https://ftx.com/api/'
@@ -39,8 +41,10 @@ class ftx_future:
                 result = self._process_response(response)
                 return result
             except Exception as e:
-                print('Exception:' + str(e))
+                msg = 'Exception:' + str(e)
+                print(msg)
                 time.sleep(1)
+                Message.dingding_warn(msg)
         return result
 
     def _sign_request(self, request: Request) -> None:
@@ -94,7 +98,7 @@ class ftx_future:
                 return result.get('change24h') * 100
         return 0
 
-    def set_future_leverage(self, leverage):
+    def set_future_leverage(self, symbol, leverage):
         path = "account/leverage"
         params = {"leverage": leverage}
         return self._post(path, params)

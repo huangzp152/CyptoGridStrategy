@@ -19,11 +19,11 @@ import threading
 import time
 import sys
 
-from trader.calcIndex_ftt import CalcIndex
 
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 
+from trader.calcIndex_ftt import CalcIndex
 from gateway.ftx_future import ftx_future
 from cmd_receive_ftt import fc, app
 from gateway import BinanceSpotHttp, OrderSide, OrderType, BinanceFutureHttp, OrderStatus
@@ -971,7 +971,7 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info_%s.json' % config.symbol, 'r') as df:
+        with open('../data/trade_info_%s_ftt.json' % config.symbol, 'r') as df:
             if os.path.getsize(df.name) == 0:
                 return
             record_price_dict_to_file = json.load(df)

@@ -246,7 +246,7 @@ class BinanceFutureHttp(object):
     def get_latest_price(self, symbol):
         path = "/fapi/v1/ticker/price"
         query_dict = {"symbol": symbol}
-        return self.request(RequestMethod.GET, path, query_dict)
+        return self.request(RequestMethod.GET, path, query_dict).get('price')
 
     def get_ticker(self, symbol):
         path = "/fapi/v1/ticker/bookTicker"

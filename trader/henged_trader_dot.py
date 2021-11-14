@@ -378,10 +378,10 @@ class HengedGrid(object):
                 elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price) * (1 + self.handling_ratio):
                     future_res = self.close_short(time_format)
 
-                if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
+                if (spot_res is None or not 'orderId' in spot_res.keys()) and (future_res is None or not 'orderId' in future_res.keys()):
                     print("这个价格这轮没有买卖成功，开启下一轮")
                     self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
-                elif self.crazy_buy and spot_open_long_res and not (future_res and future_res['orderId']):
+                elif self.crazy_buy and spot_open_long_res and not (future_res and 'orderId' in future_res.keys()):
                     # 走这里的话，会在同一价位一直买一直买，建议低位时把self.crazy_buy设置为True
                     # 因为狂买模式不要一直触发不然会爆仓，所以还是在建底仓的时候做
                     msg = "进入狂买模式了"
@@ -476,7 +476,7 @@ class HengedGrid(object):
         # dynamicConfig.order_list.append(spot_res)
         spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_future_price), 2), time_inforce="")
         # print('开多单完整结果：'+str(spot_res))
-        if spot_res and spot_res['orderId']:
+        if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
@@ -518,7 +518,7 @@ class HengedGrid(object):
             if order_type == OrderType.LIMIT:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}
-            if spot_res and spot_res['orderId']:
+            if spot_res and 'orderId' in spot_res.keys():
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     self.get_last_spot_price())) * float(self.quantity)
                 dynamicConfig.total_earn_grids += 1
@@ -587,7 +587,7 @@ class HengedGrid(object):
         # dynamicConfig.order_list.append(future_res)
         future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, "SHORT", OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2),"")
 
-        if future_res and future_res['orderId']:
+        if future_res and 'orderId' in future_res.keys():
             print("开空单成功")
             Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份空单了！")
             self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
@@ -630,7 +630,7 @@ class HengedGrid(object):
             if order_type == OrderType.LIMIT:
                 print('price:' + price + '挂平仓空单了')
                 return {}
-            if future_res and future_res['orderId']:
+            if future_res and 'orderId' in future_res.keys():
                 # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份空单了！")
                 self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
                 dynamicConfig.total_earn += (float(self.get_last_future_price()) - float(self.cur_market_future_price)) * float(self.quantity)

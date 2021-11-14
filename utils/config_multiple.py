@@ -111,7 +111,11 @@ class Product:
         self.record_future_price = []
         self.long_bottom_position_price = []
 
-config = Config()
+        self.order_list = []
+        self.total_earn = 0
+        self.total_invest = 0
+        self.total_earn_grids = 0
+        self.total_steps = 0
 
 # class DynamicConfig(object):
 #
