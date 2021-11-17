@@ -1,0 +1,31 @@
+{
+  "hzp": {
+    "binance": {
+      "BTCBUSD": {
+        "record_spot_price": [],
+        "record_future_price": [],
+        "long_bottom_position_price": []
+      },
+      "ETHBUSD": {
+        "record_spot_price": [],
+        "record_future_price": [],
+        "long_bottom_position_price": []
+      },
+      "DOTUSDT": {
+        "record_spot_price": [],
+        "record_future_price": [],
+        "long_bottom_position_price": []
+      },
+      "UNIUSDT": {
+        "record_spot_price": [],
+        "record_future_price": [],
+        "long_bottom_position_price": []
+      }
+    },
+    "ftx": {
+      "record_spot_price": [],
+      "record_future_price": [],
+      "long_bottom_position_price": []
+    }
+  }
+}
