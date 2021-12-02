@@ -19,6 +19,7 @@ class flaskConfig(object):
         self.update_position_list_signal_from_client=False
         self.long_buy_ratio_scale_signal_from_client=False
         self.change_position_side_singal_from_client=False
+        self.end_martin_grid_singal_from_client=False
         self.ratio_no_trendency=0.8
         self.ratio_up_or_down=1.6
         self.long_buy_ratio_scale=0.33 # 0.25 多空格子利率的比例，0.25即1:4,就是比如做多网格的利率是0.3的话，做空就是0.3 / 0.25= 1.2,通过多空格子大小的差异来形成对冲获利
@@ -33,6 +34,7 @@ class flaskConfig(object):
         self.ease_position_share = 50 #多空单都超过8个时，掐掉一些，减少持仓数量
         self.crazy_buy = False
         self.open_trend_trade = False
+        self.end_martin_grid = 0
 
 
 
@@ -162,6 +164,16 @@ def grid_change_long_buy_ratio_scale():
         fc.long_buy_ratio_scale = float(long_buy_ratio_scale)
         fc.long_buy_ratio_scale_singal_from_client = True
     return 'hzp, /change/long_buy_ratio_scale, long_buy_ratio_scale:' + long_buy_ratio_scale
+
+@app.route('/grid/change/end_martin_grid', methods=['GET'])
+def grid_change_end_martin_grid():
+
+    # data = request.get_json()
+    end_martin_grid = str(request.args.get('end_martin_grid'))
+    if end_martin_grid:
+        fc.end_martin_grid = float(end_martin_grid)
+        fc.end_martin_grid_singal_from_client = True
+    return 'hzp, /change/end_martin_grid, end_martin_grid:' + end_martin_grid
 
 @app.route('/grid/change/crazy_buy', methods=['GET'])
 def crazy_buy():
