@@ -478,7 +478,6 @@ class HengedGrid(object):
             print("开多单成功")
             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
-            self.current_all_spot_quantity = float(self.quantity) * len(dynamicConfig.record_spot_price)
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
