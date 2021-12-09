@@ -276,7 +276,7 @@ class HengedGrid(object):
                 if symbol_to_check_trend.endswith('BUSD'):
                     symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
                 if fc.position_side == 'LONG':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
+                    isTrendComing = False#index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
                 elif fc.position_side == 'SHORT':
                     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 else:
