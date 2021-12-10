@@ -67,10 +67,10 @@ class HengedGrid(object):
         #     return res
         res = self.http_client_spot.get_account_info(config.symbol)#现货或者合约，都是一样的接口
         if res:
-            assets = res.get('assets')
+            assets = res.get('balances')# future : assets
             for asset in assets:
                 if config.symbol.endswith(asset.get('asset')):
-                    return asset.get('crossWalletBalance')
+                    return asset.get('free')
         return 0
 
     def getAsset(self):
@@ -132,10 +132,10 @@ class HengedGrid(object):
         self.set_spot_share(int(len(dynamicConfig.record_spot_price)))
         self.set_future_step(len(dynamicConfig.record_future_price))
 
-        if self.spot_step != int(float(self.http_client_spot.get_future_position_info(config.symbol)) / float(self.quantity)):
-            print(f"现货：接口中获取的仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.spot_step}，你自己处理掉吧")
-        if self.future_step != self.get_step_by_position(False):
-            print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
+        # if self.spot_step != int(float(self.http_client_spot.get_future_position_info(config.symbol)) / float(self.quantity)):
+        #     print(f"现货：接口中获取的仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.spot_step}，你自己处理掉吧")
+        # if self.future_step != self.get_step_by_position(False):
+        #     print(f"合约空：仓位数不是0，但列表为空，那么说明是之前买的，或者另外手动买的，不知道均价多少了，那就告诉你仓位:{self.future_step}，你自己处理掉吧")
 
         # test check value
         # print('check account exchangeinfo: ' + str(self.http_client_spot.exchangeInfo(config.symbol)))  # 保留账户模拟数据
@@ -363,7 +363,7 @@ class HengedGrid(object):
                 #多单市场价要高于你的卖出价，才能成交
                 #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
                 elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price) * (1 + self.handling_ratio):
-                    spot_res = self.close_long(time_format)
+                    spot_res = self.close_long(time_format, self.cur_market_future_price)
 
                 #开空单（卖出借仓）
                 #空单市场价要高于你的卖出价，才能成交
@@ -374,7 +374,7 @@ class HengedGrid(object):
                 #空单市场价要低于你的买回价，才能成交
                 #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
                 elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price) * (1 + self.handling_ratio):
-                    future_res = self.close_short(time_format)
+                    future_res = self.close_short(time_format, self.cur_market_future_price)
 
                 if (spot_res is None or not spot_res['orderId']) and (future_res is None or not future_res['orderId']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
@@ -472,7 +472,7 @@ class HengedGrid(object):
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, "LONG", OrderType.MARKET, self.quantity, price=round(float(self.cur_market_future_price), 2), time_inforce="")
+        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, float(self.quantity), price=str(round(float(self.cur_market_future_price), 2)))
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and spot_res['orderId']:
             print("开多单成功")
@@ -507,7 +507,7 @@ class HengedGrid(object):
             # test
             # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
             # dynamicConfig.order_list.append(spot_res)
-            order_type = OrderType.MARKET
+            order_type = OrderType.LIMIT
             time_inforce = ''
             if price != 'none':
                 order_type = OrderType.LIMIT
@@ -519,7 +519,7 @@ class HengedGrid(object):
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price))
-            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, "LONG", order_type, spot_quantity, price=price, time_inforce=time_inforce)
+            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
             if order_type == OrderType.LIMIT:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}
@@ -813,7 +813,7 @@ class HengedGrid(object):
         dynamicConfig.spot_step = int(len(dynamicConfig.record_spot_price)) #int(float(self.http_client_spot.get_spot_position_info(config.coin)) / float(self.quantity)) # 取该货币的仓位，处以每份的数量，结果为份数
         #测试时默认是0开始
         self.spot_step = dynamicConfig.spot_step
-        print("get_spot_share, dynamicConfig.spot_step:" + str(dynamicConfig.spot_step), ", position:" + self.http_client_spot.get_future_position_info(config.symbol) + ", every piece quantity:" + self.quantity)
+        # print("get_spot_share, dynamicConfig.spot_step:" + str(dynamicConfig.spot_step), ", position:" + self.http_client_spot.get_future_position_info(config.symbol) + ", every piece quantity:" + self.quantity)
         return self.spot_step
 
     def set_future_step(self, future_step):
@@ -835,11 +835,12 @@ class HengedGrid(object):
         if self.end_martin_grid > 0 and len(dynamicConfig.record_spot_price) > 0 and len(dynamicConfig.record_spot_price) <= self.end_martin_grid:
             print("execute martin stragety")
             self.spot_sell_price = (round(sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)) if len(dynamicConfig.record_spot_price) > 0 else self.spot_sell_price
+            print("self.spot_sell_price：" + str(self.spot_sell_price))
             # self.quantity = self.quantity * (len(dynamicConfig.record_spot_price) - 1) # 留一份
         else:
             dynamicConfig.spot_sell_price = round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)
-            self.spot_sell_price = max(dynamicConfig.spot_sell_price, float(dynamicConfig.record_spot_price[-1]) if len(dynamicConfig.record_spot_price) > 0 else 0) # 如果多单平仓价比列表里最小的还小，那交易时就亏本了啊
-            # print("设置接下来多单卖出的价格:" + str(self.spot_sell_price))
+            self.spot_sell_price = max(dynamicConfig.spot_sell_price, (float(dynamicConfig.record_spot_price[-1]) if len(dynamicConfig.record_spot_price) > 0 else 0)) # 如果多单平仓价比列表里最小的还小，那交易时就亏本了啊
+            print("[ss]设置接下来多单卖出的价格:" + str(self.spot_sell_price))
 
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")

@@ -97,7 +97,7 @@ class BinanceSpotHttp(object):
     def __init__(self, api_key=None, secret=None, host=None, proxy_host=None, proxy_port=0, timeout=5, try_counts=5):
         self.api_key = api_key
         self.secret = secret
-        self.host = host if host else "https://testnet.binance.vision"#"https://testnet.binance.vision"#"https://api.binance.com"
+        self.host = host if host else "https://api.binance.com"#"https://testnet.binance.vision"#"https://api.binance.com"
         self.recv_window = 10000
         self.timeout = timeout
         self.order_count_lock = Lock()
@@ -412,7 +412,7 @@ class BinanceSpotHttp(object):
 
         return self.request(RequestMethod.DELETE, path, params, verify=True)
 
-    def get_account_info(self):
+    def get_account_info(self, symbol):
         """
         {'feeTier': 2, 'canTrade': True, 'canDeposit': True, 'canWithdraw': True, 'updateTime': 0, 'totalInitialMargin': '0.00000000',
         'totalMaintMargin': '0.00000000', 'totalWalletBalance': '530.21334791', 'totalUnrealizedProfit': '0.00000000',
