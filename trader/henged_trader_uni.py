@@ -40,7 +40,7 @@ class HengedGrid(object):
             api_key = config.api_key_future
             api_secret = config.api_secret_future
 
-        self.http_client_spot = BinanceFutureHttp(api_key=api_key, secret=api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        self.http_client_spot = BinanceSpotHttp(api_key=api_key, secret=api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
         self.http_client_future = BinanceFutureHttp(api_key=api_key, secret=api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
 
         self.grid_side = fc.position_side

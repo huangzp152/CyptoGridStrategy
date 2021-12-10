@@ -14,7 +14,7 @@ class CalcIndex:
     def __init__(self, test_data=None):
         self.coinType = config.symbol  # 交易币种
         if config.platform == "binance_future_test":
-            self.http_client = BinanceFutureHttp(api_key=config.api_key, secret=config.api_secret,
+            self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret,
                                                  proxy_host=config.proxy_host, proxy_port=config.proxy_port)
         else:
             self.http_client = ftx_future(api_key=config_ftt.config.api_key, api_secret=config_ftt.config.api_secret)
