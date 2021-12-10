@@ -294,7 +294,7 @@ class HengedGrid(object):
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.open_spot_price = dynamicConfig.record_spot_price[0]
-                        self.close_long(time_format, True)
+                        self.close_long(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_spot_price))
                         del dynamicConfig.record_spot_price[0]
                     else:
@@ -305,9 +305,9 @@ class HengedGrid(object):
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
                     for i in range(0, position_delta):
-                        self.close_long(time_format, True)
+                        self.close_long(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn('这份多单平掉了:' + str(dynamicConfig.record_spot_price[i]))
-                        self.close_short(time_format, True)
+                        self.close_short(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn('这份空单平掉了:' + str(dynamicConfig.record_future_price[i]))
                         del dynamicConfig.record_spot_price[i]
                         del dynamicConfig.record_future_price[i]
@@ -319,7 +319,7 @@ class HengedGrid(object):
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.open_future_price = dynamicConfig.record_future_price[0]
-                        self.close_short(time_format, True)
+                        self.close_short(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_future_price))
                         del dynamicConfig.record_future_price[0]
                     else:
@@ -518,7 +518,7 @@ class HengedGrid(object):
             self.current_all_spot_quantity = self.quantity * (len(dynamicConfig.record_spot_price) -1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
-            print("current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price))
+            print(tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
             if order_type == OrderType.LIMIT:
                 print('price:' + price + ' 挂平仓多单了')
@@ -1048,7 +1048,7 @@ class HengedGrid(object):
         for tmp in dynamicConfig.record_spot_price:
             self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
             if float(tmp) <= float(self.cur_market_future_price):
-                self.close_long(time_format, True)
+                self.close_long(time_format, True, self.cur_market_future_price)
             else:
                 ret_list_spot.append(tmp)
         dynamicConfig.record_spot_price = ret_list_spot
@@ -1057,7 +1057,7 @@ class HengedGrid(object):
         for tmp in dynamicConfig.record_future_price:
             self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
             if float(tmp) >= float(self.cur_market_future_price):
-                self.close_short(time_format, True)
+                self.close_short(time_format, True, self.cur_market_future_price)
             else:
                 ret_list_future.append(tmp)
         dynamicConfig.record_future_price = ret_list_future
