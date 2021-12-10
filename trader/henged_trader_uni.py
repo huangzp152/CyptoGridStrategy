@@ -125,7 +125,7 @@ class HengedGrid(object):
         quantity_basic = round((fc.every_time_trade_share / float(self.cur_market_future_price)), 3)
         self.quantity = self._format(quantity_basic)
         self.current_all_spot_quantity = self.quantity
-        self.cur_market_future_price = self.quantity
+        self.current_all_future_quantity = self.quantity
         # 设定仓位
         # dynamicConfig.spot_step = self.get_spot_share() #现货仓位 #self.get_step_by_position(True) #  合约
         # dynamicConfig.future_step = self.get_future_share() #self.get_step_by_position(False) 一样的
@@ -282,8 +282,7 @@ class HengedGrid(object):
                 else:
                     isTrendComing = False
 
-                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get(
-                    'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
 
                 msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
                 print(msg6)

@@ -36,12 +36,12 @@ class ftx_future:
         request = Request(method, self._ENDPOINT + path, **kwargs)
         self._sign_request(request)
         response = self._session.send(request.prepare())
+        result = ''
         for i in range(5):
             try:
                 result = self._process_response(response)
-                return result
             except Exception as e:
-                msg = 'Exception:' + str(e)
+                msg = 'Exception:' + str(e) + ', time:' + str(i)
                 print(msg)
                 time.sleep(1)
                 Message.dingding_warn(msg)

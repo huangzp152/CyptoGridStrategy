@@ -20,15 +20,15 @@ class flaskConfig(object):
         self.long_buy_ratio_scale_signal_from_client=False
         self.open_trend_trade_singal_from_client=False
         self.change_position_side_singal_from_client=False
-        self.ratio_no_trendency=0.8
-        self.ratio_up_or_down=1.2
+        self.ratio_no_trendency=0.5
+        self.ratio_up_or_down=1
         self.long_buy_ratio_scale=0.25 # 0.25 多空格子利率的比例，0.25即1:4,就是比如做多网格的利率是0.3的话，做空就是0.3 / 0.25= 1.2,通过多空格子大小的差异来形成对冲获利
         self.every_time_trade_share = 50 # 33 测试环境下要求小数点后面3位精度，买10u的话只要0.000304左右，四舍五入就是0.000了，这样买不上
         self.cut_position_threshold = 0.99 # 0.2为亏损到本金的2成仓位时，割肉
         self.quantity = 0.02
         self.leverage = 20
         self.position_side = 'LONG'  # 切换网格的方向，BOTH:多空对冲网格， LONG：做多网格， SHORT：做空网格
-        self.long_bottom_position_share = 0.05 #底仓的仓位成数， 0.2代表两成
+        self.long_bottom_position_share = 0.03 #底仓的仓位成数， 0.2代表两成
         self.start_grid = False
         self.terminate = False
         self.ease_position_share = 500 #多空单都超过8个时，掐掉一些，减少持仓数量

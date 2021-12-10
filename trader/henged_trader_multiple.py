@@ -1195,43 +1195,44 @@ if __name__ == "__main__":
     cfgs = []
     for i in range(0, len(config.self.products)):
         cfgs.append(User(cfgs[i]))
+        print('check:' + str(cfgs[i]))
 
-    for i in range(0, len(cfgs)):
-        for j in range(0, len(cfgs[i].markets)):
-            for k in range(0, len(cfgs[i].markets[j].products)):
-                try:
-                    if not cfgs[i] or not cfgs[i].markets[j] or not cfgs[i].markets[j].products[k]:
-                        continue
-
-                    hengedGrid = HengedGrid(cfgs[i], cfgs[i].markets[j], cfgs[i].markets[j].products[k])
-                    fc = flaskConfig.product(cfgs[i].user, cfgs[i].markets[j].platform, cfgs[i].markets[j].products[k].symbol)
-                    # official
-                    index = CalcIndex(cfgs[i].markets[j], cfgs[i].markets[j].products[k])
-                    run_thread = threading.Thread(target=hengedGrid.run, args=(cfgs[i].markets[j].products[k]))
-                    while not fc.terminate:
-                        time.sleep(3)
-                        if run_thread:
-                            if fc.start_grid:
-                                if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-                                    if not run_thread.isAlive():
-                                        run_thread.start()
-                                else:
-                                    if not run_thread.is_alive():
-                                        run_thread.start()
-                                fc.start_grid = False
-                            dynamicSettings(hengedGrid, fc)
-                    receiver_thread.join()
-                except Exception as e:
-                    print('出现异常了:' + str(e))
-                    error_raw = '出现异常了:' + str(e)
-                except BaseException as be:
-                    if isinstance(be, KeyboardInterrupt):
-                        print('ctrl + c 程序中断了')
-                        error_raw = 'ctrl + c 程序中断了' + str(be)
-                finally:
-                    # hengedGrid.save_trade_info()
-                    if error_raw:
-                        error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
-                        Message.dingding_warn(str(error_info))
+    # for i in range(0, len(cfgs)):
+    #     for j in range(0, len(cfgs[i].markets)):
+    #         for k in range(0, len(cfgs[i].markets[j].products)):
+    #             try:
+    #                 if not cfgs[i] or not cfgs[i].markets[j] or not cfgs[i].markets[j].products[k]:
+    #                     continue
+    # 
+    #                 hengedGrid = HengedGrid(cfgs[i], cfgs[i].markets[j], cfgs[i].markets[j].products[k])
+    #                 fc = flaskConfig.product(cfgs[i].user, cfgs[i].markets[j].platform, cfgs[i].markets[j].products[k].symbol)
+    #                 # official
+    #                 index = CalcIndex(cfgs[i].markets[j], cfgs[i].markets[j].products[k])
+    #                 run_thread = threading.Thread(target=hengedGrid.run, args=(cfgs[i].markets[j].products[k]))
+    #                 while not fc.terminate:
+    #                     time.sleep(3)
+    #                     if run_thread:
+    #                         if fc.start_grid:
+    #                             if sys.version_info.major == 3 and sys.version_info.minor >= 8:
+    #                                 if not run_thread.isAlive():
+    #                                     run_thread.start()
+    #                             else:
+    #                                 if not run_thread.is_alive():
+    #                                     run_thread.start()
+    #                             fc.start_grid = False
+    #                         dynamicSettings(hengedGrid, fc)
+    #                 receiver_thread.join()
+    #             except Exception as e:
+    #                 print('出现异常了:' + str(e))
+    #                 error_raw = '出现异常了:' + str(e)
+    #             except BaseException as be:
+    #                 if isinstance(be, KeyboardInterrupt):
+    #                     print('ctrl + c 程序中断了')
+    #                     error_raw = 'ctrl + c 程序中断了' + str(be)
+    #             finally:
+    #                 # hengedGrid.save_trade_info()
+    #                 if error_raw:
+    #                     error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
+    #                     Message.dingding_warn(str(error_info))
 
 
