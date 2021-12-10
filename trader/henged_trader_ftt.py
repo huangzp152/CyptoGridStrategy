@@ -165,7 +165,7 @@ class HengedGrid(object):
         # print("orders:" + str(self.http_client_future.get_positionInfo('BTCUSDT')))#现货查不了
         # print("orders:" + str(self.http_client_spot.get))
         self.leverage = str(fc.leverage)
-        self.set_leverage(self.leverage)
+        # self.set_leverage(self.leverage)
         print('目前杠杆:' + self.leverage)
         print("设置初始的盈利点数")
         self.set_spot_ratio()
