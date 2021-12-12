@@ -515,14 +515,14 @@ class HengedGrid(object):
             isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_spot_price = sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)
-            self.current_all_spot_quantity = self.quantity * (len(dynamicConfig.record_spot_price) -1)
+            self.current_all_spot_quantity = self.quantity * (len(dynamicConfig.record_spot_price) - 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
-            print(tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
+            print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
             if order_type == OrderType.LIMIT:
                 print('price:' + price + ' 挂平仓多单了')
-                return {}
+                # return {}
             if spot_res and 'orderId' in spot_res.keys():
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     open_spot_price)) * float(spot_quantity)
@@ -641,7 +641,7 @@ class HengedGrid(object):
             future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, future_quantity, price, time_inforce)
             if order_type == OrderType.LIMIT:
                 print('price:' + price + '挂平仓空单了')
-                return {}
+                # return {}
             if future_res and 'orderId' in future_res.keys():
                 # Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "平掉一份空单了！")
                 self.decreaseMoney(float(self.cur_market_future_price) * float(future_quantity))
