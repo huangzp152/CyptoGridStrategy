@@ -1,7 +1,7 @@
 {
   "platform": "binance_future_test",
   "symbol": "UNIBUSD",
-  "coin": "UNI",
+  "coin": "BUSD",
   "api_key": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",
   "api_secret": "ysNnpFvkTzZPr5fwmb0lB5mWYllEA448TNf9W67ICc3h0YqUhnVpUbhn4qpOrEAL",
   "api_key_future": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",

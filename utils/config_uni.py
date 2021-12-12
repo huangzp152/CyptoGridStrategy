@@ -8,7 +8,7 @@ class Config:
 
         self.platform: str = "binance_spot"  # 交易的平台
         self.symbol: str = "UNIBUSD"  # 交易对.
-        self.coin: str = "UNI" # 要进行仓位查询的币种
+        self.coin: str = "BUSD" # 要进行仓位查询的币种
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
         self.api_secret: str = None

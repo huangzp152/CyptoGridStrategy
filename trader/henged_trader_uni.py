@@ -74,7 +74,7 @@ class HengedGrid(object):
         return 0
 
     def getAsset(self):
-        ret = self.http_client_future.get_future_asset(config.symbol)
+        ret = self.http_client_spot.get_spot_position_info(config.coin)
         print('ret:' + str(ret))
         return ret
 
@@ -157,8 +157,8 @@ class HengedGrid(object):
         #     print(f"future_res:{future_res}")
         # print("orders:" + str(self.http_client_future.get_positionInfo('BTCUSDT')))#现货查不了
         # print("orders:" + str(self.http_client_spot.get))
-        self.leverage = str(self.set_leverage(fc.leverage))
-        print('目前杠杆:' + self.leverage)
+        # self.leverage = str(self.set_leverage(fc.leverage))
+        # print('目前杠杆:' + self.leverage)
         print("设置初始的盈利点数")
         self.set_spot_ratio()
         self.set_future_ratio()
@@ -400,12 +400,12 @@ class HengedGrid(object):
                 time.sleep(5)
 
                 # 这几个其实有点多余（未验证）
-                self.spot_buy_price = dynamicConfig.spot_buy_price
-                self.spot_sell_price = dynamicConfig.spot_sell_price
+                # self.spot_buy_price = dynamicConfig.spot_buy_price
+                # self.spot_sell_price = dynamicConfig.spot_sell_price
                 self.spot_step = dynamicConfig.spot_step
 
-                self.future_buy_price = dynamicConfig.future_buy_price
-                self.future_sell_price = dynamicConfig.future_sell_price
+                # self.future_buy_price = dynamicConfig.future_buy_price
+                # self.future_sell_price = dynamicConfig.future_sell_price
                 self.future_step = dynamicConfig.future_step
 
                 print("----------------------------------------------------------")

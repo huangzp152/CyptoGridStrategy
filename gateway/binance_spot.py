@@ -328,7 +328,7 @@ class BinanceSpotHttp(object):
 
         res = self.request(RequestMethod.POST, path=path, requery_dict=params, verify=True)
         try:
-            if res['orderId']:
+            if res and 'orderId' in res.keys():
                 buy_info = "报警：币种为：{cointype}。开多买单量为：{num}".format(cointype=symbol,num=quantity)
                 Message.dingding_warn(buy_info)
         except BaseException as e:
@@ -430,7 +430,7 @@ class BinanceSpotHttp(object):
         return self.request(RequestMethod.GET, path, params, verify=True)
 
     def get_spot_position_info(self, coin):
-        res = self.get_account_info()
+        res = self.get_account_info("fake")
         if res:
             balances = res.get('balances')
             if balances:
