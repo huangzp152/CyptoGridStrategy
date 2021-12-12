@@ -515,7 +515,7 @@ class HengedGrid(object):
             isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_spot_price = sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)
-            self.current_all_spot_quantity = self.quantity * (len(dynamicConfig.record_spot_price) - 1)
+            self.current_all_spot_quantity = self.quantity * ((len(dynamicConfig.record_spot_price) - 1) if (len(dynamicConfig.record_spot_price) > 1) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
@@ -634,8 +634,8 @@ class HengedGrid(object):
             isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_future_price = sum([float(item) for item in dynamicConfig.record_future_price]) / len(dynamicConfig.record_future_price)
-            future_quantity = self.current_all_future_quantity if isMartin else self.quantity
             open_future_price = current_average_future_price if isMartin else self.get_last_future_price()
+            self.current_all_future_quantity = ((len(dynamicConfig.record_future_price) -1) if (len(dynamicConfig.record_future_price) > 1) else 1)
             future_quantity = self.current_all_future_quantity if isMartin else self.quantity
             print("current_average_future_price:" + str(current_average_future_price) + ", self.current_all_future_quantity:" + str(self.current_all_future_quantity) + ", future_quantity:" + str(future_quantity) + ", open_future_price:" + str(open_future_price))
             future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, future_quantity, price, time_inforce)
