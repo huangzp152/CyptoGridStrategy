@@ -457,7 +457,7 @@ class HengedGrid(object):
 
 
     def nearly_full_position(self):
-        if float(dynamicConfig.total_steps * 100) / (float(self.spot_money) * int(self.leverage)) >= 0.95:
+        if float(((sum(dynamicConfig.record_spot_price) if len(dynamicConfig.record_spot_price) > 0 else 0) + (sum(dynamicConfig.record_future_price) if len(dynamicConfig.record_future_price) > 0 else 0)) * self.quantity) / (float(self.spot_money) * int(self.leverage)) >= 0.95:
             print('9成5仓位了，只平仓不开仓了')
             time.sleep(10)
             return True
