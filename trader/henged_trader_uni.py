@@ -170,7 +170,7 @@ class HengedGrid(object):
         self.future_step = dynamicConfig.future_step
         self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
         self.set_future_next_buy_price(float(self.cur_market_future_price))
-        self.spot_money = float(self.getAsset()[0])
+        self.spot_money = float(self.getAsset())
         self.ease_position_share = fc.ease_position_share
 
         ascending = True
@@ -252,7 +252,7 @@ class HengedGrid(object):
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 try:
-                    self.spot_money = float(self.getAsset()[0])
+                    self.spot_money = float(self.getAsset())
                 except Exception as e:
                     print('exception:' + str(e))
                     time.sleep(5)
