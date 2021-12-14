@@ -431,6 +431,7 @@ class BinanceSpotHttp(object):
 
     def get_spot_position_info(self, coin):
         res = self.get_account_info("fake")
+        # print("res COMPLETE:" + str(res))
         if res:
             balances = res.get('balances')
             if balances:

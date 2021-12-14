@@ -141,7 +141,7 @@ class HengedGrid(object):
         # test check value
         # print('check account exchangeinfo: ' + str(self.http_client_spot.exchangeInfo(config.symbol)))  # 保留账户模拟数据
         # print('check account assets spot: ' + str(self.http_client_spot.get_future_position_info(config.symbol)))  # 保留账户模拟数据
-        print('check account assets future: ' + str(self.http_client_future.get_future_asset(config.symbol)))
+        # print('check account assets future: ' + str(self.http_client_future.get_future_asset(config.symbol)))
         # print('check account: ' + str(self.http_client_spot.get_account_info(config.symbol)))# 查询现货指定货币的仓位
         print('check market price: ' + str(round(float(self.cur_market_future_price), 2)))
         print('check quantity: ' + str(self.quantity))
@@ -197,17 +197,17 @@ class HengedGrid(object):
             struct_time.tm_sec))
         print(self.grid_run_time)
 
-        print("把上次存下来的卖掉一部分")
+        # print("把上次存下来的卖掉一部分")
         #self.close_previous_position(time_format)
 
-        print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
-        if self.grid_side == 'BOTH':
-            self.open_long(time_format)
-            self.open_short(time_format)
-        elif self.grid_side == 'LONG':
-            self.open_long(time_format)
-        elif self.grid_side == 'SHORT':
-            self.open_short(time_format)
+        # print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
+        # if self.grid_side == 'BOTH':
+        #     self.open_long(time_format)
+        #     self.open_short(time_format)
+        # elif self.grid_side == 'LONG':
+        #     self.open_long(time_format)
+        # elif self.grid_side == 'SHORT':
+        #     self.open_short(time_format)
 
         time.sleep(5)
 
@@ -498,7 +498,7 @@ class HengedGrid(object):
             print("貌似没有开多单成功，为啥：")
             print("spot_res：" + str(spot_res))
 
-    def close_long(self, time_format, cut_position = False, price='none'):
+    def close_long(self, time_format, cut_position = False, price='none', tickOutBottom = False):
         if self.grid_side == 'SHORT':
             if float(self.cur_market_future_price) <= self.get_last_spot_price():
                 print("亏本的买卖不做，不平了")
@@ -522,9 +522,9 @@ class HengedGrid(object):
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
             spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
-            if order_type == OrderType.LIMIT:
+            if order_type == OrderType.LIMIT and tickOutBottom is True:
                 print('price:' + price + ' 挂平仓多单了')
-                # return {}
+                return {}
             if spot_res and 'orderId' in spot_res.keys():
                 dynamicConfig.total_earn += (float(self.cur_market_future_price) - float(
                     open_spot_price)) * float(spot_quantity)
@@ -766,8 +766,8 @@ class HengedGrid(object):
 
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
-        dynamicConfig.record_spot_price.sort(reverse=True)#降序
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
+        dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
 
     def get_last_spot_price(self):
@@ -1128,7 +1128,7 @@ class HengedGrid(object):
             tmp = max(dynamicConfig.long_bottom_position_price)
             if float(tmp) > float(price):
                 print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
-                self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
+                self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))), True)#挂掉出了
                 tick_out_price = tmp
                 need_open_long_bottom_position = True
         if need_open_long_bottom_position and tick_out_price:
