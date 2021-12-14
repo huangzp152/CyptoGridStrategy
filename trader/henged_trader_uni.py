@@ -329,8 +329,13 @@ class HengedGrid(object):
                 msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price)
                 msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
 
+                isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
+                msg9 = "当前多单是否马丁：" + str(isMartin) + "， 多单列表数量：" + str(len(dynamicConfig.record_spot_price)) + ", 马丁格子界限：" + str(self.end_martin_grid)
+                msg10 = "多单马丁平均价格：" + str(sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)) if isMartin else ""
                 print(msg7)
                 print(msg8)
+                print(msg9)
+                print(msg10)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
                     msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
@@ -850,7 +855,7 @@ class HengedGrid(object):
             print("execute martin stragety")
             self.spot_sell_price = max(round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point), (round(sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)) if len(dynamicConfig.record_spot_price) > 0 else self.spot_sell_price)
             dynamicConfig.spot_sell_price = self.spot_sell_price
-            print("self.spot_sell_price：" + str(self.spot_sell_price))
+            print("[martin]self.spot_sell_price：" + str(self.spot_sell_price))
             # self.quantity = self.quantity * (len(dynamicConfig.record_spot_price) - 1) # 留一份
         else:
             dynamicConfig.spot_sell_price = round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)
@@ -868,7 +873,7 @@ class HengedGrid(object):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
         if self.end_martin_grid > 0 and len(dynamicConfig.record_future_price) > 0 and len(dynamicConfig.record_future_price) <= self.end_martin_grid:
-            print("execute martin stragety")
+            print("[martin]execute martin stragety")
             self.future_buy_price = min(round(deal_price * (1 - dynamicConfig.future_rising_ratio / 100), demical_point), (round(sum([float(item) for item in dynamicConfig.record_future_price]) / len(dynamicConfig.record_future_price) * (1 - dynamicConfig.future_rising_ratio / 100), demical_point)) if len(dynamicConfig.record_future_price) > 0 else self.future_buy_price)
             dynamicConfig.future_buy_price = self.future_buy_price
             # self.current_all_future_quantity = self.quantity * (len(dynamicConfig.record_future_price) - 1)  # 留一份
