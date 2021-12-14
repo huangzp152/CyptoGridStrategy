@@ -482,7 +482,7 @@ class HengedGrid(object):
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
-                self.add_record_spot_price(self.cur_market_future_price)
+                self.add_record_spot_price(str(self.cur_market_future_price))
                 self.set_spot_share(self.spot_step + 1)
                 dynamicConfig.total_steps += 1
             else:
@@ -765,7 +765,7 @@ class HengedGrid(object):
               # + ", 合约的仓位：self.get_future_share():" + str(self.get_future_share()))
 
     def add_record_spot_price(self, value):
-        dynamicConfig.record_spot_price.append(value)
+        dynamicConfig.record_spot_price.append(str(value))
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
         dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
@@ -796,7 +796,7 @@ class HengedGrid(object):
         dynamicConfig.record_future_price[0] = first_record_price
 
     def add_record_future_price(self, value):
-        dynamicConfig.record_future_price.append(value)
+        dynamicConfig.record_future_price.append(str(value))
         dynamicConfig.record_future_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
         self.save_trade_info()
@@ -1066,7 +1066,7 @@ class HengedGrid(object):
             if float(tmp) <= float(self.cur_market_future_price):
                 self.close_long(time_format, True, self.cur_market_future_price)
             else:
-                ret_list_spot.append(tmp)
+                ret_list_spot.append(str(tmp))
         dynamicConfig.record_spot_price = ret_list_spot
         # print("ssdfsdf:" + str(dynamicConfig.record_spot_price))
 
@@ -1075,7 +1075,7 @@ class HengedGrid(object):
             if float(tmp) >= float(self.cur_market_future_price):
                 self.close_short(time_format, True, self.cur_market_future_price)
             else:
-                ret_list_future.append(tmp)
+                ret_list_future.append(str(tmp))
         dynamicConfig.record_future_price = ret_list_future
         # del ret_list_spot[:]
         # del ret_list_future[:]
@@ -1137,7 +1137,7 @@ class HengedGrid(object):
 
         if need_open_long_bottom_position:
             print('这个价格需要加入底仓')
-            dynamicConfig.long_bottom_position_price.append(price)
+            dynamicConfig.long_bottom_position_price.append(str(price))
             self.save_trade_info()
             need_open_long_bottom_position = False
             return self.open_long(time_format, True)#加入底仓后，需要开单，才算真正加入了底仓
