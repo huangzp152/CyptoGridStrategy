@@ -147,9 +147,9 @@ class HengedGrid(object):
         print('check quantity: ' + str(self.quantity))
 
         #设置为双向持仓
-        if self.http_client_future.check_position_side().get('dualSidePosition') is False:
-            self.http_client_future.set_henged_position_mode()
-        print('check positionSide:' + str(self.http_client_future.check_position_side()))
+        # if self.http_client_future.check_position_side().get('dualSidePosition') is False:
+        #     self.http_client_future.set_henged_position_mode()
+        # print('check positionSide:' + str(self.http_client_future.check_position_side()))
 
         # future_res = self.http_client_future.place_order('BTCUSDT', OrderSide.SELL, OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2), "")
         # spot_res = self.http_client_spot.place_order('BTCUSDT', OrderSide.BUY, OrderType.MARKET, quantity=self.quantity, price=round(float(self.cur_market_spot_price), 2), time_inforce="")
@@ -506,7 +506,7 @@ class HengedGrid(object):
         print("进入平多单流程")
         spot_res = {}
         isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
-        if self.spot_step > (1 if isMartin else 0):
+        if self.spot_step > (0 if tickOutBottom else (1 if isMartin else 0)):
             # test
             # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
             # dynamicConfig.order_list.append(spot_res)
