@@ -82,7 +82,7 @@ class HengedGrid(object):
     def getAsset(self):
         ret = self.http_client_future.get_future_asset(config.coin)
         # print('ret:' + str(ret))
-        return ret
+        return abs(ret)
 
     def set_leverage(self, leverage):
         ret = self.http_client_future.set_future_leverage(leverage)
@@ -1067,6 +1067,8 @@ class HengedGrid(object):
         return need_join
 
     def get_long_bottom_position_scale(self):
+        if self.spot_money == 0:
+            return 1
         current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
             self.quantity)) / self.spot_money
         ret = current_position_share
