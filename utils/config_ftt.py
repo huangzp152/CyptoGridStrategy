@@ -7,7 +7,7 @@ class Config:
     def __init__(self):
 
         self.platform: str = "ftx"  # 交易的平台
-        self.symbol: str = "FTT"  # 交易对.
+        self.symbol: str = "FTT/USD"  # 交易对.
         self.coin: str = "USD" # 要进行仓位查询的币种
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
@@ -84,12 +84,12 @@ class DynamicConfig(object):
 
         # from file
         benefit_list_from_file = self.get_trade_benefit()
-        print(str(benefit_list_from_file[config.symbol]))
+        print(str(benefit_list_from_file[config.symbol.replace('/', '')]))
         self.order_list = []
-        self.total_earn = round(float(benefit_list_from_file[config.symbol][1]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][1] else 0
+        self.total_earn = round(float(benefit_list_from_file[config.symbol.replace('/', '')][1]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol.replace('/', '')] and benefit_list_from_file[config.symbol.replace('/', '')][1] else 0
         self.total_invest = 0
-        self.total_earn_grids = round(float(benefit_list_from_file[config.symbol][3]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][3] else 0
-        self.total_steps = round(float(benefit_list_from_file[config.symbol][4]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol] and benefit_list_from_file[config.symbol][4] else 0
+        self.total_earn_grids = round(float(benefit_list_from_file[config.symbol.replace('/', '')][3]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol.replace('/', '')] and benefit_list_from_file[config.symbol.replace('/', '')][3] else 0
+        self.total_steps = round(float(benefit_list_from_file[config.symbol.replace('/', '')][4]), 2) if benefit_list_from_file and benefit_list_from_file[config.symbol.replace('/', '')] and benefit_list_from_file[config.symbol.replace('/', '')][4] else 0
 
     def loads(self, config_file=None):
         """ Load config file.

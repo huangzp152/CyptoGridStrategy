@@ -192,7 +192,7 @@ class HengedGrid(object):
 
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print('now time:' + str(time_format))
-        self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
+        self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol.replace('/', '')][0])
         struct_time = time.gmtime(self.diff_time)
 
         self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
@@ -240,7 +240,7 @@ class HengedGrid(object):
                 # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
 
                 time.sleep(0.01)
-                self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol][0])
+                self.diff_time = time.time() - begin_time + int(dynamicConfig.get_trade_benefit()[config.symbol.replace('/', '')][0])
                 struct_time = time.gmtime(self.diff_time)
 
                 time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -302,7 +302,7 @@ class HengedGrid(object):
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
                         self.open_spot_price = dynamicConfig.record_spot_price[0]
-                        self.close_long(time_format, True)
+                        self.close_long(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn(msg + ', 这份止损了:' + str(self.open_spot_price))
                         del dynamicConfig.record_spot_price[0]
                     else:
@@ -313,7 +313,7 @@ class HengedGrid(object):
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
                     for i in range(0, position_delta):
-                        self.close_long(time_format, True)
+                        self.close_long(time_format, True, self.cur_market_future_price)
                         Message.dingding_warn('这份多单平掉了:' + str(dynamicConfig.record_spot_price[i]))
                         self.close_short(time_format, True)
                         Message.dingding_warn('这份空单平掉了:' + str(dynamicConfig.record_future_price[i]))
@@ -373,7 +373,7 @@ class HengedGrid(object):
                 #多单市场价要高于你的卖出价，才能成交
                 #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
                 elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price) * (1 + self.handling_ratio):
-                    spot_res = self.close_long(time_format)
+                    spot_res = self.close_long(time_format, False, str(self.cur_market_future_price))
 
                 #开空单（卖出借仓）
                 #空单市场价要高于你的卖出价，才能成交
@@ -384,7 +384,7 @@ class HengedGrid(object):
                 #空单市场价要低于你的买回价，才能成交
                 #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
                 elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price) * (1 + self.handling_ratio):
-                    future_res = self.close_short(time_format)
+                    future_res = self.close_short(time_format, False, str(self.cur_market_future_price))
 
                 if (spot_res is None or not spot_res['id']) and (future_res is None or not future_res['id']):
                     print("这个价格这轮没有买卖成功，开启下一轮")
@@ -482,7 +482,7 @@ class HengedGrid(object):
         # test
         # spot_res = {'id': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
+        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2), tickOutBottom)
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and spot_res['id']:
             print("开多单成功")
@@ -506,7 +506,7 @@ class HengedGrid(object):
             print("貌似没有开多单成功，为啥：")
             print("spot_res：" + str(spot_res))
 
-    def close_long(self, time_format, cut_position = False, price='none'):
+    def close_long(self, time_format, cut_position = False, price='none', tickOutBottom = False):
         if self.grid_side == 'SHORT':
             if float(self.cur_market_future_price) <= float(self.get_last_spot_price()):
                 print("亏本的买卖不做，不平了")
@@ -522,8 +522,8 @@ class HengedGrid(object):
             if price != 'none':
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
-            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
-            if order_type == OrderType.LIMIT:
+            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL.value, 'LONG', OrderType.LIMIT.value, self.quantity, round(float(self.cur_market_future_price), 2))
+            if order_type == OrderType.LIMIT and tickOutBottom is True:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}
             if spot_res and spot_res['id']:
@@ -593,7 +593,7 @@ class HengedGrid(object):
         # future_res
         # future_res= {'id': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(future_res)
-        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL.value, "SHORT", OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
+        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL.value, "SHORT", OrderType.LIMIT.value, self.quantity, round(float(self.cur_market_future_price), 2))
 
         if future_res and future_res['id']:
             print("开空单成功")
@@ -971,7 +971,7 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info_%s_ftt.json' % config.symbol, 'r') as df:
+        with open('../data/trade_info_%s.json' % config.symbol.replace('/', ''), 'r') as df:
             if os.path.getsize(df.name) == 0:
                 return
             record_price_dict_to_file = json.load(df)
@@ -996,7 +996,7 @@ class HengedGrid(object):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
-        with open('../data/trade_info_%s_ftt.json' % config.symbol, "w") as df:
+        with open('../data/trade_info_%s.json' % config.symbol.replace('/', ''), "w") as df:
             json.dump(record_price_dict_to_file, df)
         self.save_trade_benefit()
 
