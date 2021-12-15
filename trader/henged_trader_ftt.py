@@ -482,7 +482,7 @@ class HengedGrid(object):
         # test
         # spot_res = {'id': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2), tickOutBottom)
+        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and spot_res['id']:
             print("开多单成功")
