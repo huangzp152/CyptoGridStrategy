@@ -326,11 +326,19 @@ class HengedGrid(object):
                     else:
                         print('最亏的那份空单损益:' + str(future_lost_ratio))
 
-                msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】：" + str(self.spot_sell_price)
-                msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
-
-                print(msg7)
-                print(msg8)
+                isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
+                tag = '【马丁】' if isMartin else '【网格】'
+                if self.grid_side == 'LONG':
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(self.spot_sell_price)
+                    print(msg7)
+                elif self.grid_side == "SHORT":
+                    msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
+                    print(msg8)
+                else:
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(self.spot_sell_price)
+                    msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
+                    print(msg7)
+                    print(msg8)
 
                 if loop_count % 1800 == 5:#  半小时汇报一次
                     msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
