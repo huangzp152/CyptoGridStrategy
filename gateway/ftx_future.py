@@ -158,6 +158,8 @@ class ftx_future:
         if end_time:
             query_dict['end_time'] = end_time
 
+        print("check kline, sleep 0.5 second") # avoid ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+        time.sleep(0.5)
         data = self._get(path, query_dict)
         if isinstance(data, list) and len(data):
             return data[-limit:]

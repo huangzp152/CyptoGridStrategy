@@ -32,7 +32,6 @@ from utils.config_multiple import Config, User
 from utils.dingding import Message
 
 
-
 class HengedGrid(object):
 
     def __init__(self, cfg, market, product):
@@ -40,7 +39,6 @@ class HengedGrid(object):
         self.user = cfg.user
         self.market = market
         self.product = product
-
 
         api_key = market.api_key_future
         api_secret = market.api_secret_future
@@ -50,7 +48,7 @@ class HengedGrid(object):
         elif market.platform == 'binance':
             self.http_client_spot = BinanceFutureHttp(api_key=api_key, secret=api_secret, proxy_host='', proxy_port=0)
             self.http_client_future = BinanceFutureHttp(api_key=api_key, secret=api_secret, proxy_host='', proxy_port=0)
-    
+
         self.grid_side = fc.position_side
         self.long_bottom_position_share = fc.long_bottom_position_share
         self.cut_position_threshold = fc.cut_position_threshold
@@ -1182,7 +1180,7 @@ def dynamicSettings(hengedGrid, fc):
         msg = 'stop by myself!'
         print(msg)
         Message.dingding_warn(str(msg))
-
+config = Config()
 if __name__ == "__main__":
     error_raw = ''
     hengedGrid = None
@@ -1191,7 +1189,7 @@ if __name__ == "__main__":
     receiver_thread = threading.Thread(target=open_receiver)
     receiver_thread.start()
 
-    config.loads('../self.product_multiple.json')
+    config.loads('../config_multiple.json')
     cfgs = []
     for i in range(0, len(config.self.products)):
         cfgs.append(User(cfgs[i]))

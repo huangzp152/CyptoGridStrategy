@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("/usr/local/lib/python3.6/dist-packages")
-from utils.config_multiple import User
+import utils.config_multiple
 from flask import Flask, request
 app = Flask(__name__)
 
