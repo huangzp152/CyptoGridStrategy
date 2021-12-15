@@ -91,7 +91,7 @@
               "start_grid": false
           },
             {
-              "symbol": "FTT-PERP",
+              "symbol": "FTT",
               "coin":"USD",
               "every_time_trade_share": 30,
               "ratio_no_trendency": 0.8,
