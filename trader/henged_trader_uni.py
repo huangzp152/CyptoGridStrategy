@@ -286,7 +286,12 @@ class HengedGrid(object):
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
 
                 msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
+                self.quantity = self._format(round(fc.every_time_trade_share / dynamicConfig.record_spot_price[-1], 3)) if len() > 0 else self._format(round(fc.every_time_trade_share / self.cur_market_future_price, 3))
+                msg7 = "开仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price) + 1))
+                msg8 = "平仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price)))
                 print(msg6)
+                print(msg7)
+                print(msg8)
 
                 #清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
@@ -325,6 +330,11 @@ class HengedGrid(object):
                         del dynamicConfig.record_future_price[0]
                     else:
                         print('最亏的那份空单损益:' + str(future_lost_ratio))
+
+                # 开仓资金占总资金1/3以上走马丁
+                # occupied_share = sum([float(dynamicConfig.record_spot_price[i]) * 1.01 * (i + 1) * self.quantity for i in range(0, len(dynamicConfig.record_spot_price))])
+                # total_share =occupied_share + self.spot_money
+                # isMartin = False if (occupied_share / total_share) > 1/3 else False
 
                 isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
                 tag = '【马丁】' if isMartin else '【网格】'
@@ -366,7 +376,6 @@ class HengedGrid(object):
                         spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
                     # if not spot_open_long_res:#不需要建仓
                     spot_res = self.open_long(time_format) #不管是否建仓，都要买一份
-
 
                 #平掉多单（卖出获利）
                 #多单市场价要高于你的卖出价，才能成交

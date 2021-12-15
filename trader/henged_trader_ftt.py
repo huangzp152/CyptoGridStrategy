@@ -89,13 +89,13 @@ class HengedGrid(object):
 
     def addMoney(self, money):
         res = float(self.getMoney()) + float(money)
-        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol, 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol.replace('/', ""), 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
-        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol, 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol.replace('/', ""), 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
