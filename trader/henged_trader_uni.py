@@ -103,15 +103,6 @@ class HengedGrid(object):
         self.getMoney()
         # while(True):
 
-        #test
-        kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv' # '/home/code/binance/data/BTCUSDT-5m-2021-06-26.csv' #mac： '/Users/zipinghuang/Downloads/binance/BTCUSDT-5m-2021-06-26.csv'
-        # with open(kline_path, 'r', encoding='utf-8') as df:
-            #test
-            # read = csv.reader(df)
-            # self.rows = [row for row in read]
-            # index = CalcIndex(self.rows)
-            # self.cur_market_price = self.rows[0][2]
-
         # official
         index = CalcIndex()
 
@@ -1164,6 +1155,21 @@ class HengedGrid(object):
 
 
 if __name__ == "__main__":
+
+    # test
+    kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv'
+    with open(kline_path, 'r', encoding='utf-8') as df:
+        # test
+        read = csv.reader(df)
+        rows = [row for row in read]
+        # index = CalcIndex(self.rows)
+        cur_market_price = rows[0][4]
+
+    for i in range(0, len(rows)):
+        print("cur_market_price:" + str(cur_market_price))
+
+
+
     error_raw = ''
     hengedGrid = None
     try:
