@@ -482,9 +482,9 @@ class HengedGrid(object):
         # test
         # spot_res = {'id': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.MARKET.value, self.quantity, round(float(self.cur_market_future_price), 2))
+        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY.value, 'LONG', OrderType.LIMIT.value, self.quantity, round(float(self.cur_market_future_price), 2))
         # print('开多单完整结果：'+str(spot_res))
-        if spot_res and spot_res['id']:
+        if spot_res and 'id' in spot_res.keys():
             print("开多单成功")
             self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
             dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
@@ -1088,7 +1088,7 @@ class HengedGrid(object):
             tmp = max(dynamicConfig.long_bottom_position_price)
             if float(tmp) > float(price):
                 print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
-                self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))))#挂掉出了
+                self.close_long(time_format, False, str(int(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100))), True)#挂掉出了
                 tick_out_price = tmp
                 need_open_long_bottom_position = True
         if need_open_long_bottom_position and tick_out_price:
