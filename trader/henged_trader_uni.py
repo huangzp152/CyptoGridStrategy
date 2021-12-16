@@ -216,7 +216,7 @@ class HengedGrid(object):
             read = csv.reader(df)
             rows = [row for row in read]
             # index = CalcIndex(self.rows)
-            cur_market_price = rows[0][4]
+            self.cur_market_price = rows[0][4]
         #
         # for i in range(0, len(rows)):
         #     print("cur_market_price:" + str(rows[i][4]))
