@@ -61,18 +61,19 @@ class HengedGrid(object):
         pass
 
     def getMoney(self):
-        #test
-        # with open('/home/code/binance/data/test_account.txt', 'r+', encoding='utf-8') as df:
-        #     res = str(df.read())
-        #     print("account money:" + res)
-        #     return res
-        res = self.http_client_spot.get_account_info(config.symbol)#现货或者合约，都是一样的接口
-        if res:
-            assets = res.get('balances')# future : assets
-            for asset in assets:
-                if config.symbol.endswith(asset.get('asset')):
-                    return asset.get('free')
-        return 0
+        if config.platform == 'test':
+            with open('/home/code/binance/data/test_account.txt', 'r+', encoding='utf-8') as df:
+                res = str(df.read())
+                print("backtest account money:" + res)
+                return res
+        else:
+            res = self.http_client_spot.get_account_info(config.symbol)#现货或者合约，都是一样的接口
+            if res:
+                assets = res.get('balances')# future : assets
+                for asset in assets:
+                    if config.symbol.endswith(asset.get('asset')):
+                        return asset.get('free')
+            return 0
 
     def getAsset(self):
         ret = self.http_client_spot.get_spot_position_info(config.coin)
@@ -86,13 +87,13 @@ class HengedGrid(object):
 
     def addMoney(self, money):
         res = float(self.getMoney()) + float(money)
-        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol, 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
-        with open('/home/code/binance/data/test_account_%s.txt' % config.symbol, 'w', encoding='utf-8') as df:
+        with open('/home/code/binance/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
             df.write(str(res))
         pass
 
@@ -152,8 +153,13 @@ class HengedGrid(object):
         # self.leverage = str(self.set_leverage(fc.leverage))
         # print('目前杠杆:' + self.leverage)
         print("设置初始的盈利点数")
-        self.set_spot_ratio()
-        self.set_future_ratio()
+        if self.grid_side == 'LONG':
+            self.set_spot_ratio()
+        elif self.grid_side == 'SHORT':
+            self.set_future_ratio()
+        else:
+            self.set_spot_ratio()
+            self.set_future_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
         self.set_spot_next_buy_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
@@ -161,7 +167,7 @@ class HengedGrid(object):
         self.future_step = dynamicConfig.future_step
         self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
         self.set_future_next_buy_price(float(self.cur_market_future_price))
-        self.spot_money = float(self.getAsset())
+        self.spot_money = float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
         self.ease_position_share = fc.ease_position_share
 
         ascending = True
@@ -204,15 +210,25 @@ class HengedGrid(object):
 
         has_report = False
 
+        kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv'
+        with open(kline_path, 'r', encoding='utf-8') as df:
+            # test
+            read = csv.reader(df)
+            rows = [row for row in read]
+            # index = CalcIndex(self.rows)
+            cur_market_price = rows[0][4]
+        #
+        # for i in range(0, len(rows)):
+        #     print("cur_market_price:" + str(rows[i][4]))
+
         while not fc.stop_singal_from_client:
             print('loop, count:' + str(loop_count))
-            loop_count = loop_count + 1
-
             #test
         # for i in range(6, len(self.rows)):
             # print('check account: ' + str(self.getMoney()))
             # print("kline:" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(self.rows[i][0])/1000)) + ", price:" + self.rows[i][2])
             # self.cur_market_price = self.rows[i][2]
+
 
 
 
@@ -243,7 +259,7 @@ class HengedGrid(object):
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 try:
-                    self.spot_money = float(self.getAsset())
+                    self.spot_money =  float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
                 except Exception as e:
                     print('exception:' + str(e))
                     time.sleep(5)
@@ -273,8 +289,8 @@ class HengedGrid(object):
                     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 else:
                     isTrendComing = False
-
-                self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                self.cur_market_future_price = rows[loop_count][4] if config.platform == 'test' else self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                loop_count = loop_count + 1
 
                 msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
                 # self.quantity = self._format(round(fc.every_time_trade_share / float(dynamicConfig.record_spot_price[-1]), 3)) if len(dynamicConfig.record_spot_price) > 0 else self._format(round(fc.every_time_trade_share / self.cur_market_future_price, 3))
@@ -482,7 +498,7 @@ class HengedGrid(object):
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, float(self.quantity), price=str(round(float(self.cur_market_future_price), 2)))
+        spot_res = 'backtestid' if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, float(self.quantity), price=str(round(float(self.cur_market_future_price), 2)))
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
@@ -529,7 +545,7 @@ class HengedGrid(object):
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
-            spot_res = self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
+            spot_res = 'backtestid' if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
             if order_type == OrderType.LIMIT and tickOutBottom is True:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}
@@ -736,7 +752,10 @@ class HengedGrid(object):
         todo 仓位越多，格子要越大，防止不断地开仓或平仓, 实现起来有点复杂
         '''
         print("set_spot_ratio")
-        ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
+        if config.platform == 'test':
+            ratio_24hr = 5
+        else:
+            ratio_24hr = round(float(self.http_client_spot.get_ticker_24hour(config.symbol)['priceChangePercent']), 1)
         if abs(ratio_24hr) > 6:
                 print("24小时上涨或下跌趋势")
                 dynamicConfig.spot_rising_ratio = fc.ratio_up_or_down# + dynamicConfig.total_steps / 4
@@ -1020,7 +1039,12 @@ class HengedGrid(object):
         #     if order.get('side') == OrderSide.BUY.value and order.get('status') == OrderStatus.FILLED.value:
         #         dynamicConfig.record_spot_price.append(order.get('price'))
 
-        with open('../data/trade_info_%s.json' % config.symbol, 'r') as df:
+        if config.platform == 'test':
+            trade_info_file_path = '../data/trade_info_%s.json' % config.symbol
+        else:
+            trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
+
+        with open(trade_info_file_path, 'r') as df:
             if os.path.getsize(df.name) == 0:
                 return
             record_price_dict_to_file = json.load(df)
@@ -1044,8 +1068,15 @@ class HengedGrid(object):
     def save_trade_info(self):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
+
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
-        with open('../data/trade_info_%s.json' % config.symbol, "w") as df:
+
+        if config.platform == 'test':
+            trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
+        else:
+            trade_info_file_path = '../data/trade_info_%s.json' % config.symbol
+
+        with open(trade_info_file_path, "w") as df:
             json.dump(record_price_dict_to_file, df)
 
         self.save_trade_benefit()
@@ -1157,19 +1188,19 @@ class HengedGrid(object):
 if __name__ == "__main__":
 
     # test
-    kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv'
-    with open(kline_path, 'r', encoding='utf-8') as df:
-        # test
-        read = csv.reader(df)
-        rows = [row for row in read]
-        # index = CalcIndex(self.rows)
-        cur_market_price = rows[0][4]
+    # kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv'
+    # with open(kline_path, 'r', encoding='utf-8') as df:
+    #     # test
+    #     read = csv.reader(df)
+    #     rows = [row for row in read]
+    #     # index = CalcIndex(self.rows)
+    #     cur_market_price = rows[0][4]
+    #
+    # for i in range(0, len(rows)):
+    #     print("cur_market_price:" + str(rows[i][4]))
 
-    for i in range(0, len(rows)):
-        print("cur_market_price:" + str(cur_market_price))
-
-
-
+    ###########################################################
+    #official
     error_raw = ''
     hengedGrid = None
     try:
@@ -1177,8 +1208,9 @@ if __name__ == "__main__":
         # dynamicConfig.loads('./config.json')
 
         hengedGrid = HengedGrid()
-        receiver_thread = threading.Thread(target=hengedGrid.open_receiver)
-        receiver_thread.start()
+        if config.platform != 'test':
+            receiver_thread = threading.Thread(target=hengedGrid.open_receiver)
+            receiver_thread.start()
         exit_thread = threading.Thread(target=hengedGrid.normal_exit)
         exit_thread.start()
         run_thread = threading.Thread(target=hengedGrid.run)
@@ -1195,7 +1227,8 @@ if __name__ == "__main__":
                     fc.start_grid = False
                 if fc.stop_singal_from_client:
                     run_thread.join()
-        receiver_thread.join()
+        if config.platform != 'test':
+            receiver_thread.join()
         exit_thread.join()
 
     except Exception as e:
@@ -1209,5 +1242,5 @@ if __name__ == "__main__":
         # hengedGrid.save_trade_info()
         if error_raw:
             error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
-            Message.dingding_warn(str(error_info))
+            Message.dingding_warn("[test]"+str(error_info))
 
