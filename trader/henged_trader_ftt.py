@@ -260,6 +260,9 @@ class HengedGrid(object):
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 try:
                     self.spot_money = float(self.getAsset())
+                    if self.spot_money == 0:
+                        time.sleep(5)
+                        continue
                 except Exception as e:
                     print('exception:' + str(e))
                     time.sleep(5)
