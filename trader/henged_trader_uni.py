@@ -286,12 +286,12 @@ class HengedGrid(object):
                 self.cur_market_future_price = self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
 
                 msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
-                self.quantity = self._format(round(fc.every_time_trade_share / float(dynamicConfig.record_spot_price[-1]), 3)) if len(dynamicConfig.record_spot_price) > 0 else self._format(round(fc.every_time_trade_share / self.cur_market_future_price, 3))
-                msg7 = "开仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price) + 1))
-                msg8 = "平仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price)))
+                # self.quantity = self._format(round(fc.every_time_trade_share / float(dynamicConfig.record_spot_price[-1]), 3)) if len(dynamicConfig.record_spot_price) > 0 else self._format(round(fc.every_time_trade_share / self.cur_market_future_price, 3))
+                # msg7 = "开仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price) + 1))
+                # msg8 = "平仓数量：" + str(self.quantity * pow(1.01, len(dynamicConfig.record_spot_price)))
                 print(msg6)
-                print(msg7)
-                print(msg8)
+                # print(msg7)
+                # print(msg8)
 
                 #清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
