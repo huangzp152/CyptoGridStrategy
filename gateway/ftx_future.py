@@ -24,7 +24,16 @@ class ftx_future:
         self.order_count = 1_000_000
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        return self._request('GET', path, params=params)
+        for i in range(0, 10):
+            try:
+                result = self._request('GET', path, params=params)
+                return result
+            except Exception as e:
+                msg = '_request Exception:' + str(e) + ', time:' + str(i)
+                print(msg)
+                time.sleep(3)
+                Message.dingding_warn(msg)
+
 
     def _post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('POST', path, json=params)
@@ -64,6 +73,7 @@ class ftx_future:
         try:
             data = response.json()
         except ValueError:
+            print("except ValueError")
             response.raise_for_status()
             raise
         else:
