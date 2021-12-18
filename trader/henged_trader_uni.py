@@ -18,6 +18,9 @@ import random
 import threading
 import time
 import sys
+
+import numpy as np
+
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 from cmd_receive_uni import fc, app
@@ -97,30 +100,18 @@ class HengedGrid(object):
             df.write(str(res))
         pass
 
-    def run(self):
-
-        print("HengedGrid, run()")
-        print("--------------初始准备阶段开始！---------------")
-        self.getMoney()
-        # while(True):
-        kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/UNIBUSD-1m-2021-12-01.csv'
-        with open(kline_path, 'r', encoding='utf-8') as df:
-            # test
-            read = csv.reader(df)
-            rows = [row for row in read]
-            # index = CalcIndex(self.rows)
-
-        # official
+    def loop_one_ratio(self):
         index = CalcIndex()
-
         # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
         if config.platform == 'test':
             pass
         else:
             self.init_record_price_list()
-        #获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
+        # 获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
         # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
-        self.cur_market_future_price = rows[0][4] if config.platform == "test" else self.http_client_spot.get_latest_price(config.symbol).get('price')#self.http_client_future.get_latest_price(config.symbol).get('price')
+        self.cur_market_future_price = self.rows[0][
+            4] if config.platform == "test" else self.http_client_spot.get_latest_price(config.symbol).get(
+            'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
         # 设定精度，无所谓现货或者合约
         self.demical_length = len(str(self.cur_market_future_price).split(".")[1])
         # 设定买卖数量
@@ -147,7 +138,7 @@ class HengedGrid(object):
         print('check market price: ' + str(round(float(self.cur_market_future_price), 2)))
         print('check quantity: ' + str(self.quantity))
 
-        #设置为双向持仓
+        # 设置为双向持仓
         # if self.http_client_future.check_position_side().get('dualSidePosition') is False:
         #     self.http_client_future.set_henged_position_mode()
         # print('check positionSide:' + str(self.http_client_future.check_position_side()))
@@ -171,10 +162,12 @@ class HengedGrid(object):
             self.set_future_ratio()
         print("设置初始的多单 空单买入卖出价格，仓位")
         self.spot_step = dynamicConfig.spot_step
-        self.set_spot_next_buy_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
+        self.set_spot_next_buy_price(float(
+            self.cur_market_future_price))  # if len(dynamicConfig.record_spot_price) == 0 else float(dynamicConfig.record_spot_price[-1]))
         self.set_spot_next_sell_price(float(self.cur_market_future_price))
         self.future_step = dynamicConfig.future_step
-        self.set_future_next_sell_price(float(self.cur_market_future_price))# if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
+        self.set_future_next_sell_price(float(
+            self.cur_market_future_price))  # if len(dynamicConfig.record_future_price) == 0 else float(dynamicConfig.record_future_price[-1]))
         self.set_future_next_buy_price(float(self.cur_market_future_price))
         self.spot_money = float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
         self.ease_position_share = fc.ease_position_share
@@ -204,7 +197,7 @@ class HengedGrid(object):
         print(self.grid_run_time)
 
         # print("把上次存下来的卖掉一部分")
-        #self.close_previous_position(time_format)
+        # self.close_previous_position(time_format)
 
         # print("等待是寂寞的，所以开仓时先分别开一个空单和多单")
         # if self.grid_side == 'BOTH':
@@ -223,16 +216,13 @@ class HengedGrid(object):
         # for i in range(0, len(rows)):
         #     print("cur_market_price:" + str(rows[i][4]))
 
-        while not fc.stop_singal_from_client and loop_count < len(rows):
+        while not fc.stop_singal_from_client and loop_count < len(self.rows):
             print('loop, count:' + str(loop_count))
-            #test
-        # for i in range(6, len(self.rows)):
+            # test
+            # for i in range(6, len(self.rows)):
             # print('check account: ' + str(self.getMoney()))
             # print("kline:" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(self.rows[i][0])/1000)) + ", price:" + self.rows[i][2])
             # self.cur_market_price = self.rows[i][2]
-
-
-
 
             spot_res = None
             spot_open_long_res = None
@@ -249,33 +239,46 @@ class HengedGrid(object):
                 print('now time:' + str(time_format))
 
                 self.grid_run_time = '网格运行时间:' + str("{0}年{1}月{2}日{3}小时{4}分钟{5}秒".format(
-                     struct_time.tm_year-1970,
-                     struct_time.tm_mon-1,
-                     struct_time.tm_mday-1,
-                     struct_time.tm_hour,
-                     struct_time.tm_min,
-                     struct_time.tm_sec))
+                    struct_time.tm_year - 1970,
+                    struct_time.tm_mon - 1,
+                    struct_time.tm_mday - 1,
+                    struct_time.tm_hour,
+                    struct_time.tm_min,
+                    struct_time.tm_sec))
                 print(self.grid_run_time)
                 # str(self.http_client_future.get_future_asset(config.symbol))
                 # tmp = self.http_client_future.get_positionInfo(config.symbol)
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 try:
-                    self.spot_money =  float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
+                    self.spot_money = float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
                 except Exception as e:
                     print('exception:' + str(e))
                     time.sleep(5)
                     continue
                 # print('check account: ' + str(self.getAsset()))
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
-                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100, 2)) + '%)') if float(diff_time / 3600) != 0 else ''
-                msg3 = '网格浮动盈亏, 多单：' + str(sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in dynamicConfig.record_spot_price])) + ', 空单：' + str(sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in dynamicConfig.record_future_price]))
-                msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
-                msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) +  '(' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + (
+                            '(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(
+                    diff_time / 3600) != 0 else ''
+                msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + (
+                            '(每小时：' + str(
+                        round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100,
+                              2)) + '%)') if float(diff_time / 3600) != 0 else ''
+                msg3 = '网格浮动盈亏, 多单：' + str(
+                    sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in
+                         dynamicConfig.record_spot_price])) + ', 空单：' + str(
+                    sum([(float(tmp) - float(self.cur_market_future_price)) * float(self.quantity) for tmp in
+                         dynamicConfig.record_future_price]))
+                msg4 = '总仓位数:' + str(dynamicConfig.total_steps) + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(
+                    self.future_step) + ', 底仓：' + str(len(dynamicConfig.long_bottom_position_price))
+                msg5 = '仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(
+                    dynamicConfig.record_future_price) + ', 底仓：' + str(
+                    dynamicConfig.long_bottom_position_price) + '(' + str(
+                    self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share)
 
                 # if struct_time.tm_min == 0 or struct_time.tm_min == 30:
-                print(msg1) #保留账户模拟数据
+                print(msg1)  # 保留账户模拟数据
                 print(msg2)
                 print(msg3)
                 print(msg4)
@@ -284,14 +287,17 @@ class HengedGrid(object):
                 # 判断一下趋势(做多拉升时or做空暴跌时，认为趋势来了)
                 symbol_to_check_trend = config.symbol
                 if symbol_to_check_trend.endswith('BUSD'):
-                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD', 'USDT') # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
+                    symbol_to_check_trend = symbol_to_check_trend.replace('BUSD',
+                                                                          'USDT')  # 因为遇到过BTCBUSD调用kline返回的结果不变的bug 应该是接口问题导致的
                 if fc.position_side == 'LONG':
-                    isTrendComing = False#index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
+                    isTrendComing = False  # index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
                 elif fc.position_side == 'SHORT':
                     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 else:
                     isTrendComing = False
-                self.cur_market_future_price = rows[loop_count][4] if config.platform == 'test' else self.http_client_spot.get_latest_price(config.symbol).get('price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
+                self.cur_market_future_price = self.rows[loop_count][
+                    4] if config.platform == 'test' else self.http_client_spot.get_latest_price(config.symbol).get(
+                    'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
                 loop_count = loop_count + 1
 
                 msg6 = "目前【市场价】：" + str(self.cur_market_future_price)
@@ -302,9 +308,10 @@ class HengedGrid(object):
                 # print(msg7)
                 # print(msg8)
 
-                #清仓操作
+                # 清仓操作
                 if len(dynamicConfig.record_spot_price) > 0:
-                    spot_lost_ratio = (float(dynamicConfig.record_spot_price[0]) - float(self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0])
+                    spot_lost_ratio = (float(dynamicConfig.record_spot_price[0]) - float(
+                        self.cur_market_future_price)) / float(dynamicConfig.record_spot_price[0])
                     if spot_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
@@ -315,8 +322,11 @@ class HengedGrid(object):
                     else:
                         print('最亏的那份多单损益:' + str(spot_lost_ratio))
 
-                position_delta = min(len(dynamicConfig.record_spot_price) - self.ease_position_share, len(dynamicConfig.record_future_price) - self.ease_position_share)
-                if len(dynamicConfig.record_spot_price) == len(dynamicConfig.record_future_price) and len(dynamicConfig.record_spot_price) > self.ease_position_share and len(dynamicConfig.record_future_price) > self.ease_position_share:
+                position_delta = min(len(dynamicConfig.record_spot_price) - self.ease_position_share,
+                                     len(dynamicConfig.record_future_price) - self.ease_position_share)
+                if len(dynamicConfig.record_spot_price) == len(dynamicConfig.record_future_price) and len(
+                        dynamicConfig.record_spot_price) > self.ease_position_share and len(
+                        dynamicConfig.record_future_price) > self.ease_position_share:
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
                     for i in range(0, position_delta):
@@ -327,9 +337,9 @@ class HengedGrid(object):
                         del dynamicConfig.record_spot_price[i]
                         del dynamicConfig.record_future_price[i]
 
-
                 if len(dynamicConfig.record_future_price) > 0:
-                    future_lost_ratio = (float(self.cur_market_future_price) - float(dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
+                    future_lost_ratio = (float(self.cur_market_future_price) - float(
+                        dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
                     if future_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
@@ -350,22 +360,25 @@ class HengedGrid(object):
                 msg7 = ''
                 msg8 = ''
                 if self.grid_side == 'LONG':
-                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(self.spot_sell_price)
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(
+                        self.spot_sell_price)
                     print(msg7)
                 elif self.grid_side == "SHORT":
                     msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
                     print(msg8)
                 else:
-                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(self.spot_sell_price)
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(
+                        self.spot_sell_price)
                     msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
                     print(msg7)
                     print(msg8)
 
-                if loop_count % 1800 == 5:#  半小时汇报一次
-                    msg = '【' + str(config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
+                if loop_count % 1800 == 5:  # 半小时汇报一次
+                    msg = '【' + str(
+                        config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
                     Message.dingding_warn(msg)
 
-                #设定仓位
+                # 设定仓位
                 # quantity_basic = (fc.every_time_trade_share if fc.every_time_trade_share else 10.1) / float(self.cur_market_future_price) if self.cur_market_future_price else config.quantity
                 # self.quantity = self._format(quantity_basic)  # 买的不一定是0.0004,应该是现在的市场价买10u的份额
                 # spot_res = None
@@ -380,34 +393,41 @@ class HengedGrid(object):
                 #     time.sleep(10)
                 # else:
 
-                #开多单（买入持仓）
-                #多单市场价要低于你的买入价，才能成交
-                if not isTrendComing and float(self.cur_market_future_price) <= float(self.spot_buy_price) and not self.nearly_full_position():
-                    if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(self.cur_market_future_price):
+                # 开多单（买入持仓）
+                # 多单市场价要低于你的买入价，才能成交
+                if not isTrendComing and float(self.cur_market_future_price) <= float(
+                        self.spot_buy_price) and not self.nearly_full_position():
+                    if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(
+                            self.cur_market_future_price):
                         spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
                     # if not spot_open_long_res:#不需要建仓
-                    spot_res = self.open_long(time_format) #不管是否建仓，都要买一份
+                    spot_res = self.open_long(time_format)  # 不管是否建仓，都要买一份
 
-                #平掉多单（卖出获利）
-                #多单市场价要高于你的卖出价，才能成交
-                #要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
-                elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price) * (1 + self.handling_ratio):
+                # 平掉多单（卖出获利）
+                # 多单市场价要高于你的卖出价，才能成交
+                # 要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price) * (
+                        1 + self.handling_ratio):
                     spot_res = self.close_long(time_format, False, self.cur_market_future_price)
 
-                #开空单（卖出借仓）
-                #空单市场价要高于你的卖出价，才能成交
-                if not isTrendComing and float(self.cur_market_future_price) >= float(self.future_sell_price) and not self.nearly_full_position():
+                # 开空单（卖出借仓）
+                # 空单市场价要高于你的卖出价，才能成交
+                if not isTrendComing and float(self.cur_market_future_price) >= float(
+                        self.future_sell_price) and not self.nearly_full_position():
                     future_res = self.open_short(time_format)
 
-                #平掉空单（买入获利）
-                #空单市场价要低于你的买回价，才能成交
-                #要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
-                elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price) * (1 + self.handling_ratio):
+                # 平掉空单（买入获利）
+                # 空单市场价要低于你的买回价，才能成交
+                # 要买回时，市场价也要小于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果min(buy_price,market_price) > get_last_future_price, 会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
+                elif not isTrendComing and float(self.cur_market_future_price) <= float(self.future_buy_price) * (
+                        1 + self.handling_ratio):
                     future_res = self.close_short(time_format, False, self.cur_market_future_price)
 
-                if (spot_res is None or not 'orderId' in spot_res.keys()) and (future_res is None or not 'orderId' in future_res.keys()):
+                if (spot_res is None or not 'orderId' in spot_res.keys()) and (
+                        future_res is None or not 'orderId' in future_res.keys()):
                     print("这个价格这轮没有买卖成功，开启下一轮")
-                    self.save_trade_to_file(time_format, [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
+                    self.save_trade_to_file(time_format,
+                                            [' ' + time_format, self.cur_market_future_price, "", "", "", ""])
                 elif self.crazy_buy and spot_open_long_res and not (future_res and 'orderId' in future_res.keys()):
                     # 走这里的话，会在同一价位一直买一直买，建议低位时把self.crazy_buy设置为True
                     # 因为狂买模式不要一直触发不然会爆仓，所以还是在建底仓的时候做
@@ -448,27 +468,87 @@ class HengedGrid(object):
                 break
 
         print('loop结束了')
-        all_invests = sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]) + sum([float(tmp_future) for tmp_future in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0])
-        msg1 = '总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str(float(all_invests) * float(self.quantity)) + '， 曾经最多投资额数：' + str(dynamicConfig.total_invest) + self.grid_run_time
+        all_invests = sum([float(tmp_spot) for tmp_spot in dynamicConfig.record_spot_price] if len(
+            dynamicConfig.record_spot_price) > 0 else [0]) + sum(
+            [float(tmp_future) for tmp_future in dynamicConfig.record_future_price] if len(
+                dynamicConfig.record_future_price) > 0 else [0])
+        msg1 = '总结，最终收益：' + str(dynamicConfig.total_earn) + ', 所有仓位数：' + str(
+            dynamicConfig.spot_step + dynamicConfig.future_step) + '， 目前投资额:' + str(
+            float(all_invests) * float(self.quantity)) + '， 曾经最多投资额数：' + str(
+            dynamicConfig.total_invest) + self.grid_run_time
         msg2 = ''
         msg3 = ''
         print(msg1)
-        tmp_list2 = [float(tmp) for tmp in dynamicConfig.record_spot_price] if len(dynamicConfig.record_spot_price) > 0 else [0]
+        tmp_list2 = [float(tmp) for tmp in dynamicConfig.record_spot_price] if len(
+            dynamicConfig.record_spot_price) > 0 else [0]
         tmp_list_result2 = 0
         for ttt in tmp_list2:
             tmp_list_result2 += ttt
         if len(dynamicConfig.record_spot_price) > 0:
-            msg2 = '，多单浮动盈亏：' + str((float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(self.quantity))
+            msg2 = '，多单浮动盈亏：' + str(
+                (float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(
+                    self.quantity))
             print(msg2)
-        tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price] if len(dynamicConfig.record_future_price) > 0 else [0]
+        tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price] if len(
+            dynamicConfig.record_future_price) > 0 else [0]
         tmp_list_result = 0
         for ttt in tmp_list:
             tmp_list_result += ttt
         if len(dynamicConfig.record_future_price) > 0:
-            msg3 = ', 空单浮动盈亏：' + str((tmp_list_result / len(dynamicConfig.record_future_price) - float(self.cur_market_future_price)) * float(self.quantity))
+            msg3 = ', 空单浮动盈亏：' + str((tmp_list_result / len(dynamicConfig.record_future_price) - float(
+                self.cur_market_future_price)) * float(self.quantity))
         Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
         stop_singal_from_client = False
+        if config.platform == 'test':
+            backtest_result = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
+                int(self.rows[0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
+                round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(all_invests)
+            print(backtest_result)
+            dynamicConfig.total_earn = 0
+            dynamicConfig.record_spot_price = []
+            all_invests = 0
+            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as df:
+                df.write(backtest_result + '\n')
+
+    def run(self):
+
+        print("HengedGrid, run()")
+        print("--------------初始准备阶段开始！---------------")
+        self.getMoney()
+        # while(True):
+        kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/UNIBUSD-1m-2021-12-01.csv'
+        with open(kline_path, 'r', encoding='utf-8') as df:
+            # test
+            read = csv.reader(df)
+            self.rows = [row for row in read]
+            # index = CalcIndex(self.rows)
+
+        # official
+
+        #test
+        ratio_list = []#[0.8, 0.25, 0.5]
+        ratio_list = np.arange(0.1, 1.1, 0.1)
+        martin_list = np.arange(1, 5, 1)
+        # for i in range(0, 10, 1/10):
+        #     ratio_list.append(i)
+        print(str(ratio_list))
         time.sleep(10)
+        for j in range(0, len(martin_list)):
+            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
+                dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
+            if config.platform == 'test':
+                self.end_martin_grid = martin_list[j]
+            for i in range(0, len(ratio_list)):
+                if config.platform == 'test':
+                    fc.ratio_up_or_down = ratio_list[i]
+                    fc.ratio_no_trendency = ratio_list[i]
+
+                self.loop_one_ratio()
+                if config.platform != 'test':
+                    break
+
+
+                # time.sleep(5)
 
     def set_ratio_and_price(self, set_side = ''):
         self.set_spot_ratio()
