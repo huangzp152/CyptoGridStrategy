@@ -92,16 +92,16 @@ class HengedGrid(object):
         return ret['leverage']
 
     def addMoney(self, money):
-        res = float(self.getMoney()) + float(money)
-        with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
-            df.write(str(res))
-        pass
+            res = float(self.getMoney()) + float(money)
+            if config.platform == 'test':
+                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
+                    df.write(str(res))
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
-        with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
-            df.write(str(res))
-        pass
+        if config.platform == 'test':
+            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
+                df.write(str(res))
 
     def loop_one_ratio(self):
         index = CalcIndex()
