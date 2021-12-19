@@ -219,7 +219,7 @@ class HengedGrid(object):
         # for i in range(0, len(rows)):
         #     print("cur_market_price:" + str(rows[i][4]))
 
-        while not fc.stop_singal_from_client and (True if (config.platform == 'test' and loop_count < len(self.rows)) else False):
+        while not fc.stop_singal_from_client or (True if (config.platform == 'test' and loop_count < len(self.rows)) else False):
             print('loop, count:' + str(loop_count))
             # test
             # for i in range(6, len(self.rows)):
@@ -568,37 +568,35 @@ class HengedGrid(object):
             # index = CalcIndex(self.rows)
 
         # official
-
+        if config.platform != 'test':
+            self.loop_one_ratio()
+        else:
         #test
-        symbol_list = ['BTCBUSD', 'ETHBUSD', 'UNIBUSD', 'FTTUSD', 'DOTUSDT']# 交易对范围
-        ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
-        martin_list = np.arange(1, 26, 5) # 马丁格子数范围
-        # for i in range(0, 10, 1/10):
-        #     ratio_list.append(i)
-        print(str(ratio_list))
-        time.sleep(10)
-        for l in range(0, len(symbol_list)):
-            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt',
-                      'a+') as dfout:
-                dfout.write(str(symbol_list[l]) + '交易对' + '\n')
-                if config.platform == 'test':
-                    config.symbol = symbol_list[l]
-            for j in range(0, len(martin_list)):# 前多少为马丁
-                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
-                    dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
-                if config.platform == 'test':
-                    self.end_martin_grid = martin_list[j]
-                for i in range(0, len(ratio_list)):
+            symbol_list = ['BTCBUSD', 'ETHBUSD', 'UNIBUSD', 'FTTUSD', 'DOTUSDT']# 交易对范围
+            ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
+            martin_list = np.arange(1, 26, 5) # 马丁格子数范围
+            # for i in range(0, 10, 1/10):
+            #     ratio_list.append(i)
+            print(str(ratio_list))
+            time.sleep(10)
+            for l in range(0, len(symbol_list)):
+                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt',
+                          'a+') as dfout:
+                    dfout.write(str(symbol_list[l]) + '交易对' + '\n')
                     if config.platform == 'test':
-                        fc.ratio_up_or_down = ratio_list[i]
-                        fc.ratio_no_trendency = ratio_list[i]
+                        config.symbol = symbol_list[l]
+                for j in range(0, len(martin_list)):# 前多少为马丁
+                    with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
+                        dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
+                    if config.platform == 'test':
+                        self.end_martin_grid = martin_list[j]
+                    for i in range(0, len(ratio_list)):
+                        if config.platform == 'test':
+                            fc.ratio_up_or_down = ratio_list[i]
+                            fc.ratio_no_trendency = ratio_list[i]
+                        self.loop_one_ratio()
 
-                    self.loop_one_ratio()
-                    if config.platform != 'test':
-                        break
-
-
-                    # time.sleep(5)
+                        # time.sleep(5)
 
     def set_ratio_and_price(self, set_side = ''):
         self.set_spot_ratio()
