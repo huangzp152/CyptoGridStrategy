@@ -21,6 +21,9 @@ import sys
 
 import numpy as np
 
+import requests
+import zipfile
+
 sys.path.append("/home/code/mac/binance")
 sys.path.append("/home/code/binance")
 from cmd_receive_uni import fc, app
@@ -216,7 +219,7 @@ class HengedGrid(object):
         # for i in range(0, len(rows)):
         #     print("cur_market_price:" + str(rows[i][4]))
 
-        while not fc.stop_singal_from_client and loop_count < len(self.rows):
+        while not fc.stop_singal_from_client and (True if (config.platform == 'test' and loop_count < len(self.rows)) else False):
             print('loop, count:' + str(loop_count))
             # test
             # for i in range(6, len(self.rows)):
@@ -516,39 +519,85 @@ class HengedGrid(object):
         print("--------------初始准备阶段开始！---------------")
         self.getMoney()
         # while(True):
-        kline_path = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/UNIBUSD-1m-2021-12-01.csv'
-        with open(kline_path, 'r', encoding='utf-8') as df:
-            # test
-            read = csv.reader(df)
-            self.rows = [row for row in read]
+        self.rows = []
+        base_url = 'https://data.binance.vision/data/spot/daily/klines/UNIBUSD/1m/'
+        for k in range(-1, -5, -1):
+            timestamp = time.time() + 86400 * k
+            date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
+            kline_path = base_url + config.symbol + '-1m-' + date + '.zip'
+            file_name = kline_path.split('/')[-1]
+            r = requests.get(kline_path, stream=True)
+            save_path = '/Users/zipinghuang/Downloads/' + file_name
+            with open(save_path, 'wb') as wb:
+                for trunk in r.iter_content(128):
+                    wb.write(trunk)
+            is_zipfile = zipfile.is_zipfile(save_path)
+            if is_zipfile:
+                fz = zipfile.ZipFile(save_path, 'r')
+                for file in fz.namelist():
+                    fz.extract(file, '/Users/zipinghuang/Downloads/')
+                os.remove(save_path)
+                with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
+                    read = csv.reader(df)
+                    tmp = [row for row in read]
+                    self.rows.extend(tmp)
+                    print("self.row len:" + str(len(self.rows)))
+
+            # with requests.Session() as s:
+            #     download = s.get(kline_path)
+            #     with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'r',
+            #               encoding='utf-8') as df:
+            #         reader = csv.reader(download.content.decode('gbk').splitlines(), delimiter=',')
+            #         tmp = list(reader)
+
+                # decoded_content = download.content.decode('utf-8')
+                # cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+                # tmp = list(cr)
+                # self.rows.extend(tmp)
+
+            # with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'wb') as w:
+            #     w.write(r.content.decode('utf-8'))
+            # with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'r', encoding='utf-8') as df:
+            #     test
+                # read = csv.reader(df)
+                # tmp = [row for row in read]
+                # self.rows.append(tmp)
+                # print("self.row len:" + str(len(self.rows)))
+                # time.sleep(5)
             # index = CalcIndex(self.rows)
 
         # official
 
         #test
-        ratio_list = []#[0.8, 0.25, 0.5]
-        ratio_list = np.arange(0.1, 1.1, 0.1)
-        martin_list = np.arange(1, 5, 1)
+        symbol_list = ['BTCBUSD', 'ETHBUSD', 'UNIBUSD', 'FTTUSD', 'DOTUSDT']# 交易对范围
+        ratio_list = np.arange(0.4, 1.6, 0.1)# 利率范围
+        martin_list = np.arange(5, 25, 5) # 马丁格子数范围
         # for i in range(0, 10, 1/10):
         #     ratio_list.append(i)
         print(str(ratio_list))
         time.sleep(10)
-        for j in range(0, len(martin_list)):
-            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
-                dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
-            if config.platform == 'test':
-                self.end_martin_grid = martin_list[j]
-            for i in range(0, len(ratio_list)):
+        for l in range(0, len(symbol_list)):
+            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt',
+                      'a+') as dfout:
+                dfout.write(str(symbol_list[l]) + '交易对' + '\n')
                 if config.platform == 'test':
-                    fc.ratio_up_or_down = ratio_list[i]
-                    fc.ratio_no_trendency = ratio_list[i]
+                    config.symbol = symbol_list[l]
+            for j in range(0, len(martin_list)):# 前多少为马丁
+                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
+                    dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
+                if config.platform == 'test':
+                    self.end_martin_grid = martin_list[j]
+                for i in range(0, len(ratio_list)):
+                    if config.platform == 'test':
+                        fc.ratio_up_or_down = ratio_list[i]
+                        fc.ratio_no_trendency = ratio_list[i]
 
-                self.loop_one_ratio()
-                if config.platform != 'test':
-                    break
+                    self.loop_one_ratio()
+                    if config.platform != 'test':
+                        break
 
 
-                # time.sleep(5)
+                    # time.sleep(5)
 
     def set_ratio_and_price(self, set_side = ''):
         self.set_spot_ratio()
