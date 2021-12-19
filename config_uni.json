@@ -1,5 +1,5 @@
 {
-  "platform": "test",
+  "platform": "binance_future_test",
   "symbol": "UNIBUSD",
   "coin": "BUSD",
   "api_key": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",

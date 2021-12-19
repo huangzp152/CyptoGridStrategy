@@ -520,28 +520,29 @@ class HengedGrid(object):
         self.getMoney()
         # while(True):
         self.rows = []
-        base_url = 'https://data.binance.vision/data/spot/daily/klines/UNIBUSD/1m/'
-        for k in range(-1, -5, -1):
-            timestamp = time.time() + 86400 * k
-            date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
-            kline_path = base_url + config.symbol + '-1m-' + date + '.zip'
-            file_name = kline_path.split('/')[-1]
-            r = requests.get(kline_path, stream=True)
-            save_path = '/Users/zipinghuang/Downloads/' + file_name
-            with open(save_path, 'wb') as wb:
-                for trunk in r.iter_content(128):
-                    wb.write(trunk)
-            is_zipfile = zipfile.is_zipfile(save_path)
-            if is_zipfile:
-                fz = zipfile.ZipFile(save_path, 'r')
-                for file in fz.namelist():
-                    fz.extract(file, '/Users/zipinghuang/Downloads/')
-                os.remove(save_path)
-                with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
-                    read = csv.reader(df)
-                    tmp = [row for row in read]
-                    self.rows.extend(tmp)
-                    print("self.row len:" + str(len(self.rows)))
+        if config.platform == 'test':
+            base_url = 'https://data.binance.vision/data/spot/daily/klines/UNIBUSD/1m/'
+            for k in range(-1, -5, -1):
+                timestamp = time.time() + 86400 * k
+                date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
+                kline_path = base_url + config.symbol + '-1m-' + date + '.zip'
+                file_name = kline_path.split('/')[-1]
+                r = requests.get(kline_path, stream=True)
+                save_path = '/Users/zipinghuang/Downloads/' + file_name
+                with open(save_path, 'wb') as wb:
+                    for trunk in r.iter_content(128):
+                        wb.write(trunk)
+                is_zipfile = zipfile.is_zipfile(save_path)
+                if is_zipfile:
+                    fz = zipfile.ZipFile(save_path, 'r')
+                    for file in fz.namelist():
+                        fz.extract(file, '/Users/zipinghuang/Downloads/')
+                    os.remove(save_path)
+                    with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
+                        read = csv.reader(df)
+                        tmp = [row for row in read]
+                        self.rows.extend(tmp)
+                        print("self.row len:" + str(len(self.rows)))
 
             # with requests.Session() as s:
             #     download = s.get(kline_path)
@@ -570,8 +571,8 @@ class HengedGrid(object):
 
         #test
         symbol_list = ['BTCBUSD', 'ETHBUSD', 'UNIBUSD', 'FTTUSD', 'DOTUSDT']# 交易对范围
-        ratio_list = np.arange(0.4, 1.6, 0.1)# 利率范围
-        martin_list = np.arange(5, 25, 5) # 马丁格子数范围
+        ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
+        martin_list = np.arange(1, 26, 5) # 马丁格子数范围
         # for i in range(0, 10, 1/10):
         #     ratio_list.append(i)
         print(str(ratio_list))
