@@ -64,11 +64,13 @@ class HengedGrid(object):
         self.end_martin_grid = fc.end_martin_grid
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
+        self.is_mac = False
+        self.computer_path_base = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/' if self.is_mac else 'G:\\PersonalFiles\\binance_grid_trader-master\\'
         pass
 
     def getMoney(self):
         if config.platform == 'test':
-            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account.txt', 'r+', encoding='utf-8') as df:
+            with open(self.computer_path_base + 'data/test_account.txt', 'r+', encoding='utf-8') as df:
                 res = str(df.read())
                 print("backtest account money:" + res)
                 return res
@@ -94,13 +96,13 @@ class HengedGrid(object):
     def addMoney(self, money):
             res = float(self.getMoney()) + float(money)
             if config.platform == 'test':
-                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
+                with open(self.computer_path_base + 'data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
                     df.write(str(res))
 
     def decreaseMoney(self, money):
         res = float(self.getMoney()) - float(money)
         if config.platform == 'test':
-            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
+            with open(self.computer_path_base + 'data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
                 df.write(str(res))
 
     def loop_one_ratio(self):
@@ -510,7 +512,7 @@ class HengedGrid(object):
             dynamicConfig.total_earn = 0
             dynamicConfig.record_spot_price = []
             all_invests = 0
-            with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as df:
+            with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as df:
                 df.write(backtest_result + '\n')
 
     def run(self):
@@ -528,7 +530,7 @@ class HengedGrid(object):
                 kline_path = base_url + config.symbol + '-1m-' + date + '.zip'
                 file_name = kline_path.split('/')[-1]
                 r = requests.get(kline_path, stream=True)
-                save_path = '/Users/zipinghuang/Downloads/' + file_name
+                save_path = self.computer_path_base + 'backtest/' + file_name
                 with open(save_path, 'wb') as wb:
                     for trunk in r.iter_content(128):
                         wb.write(trunk)
@@ -536,7 +538,7 @@ class HengedGrid(object):
                 if is_zipfile:
                     fz = zipfile.ZipFile(save_path, 'r')
                     for file in fz.namelist():
-                        fz.extract(file, '/Users/zipinghuang/Downloads/')
+                        fz.extract(file, self.computer_path_base + 'backtest/')
                     os.remove(save_path)
                     with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
                         read = csv.reader(df)
@@ -580,13 +582,13 @@ class HengedGrid(object):
             print(str(ratio_list))
             time.sleep(10)
             for l in range(0, len(symbol_list)):
-                with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt',
+                with open(self.computer_path_base + 'backtest/backtest_result.txt',
                           'a+') as dfout:
                     dfout.write(str(symbol_list[l]) + '交易对' + '\n')
                     if config.platform == 'test':
                         config.symbol = symbol_list[l]
                 for j in range(0, len(martin_list)):# 前多少为马丁
-                    with open('/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/backtest/backtest_result.txt', 'a+') as dfout:
+                    with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as dfout:
                         dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
                     if config.platform == 'test':
                         self.end_martin_grid = martin_list[j]
@@ -680,7 +682,7 @@ class HengedGrid(object):
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
-            spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, float(spot_quantity), price=str(price))
+            spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.SELL, order_type, self.quantity if tickOutBottom is True else float(spot_quantity), price=str(price))
             if order_type == OrderType.LIMIT and tickOutBottom is True:
                 print('price:' + price + ' 挂平仓多单了')
                 return {}
