@@ -114,7 +114,7 @@ class HengedGrid(object):
             self.init_record_price_list()
         # 获得市场价 todo，将来做多的可以改为合约做多，便于使用杠杆
         # self.cur_market_spot_price = self.http_client_spot.get_latest_price(config.symbol).get('price')
-        self.cur_market_future_price = self.rows[0][
+        self.cur_market_future_price = self.rows[config.symbol][0][
             4] if config.platform == "test" else self.http_client_spot.get_latest_price(config.symbol).get(
             'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
         # 设定精度，无所谓现货或者合约
@@ -221,7 +221,7 @@ class HengedGrid(object):
         # for i in range(0, len(rows)):
         #     print("cur_market_price:" + str(rows[i][4]))
 
-        while not fc.stop_singal_from_client or (True if (config.platform == 'test' and loop_count < len(self.rows)) else False):
+        while not fc.stop_singal_from_client or (True if (config.platform == 'test' and loop_count < len(self.rows[config.symbol])) else False):
             print('loop, count:' + str(loop_count))
             # test
             # for i in range(6, len(self.rows)):
@@ -300,7 +300,7 @@ class HengedGrid(object):
                     isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 else:
                     isTrendComing = False
-                self.cur_market_future_price = self.rows[loop_count][
+                self.cur_market_future_price = self.rows[config.symbol][loop_count][
                     4] if config.platform == 'test' else self.http_client_spot.get_latest_price(config.symbol).get(
                     'price')  # self.http_client_future.get_latest_price(config.symbol).get('price')
                 loop_count = loop_count + 1
@@ -506,7 +506,7 @@ class HengedGrid(object):
         stop_singal_from_client = False
         if config.platform == 'test':
             backtest_result = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
-                int(self.rows[0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
+                int(self.rows[config.symbol][0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
                 round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(all_invests)
             print(backtest_result)
             dynamicConfig.total_earn = 0
@@ -521,30 +521,36 @@ class HengedGrid(object):
         print("--------------初始准备阶段开始！---------------")
         self.getMoney()
         # while(True):
-        self.rows = []
+
+        self.rows = {}
+        symbol_list = ['UNIBUSD', 'BTCBUSD', 'ETHBUSD']
         if config.platform == 'test':
-            base_url = 'https://data.binance.vision/data/spot/daily/klines/UNIBUSD/1m/'
-            for k in range(-1, -5, -1):
-                timestamp = time.time() + 86400 * k
-                date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
-                kline_path = base_url + config.symbol + '-1m-' + date + '.zip'
-                file_name = kline_path.split('/')[-1]
-                r = requests.get(kline_path, stream=True)
-                save_path = self.computer_path_base + 'backtest/' + file_name
-                with open(save_path, 'wb') as wb:
-                    for trunk in r.iter_content(128):
-                        wb.write(trunk)
-                is_zipfile = zipfile.is_zipfile(save_path)
-                if is_zipfile:
-                    fz = zipfile.ZipFile(save_path, 'r')
-                    for file in fz.namelist():
-                        fz.extract(file, self.computer_path_base + 'backtest/')
-                    # os.remove(save_path)
-                    with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
-                        read = csv.reader(df)
-                        tmp = [row for row in read]
-                        self.rows.extend(tmp)
-                        print("self.row len:" + str(len(self.rows)))
+              # 交易对范围
+            for m in range(0, len(symbol_list)):
+                self.rows[symbol_list[m]] = []
+                for k in range(-1, -5, -1):
+                    timestamp = time.time() + 86400 * k
+                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
+                    base_url = 'https://data.binance.vision/data/spot/daily/klines/' + symbol_list[m] + '/1m/'
+                    kline_path = base_url + symbol_list[m] + '-1m-' + date + '.zip'
+                    file_name = kline_path.split('/')[-1]
+                    r = requests.get(kline_path, stream=True)
+                    save_path = self.computer_path_base + 'backtest/' + file_name
+                    with open(save_path, 'wb') as wb:
+                        for trunk in r.iter_content(128):
+                            wb.write(trunk)
+                    is_zipfile = zipfile.is_zipfile(save_path)
+                    if is_zipfile:
+                        fz = zipfile.ZipFile(save_path, 'r')
+                        for file in fz.namelist():
+                            fz.extract(file, self.computer_path_base + 'backtest/')
+                        # os.remove(save_path)
+                        with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
+                            read = csv.reader(df)
+                            tmp = [row for row in read]
+                            print("self.rowasdas")
+                            self.rows[symbol_list[m]].extend(tmp)
+                            print("self.row len:" + str(len(self.rows[symbol_list[m]])))
 
             # with requests.Session() as s:
             #     download = s.get(kline_path)
@@ -574,9 +580,8 @@ class HengedGrid(object):
             self.loop_one_ratio()
         else:
         #test
-            symbol_list = ['FTTUSD', 'BTCBUSD', 'ETHBUSD']# 交易对范围
             ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
-            martin_list = np.arange(1, 26, 5) # 马丁格子数范围
+            martin_list = np.arange(6, 26, 5) # 马丁格子数范围
             # for i in range(0, 10, 1/10):
             #     ratio_list.append(i)
             print(str(ratio_list))
@@ -681,7 +686,7 @@ class HengedGrid(object):
                 time_inforce = "GTC"
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_spot_price = sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)
-            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_spot_price)-1))/ (1 - 1.5) if (len(dynamicConfig.record_spot_price) > 1) else 1)
+            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_spot_price)-1))/ (1 - 1.5) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
@@ -806,7 +811,7 @@ class HengedGrid(object):
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_future_price = sum([float(item) for item in dynamicConfig.record_future_price]) / len(dynamicConfig.record_future_price)
             open_future_price = current_average_future_price if isMartin else self.get_last_future_price()
-            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_future_price) - 1)) / (1 - 1.5) if (len(dynamicConfig.record_future_price) > 1) else 1)
+            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_future_price) - 1)) / (1 - 1.5) if ((len(dynamicConfig.record_future_price) > 1) and isMartin) else 1)
             future_quantity = self.current_all_future_quantity if isMartin else self.quantity
             print("current_average_future_price:" + str(current_average_future_price) + ", self.current_all_future_quantity:" + str(self.current_all_future_quantity) + ", future_quantity:" + str(future_quantity) + ", open_future_price:" + str(open_future_price))
             future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, future_quantity, price, time_inforce)
