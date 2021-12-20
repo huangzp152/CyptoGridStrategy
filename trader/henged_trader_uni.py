@@ -539,7 +539,7 @@ class HengedGrid(object):
                     fz = zipfile.ZipFile(save_path, 'r')
                     for file in fz.namelist():
                         fz.extract(file, self.computer_path_base + 'backtest/')
-                    os.remove(save_path)
+                    # os.remove(save_path)
                     with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
                         read = csv.reader(df)
                         tmp = [row for row in read]
@@ -574,7 +574,7 @@ class HengedGrid(object):
             self.loop_one_ratio()
         else:
         #test
-            symbol_list = ['BTCBUSD', 'ETHBUSD', 'UNIBUSD', 'FTTUSD', 'DOTUSDT']# 交易对范围
+            symbol_list = ['FTTUSD', 'BTCBUSD', 'ETHBUSD']# 交易对范围
             ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
             martin_list = np.arange(1, 26, 5) # 马丁格子数范围
             # for i in range(0, 10, 1/10):
