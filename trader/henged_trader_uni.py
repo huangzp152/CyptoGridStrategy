@@ -64,7 +64,7 @@ class HengedGrid(object):
         self.end_martin_grid = fc.end_martin_grid
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
-        self.is_mac = False
+        self.is_mac = True
         self.computer_path_base = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/' if self.is_mac else 'G:\\PersonalFiles\\binance_grid_trader-master\\'
         pass
 
@@ -635,12 +635,15 @@ class HengedGrid(object):
         # test
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
-        spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, float(self.quantity), price=str(round(float(self.cur_market_future_price), 2)))
+        isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
+        quantity = float(self.quantity) * pow(1.5, len(dynamicConfig.record_spot_price)+1) if isMartin else float(self.quantity)
+        print('quantity::' + str(quantity))
+        spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price=str(round(float(self.cur_market_future_price), 2)))
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
-            self.decreaseMoney(float(self.cur_market_future_price) * float(self.quantity))
-            dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
+            self.decreaseMoney(float(self.cur_market_future_price) * quantity)
+            dynamicConfig.total_invest += float(self.cur_market_future_price) * quantity
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
@@ -678,7 +681,7 @@ class HengedGrid(object):
                 time_inforce = "GTC"
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_spot_price = sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)
-            self.current_all_spot_quantity = self.quantity * ((len(dynamicConfig.record_spot_price) - 1) if (len(dynamicConfig.record_spot_price) > 1) else 1)
+            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_spot_price)-1))/ (1 - 1.5) if (len(dynamicConfig.record_spot_price) > 1) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
@@ -756,13 +759,15 @@ class HengedGrid(object):
         # future_res
         # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(future_res)
-        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, "SHORT", OrderType.MARKET, self.quantity, round(float(self.cur_market_future_price), 2),"")
+        isMartin = True if len(dynamicConfig.record_future_price) <= self.end_martin_grid else False
+        quantity = float(self.quantity) * pow(1.5, len(dynamicConfig.record_future_price) + 1) if isMartin else float(self.quantity)
+        future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, "SHORT", OrderType.MARKET, quantity, round(float(self.cur_market_future_price), 2),"")
 
         if future_res and 'orderId' in future_res.keys():
             print("开空单成功")
             Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份空单了！")
-            self.addMoney(float(self.cur_market_future_price) * float(self.quantity))
-            dynamicConfig.total_invest += float(self.cur_market_future_price) * float(self.quantity)
+            self.addMoney(float(self.cur_market_future_price) * quantity)
+            dynamicConfig.total_invest += float(self.cur_market_future_price) * quantity
             self.add_record_future_price(self.cur_market_future_price)  # 以市场价买入才划算
             self.set_future_step(self.future_step + 1)
             dynamicConfig.total_steps += 1
@@ -801,7 +806,7 @@ class HengedGrid(object):
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_future_price = sum([float(item) for item in dynamicConfig.record_future_price]) / len(dynamicConfig.record_future_price)
             open_future_price = current_average_future_price if isMartin else self.get_last_future_price()
-            self.current_all_future_quantity = ((len(dynamicConfig.record_future_price) -1) if (len(dynamicConfig.record_future_price) > 1) else 1)
+            self.current_all_spot_quantity = self.quantity * (1.5 * (1 - pow(1.5, len(dynamicConfig.record_future_price) - 1)) / (1 - 1.5) if (len(dynamicConfig.record_future_price) > 1) else 1)
             future_quantity = self.current_all_future_quantity if isMartin else self.quantity
             print("current_average_future_price:" + str(current_average_future_price) + ", self.current_all_future_quantity:" + str(self.current_all_future_quantity) + ", future_quantity:" + str(future_quantity) + ", open_future_price:" + str(open_future_price))
             future_res = self.http_client_future.place_order(config.symbol, OrderSide.BUY, "SHORT", order_type, future_quantity, price, time_inforce)
