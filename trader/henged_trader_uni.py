@@ -365,8 +365,9 @@ class HengedGrid(object):
                 msg7 = ''
                 msg8 = ''
                 if self.grid_side == 'LONG':
-                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "，这份【多单卖出价】" + str(tag) + "：" + str(
-                        self.spot_sell_price)
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5, len(dynamicConfig.record_spot_price)) if isMartin else 1)) + "，这份【多单卖出价】" + str(tag) + "：" + str(
+                        self.spot_sell_price) + "， 数量：" + str(self.quantity * (1.5 * (1 - 1 - pow(1.5, len(dynamicConfig.record_spot_price)))/ (1 - 1.5) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
+)
                     print(msg7)
                 elif self.grid_side == "SHORT":
                     msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
@@ -685,7 +686,7 @@ class HengedGrid(object):
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
             tag = '【马丁】' if isMartin else '【网格】'
-            current_average_spot_price = sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price)
+            current_average_spot_price = sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / (1.5 * (1 - pow(1.5, len(dynamicConfig.record_spot_price))) / (1 - 1.5))
             self.current_all_spot_quantity = self.quantity * (1.5 * (1 - 1 - pow(1.5, len(dynamicConfig.record_spot_price)))/ (1 - 1.5) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = self.current_all_spot_quantity if isMartin else self.quantity
