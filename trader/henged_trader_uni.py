@@ -365,7 +365,7 @@ class HengedGrid(object):
                 msg7 = ''
                 msg8 = ''
                 if self.grid_side == 'LONG':
-                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5, len(dynamicConfig.record_spot_price)) if isMartin else 1)) + "，这份【多单卖出价】" + str(tag) + "：" + str(
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5, len(dynamicConfig.record_spot_price) + 1) if isMartin else 1)) + "，这份【多单卖出价】" + str(tag) + "：" + str(
                         self.spot_sell_price) + "， 数量：" + str(self.quantity * (1.5 * (1 - 1 - pow(1.5, len(dynamicConfig.record_spot_price)))/ (1 - 1.5) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
 )
                     print(msg7)
