@@ -366,7 +366,7 @@ class HengedGrid(object):
                 msg8 = ''
                 if self.grid_side == 'LONG':
                     msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5, len(dynamicConfig.record_spot_price) + 1) if isMartin else 1)) + "，这份【多单卖出价】" + str(tag) + "：" + str(
-                        self.spot_sell_price) + "， 数量：" + str(self.quantity * (sum([pow(1.5, i) for i in range(2, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
+                        self.spot_sell_price) + "， 数量：" + str(self.quantity * (sum([pow(1.5, i) for i in range(1, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
 )
                     print(msg7)
                 elif self.grid_side == "SHORT":
@@ -687,7 +687,7 @@ class HengedGrid(object):
                 time_inforce = "GTC"
             tag = '【马丁】' if isMartin else '【网格】'
             current_average_spot_price = sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / (1.5 * (1 - pow(1.5, len(dynamicConfig.record_spot_price))) / (1 - 1.5))
-            self.current_all_spot_quantity = self.quantity * (sum([pow(1.5, i) for i in range(2, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
+            self.current_all_spot_quantity = self.quantity * (sum([pow(1.5, i) for i in range(1, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = round(self.current_all_spot_quantity if isMartin else self.quantity, 2)
             print("self.end_martin_grid:" +str(self.end_martin_grid) + ", len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)) + ", " + tag + "current_average_spot_price:" + str(current_average_spot_price) + ", self.current_all_spot_quantity:" + str(self.current_all_spot_quantity) + ", spot_quantity:" + str(spot_quantity) + ", open_spot_price:" + str(open_spot_price) + "， price：" + str(price))
