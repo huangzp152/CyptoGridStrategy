@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 自己学习理解的策略
 带趋势判断的多空对冲网格
 
@@ -10,7 +10,7 @@
 每次获取6条五分钟趋势线，0-5分钟趋势线均价小于等于1-6分钟的话，说明在上涨
 判断趋势后面用了mk算法
 
-"""
+'''
 import csv
 import json
 import os
@@ -59,7 +59,7 @@ class HengedGrid(object):
         self.crazy_buy = fc.crazy_buy
         self.open_trend_trade = fc.open_trend_trade
         self.handling_ratio = 0.0008 # u本位买卖都是0.04%的手续费
-        self.gross_profit = 9.01
+        self.gross_profit = 0
         self.grid_run_time = ""
         self.end_martin_grid = fc.end_martin_grid
         self.current_all_spot_quantity = 0.0
@@ -104,6 +104,72 @@ class HengedGrid(object):
         if config.platform == 'test':
             with open(self.computer_path_base + 'data/test_account_%s_test.txt' % config.symbol, 'w', encoding='utf-8') as df:
                 df.write(str(res))
+
+    def run(self):
+
+        print("HengedGrid, run()")
+        print("--------------初始准备阶段开始！---------------")
+        self.getMoney()
+        # while(True):
+
+        self.rows = {}
+        symbol_list = ['UNIBUSD', 'BTCBUSD', 'ETHBUSD']
+        if config.platform == 'test':
+              # 交易对范围
+            for m in range(0, len(symbol_list)):
+                self.rows[symbol_list[m]] = []
+                for k in range(-1, -5, -1):
+                    timestamp = time.time() + 86400 * k
+                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
+                    base_url = 'https://data.binance.vision/data/spot/daily/klines/' + symbol_list[m] + '/1m/'
+                    kline_path = base_url + symbol_list[m] + '-1m-' + date + '.zip'
+                    file_name = kline_path.split('/')[-1]
+                    r = requests.get(kline_path, stream=True)
+                    save_path = self.computer_path_base + 'backtest/' + file_name
+                    with open(save_path, 'wb') as wb:
+                        for trunk in r.iter_content(128):
+                            wb.write(trunk)
+                    is_zipfile = zipfile.is_zipfile(save_path)
+                    if is_zipfile:
+                        fz = zipfile.ZipFile(save_path, 'r')
+                        for file in fz.namelist():
+                            fz.extract(file, self.computer_path_base + 'backtest/')
+                        # os.remove(save_path)
+                        with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
+                            read = csv.reader(df)
+                            tmp = [row for row in read]
+                            print("self.rowasdas")
+                            self.rows[symbol_list[m]].extend(tmp)
+                            print("self.row len:" + str(len(self.rows[symbol_list[m]])))
+        # official
+        if config.platform != 'test':
+            self.loop_one_ratio()
+        else:
+        #test
+            ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
+            martin_list = np.arange(6, 26, 5) # 马丁格子数范围
+            # for i in range(0, 10, 1/10):
+            #     ratio_list.append(i)
+            print(str(ratio_list))
+            time.sleep(10)
+            for l in range(0, len(symbol_list)):
+                with open(self.computer_path_base + 'backtest/backtest_result.txt',
+                          'a+') as dfout:
+                    dfout.write(str(symbol_list[l]) + '交易对' + '\n')
+                    if config.platform == 'test':
+                        config.symbol = symbol_list[l]
+                for j in range(0, len(martin_list)):# 前多少为马丁
+                    with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as dfout:
+                        dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
+                    if config.platform == 'test':
+                        self.end_martin_grid = martin_list[j]
+                    for i in range(0, len(ratio_list)):
+                        if config.platform == 'test':
+                            fc.ratio_up_or_down = ratio_list[i]
+                            fc.ratio_no_trendency = ratio_list[i]
+                        self.loop_one_ratio()
+
+                        # time.sleep(5)
 
     def loop_one_ratio(self):
         index = CalcIndex()
@@ -217,10 +283,6 @@ class HengedGrid(object):
 
         has_report = False
 
-        #
-        # for i in range(0, len(rows)):
-        #     print("cur_market_price:" + str(rows[i][4]))
-
         while not fc.stop_singal_from_client or (True if (config.platform == 'test' and loop_count < len(self.rows[config.symbol])) else False):
             print('loop, count:' + str(loop_count))
             # test
@@ -256,20 +318,22 @@ class HengedGrid(object):
                 # print(f"查看杠杆效果:{tmp}")
                 # print("看交易记录：" + str(self.http_client_future.get_my_trades(config.symbol)))
                 try:
-                    self.spot_money = float(self.getMoney()) if config.platform == 'test' else float(self.getAsset())
+                    self.spot_money = float(self.getMoney()) if config.platform == 'test' else float(
+                        self.getAsset())
                 except Exception as e:
                     print('exception:' + str(e))
                     time.sleep(5)
                     continue
                 # print('check account: ' + str(self.getAsset()))
-                self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
-                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + (
-                            '(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(
+                self.gross_profit = str(
+                    round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
+                msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(
+                    round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(
                     diff_time / 3600) != 0 else ''
                 msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + (
-                            '(每小时：' + str(
-                        round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100,
-                              2)) + '%)') if float(diff_time / 3600) != 0 else ''
+                            '(每小时：' + str(round(
+                        float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100,
+                        2)) + '%)') if float(diff_time / 3600) != 0 else ''
                 msg3 = '网格浮动盈亏, 多单：' + str(
                     sum([(float(self.cur_market_future_price) - float(tmp)) * float(self.quantity) for tmp in
                          dynamicConfig.record_spot_price])) + ', 空单：' + str(
@@ -297,7 +361,7 @@ class HengedGrid(object):
                 if fc.position_side == 'LONG':
                     isTrendComing = False  # index.calcTrend_MK(symbol_to_check_trend, "5m", ascending, self.demical_length)
                 elif fc.position_side == 'SHORT':
-                    isTrendComing = index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
+                    isTrendComing = False  #index.calcTrend_MK(symbol_to_check_trend, "5m", descending, self.demical_length)
                 else:
                     isTrendComing = False
                 self.cur_market_future_price = self.rows[config.symbol][loop_count][
@@ -331,7 +395,7 @@ class HengedGrid(object):
                                      len(dynamicConfig.record_future_price) - self.ease_position_share)
                 if len(dynamicConfig.record_spot_price) == len(dynamicConfig.record_future_price) and len(
                         dynamicConfig.record_spot_price) > self.ease_position_share and len(
-                        dynamicConfig.record_future_price) > self.ease_position_share:
+                    dynamicConfig.record_future_price) > self.ease_position_share:
                     msg = '减少多空持仓数量，卖掉' + str(self.ease_position_share) + '份'
                     print(msg)
                     for i in range(0, position_delta):
@@ -365,9 +429,13 @@ class HengedGrid(object):
                 msg7 = ''
                 msg8 = ''
                 if self.grid_side == 'LONG':
-                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5, len(dynamicConfig.record_spot_price) + 1) if isMartin else 1)) + "，这份【多单卖出价】" + str(tag) + "：" + str(
-                        self.spot_sell_price) + "， 数量：" + str(self.quantity * (sum([pow(1.5, i+1) for i in range(1, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
-)
+                    msg7 = "下一份多单买入价：" + str(self.spot_buy_price) + "， 数量：" + str(self.quantity * (pow(1.5,
+                                                                                                       len(dynamicConfig.record_spot_price) + 1) if isMartin else 1)) + "，这份【多单卖出价】" + str(
+                        tag) + "：" + str(
+                        self.spot_sell_price) + "， 数量：" + str(self.quantity * (
+                        sum([pow(1.5, i + 1) for i in range(1, len(dynamicConfig.record_spot_price))]) if (
+                                    (len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
+                                                              )
                     print(msg7)
                 elif self.grid_side == "SHORT":
                     msg8 = "下一份空单卖出价：" + str(self.future_sell_price) + "，这份【空单买入价】：" + str(self.future_buy_price)
@@ -405,7 +473,8 @@ class HengedGrid(object):
                         self.spot_buy_price) and not self.nearly_full_position():
                     if not self.long_bottom_position_full() or self.need_join_in_long_bottom_position_price(
                             self.cur_market_future_price):
-                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price, time_format)
+                        spot_open_long_res = self.build_long_bottom_position(self.cur_market_future_price,
+                                                                             time_format)
                     # if not spot_open_long_res:#不需要建仓
                     spot_res = self.open_long(time_format)  # 不管是否建仓，都要买一份
 
@@ -491,9 +560,8 @@ class HengedGrid(object):
         for ttt in tmp_list2:
             tmp_list_result2 += ttt
         if len(dynamicConfig.record_spot_price) > 0:
-            msg2 = '，多单浮动盈亏：' + str(
-                (float(self.cur_market_future_price) - tmp_list_result2 / len(dynamicConfig.record_spot_price)) * float(
-                    self.quantity))
+            msg2 = '，多单浮动盈亏：' + str((float(self.cur_market_future_price) - tmp_list_result2 / len(
+                dynamicConfig.record_spot_price)) * float(self.quantity))
             print(msg2)
         tmp_list = [float(tmp) for tmp in dynamicConfig.record_future_price] if len(
             dynamicConfig.record_future_price) > 0 else [0]
@@ -508,7 +576,9 @@ class HengedGrid(object):
         if config.platform == 'test':
             backtest_result = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
                 int(self.rows[config.symbol][0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
-                round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(all_invests)
+                round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(
+                round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(
+                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(all_invests)
             print(backtest_result)
             dynamicConfig.total_earn = 0
             dynamicConfig.record_spot_price = []
@@ -516,95 +586,6 @@ class HengedGrid(object):
             with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as df:
                 df.write(backtest_result + '\n')
 
-    def run(self):
-
-        print("HengedGrid, run()")
-        print("--------------初始准备阶段开始！---------------")
-        self.getMoney()
-        # while(True):
-
-        self.rows = {}
-        symbol_list = ['UNIBUSD', 'BTCBUSD', 'ETHBUSD']
-        if config.platform == 'test':
-              # 交易对范围
-            for m in range(0, len(symbol_list)):
-                self.rows[symbol_list[m]] = []
-                for k in range(-1, -5, -1):
-                    timestamp = time.time() + 86400 * k
-                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
-                    base_url = 'https://data.binance.vision/data/spot/daily/klines/' + symbol_list[m] + '/1m/'
-                    kline_path = base_url + symbol_list[m] + '-1m-' + date + '.zip'
-                    file_name = kline_path.split('/')[-1]
-                    r = requests.get(kline_path, stream=True)
-                    save_path = self.computer_path_base + 'backtest/' + file_name
-                    with open(save_path, 'wb') as wb:
-                        for trunk in r.iter_content(128):
-                            wb.write(trunk)
-                    is_zipfile = zipfile.is_zipfile(save_path)
-                    if is_zipfile:
-                        fz = zipfile.ZipFile(save_path, 'r')
-                        for file in fz.namelist():
-                            fz.extract(file, self.computer_path_base + 'backtest/')
-                        # os.remove(save_path)
-                        with open(save_path.replace('.zip', '.csv'), 'r', encoding='utf-8') as df:
-                            read = csv.reader(df)
-                            tmp = [row for row in read]
-                            print("self.rowasdas")
-                            self.rows[symbol_list[m]].extend(tmp)
-                            print("self.row len:" + str(len(self.rows[symbol_list[m]])))
-
-            # with requests.Session() as s:
-            #     download = s.get(kline_path)
-            #     with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'r',
-            #               encoding='utf-8') as df:
-            #         reader = csv.reader(download.content.decode('gbk').splitlines(), delimiter=',')
-            #         tmp = list(reader)
-
-                # decoded_content = download.content.decode('utf-8')
-                # cr = csv.reader(decoded_content.splitlines(), delimiter=',')
-                # tmp = list(cr)
-                # self.rows.extend(tmp)
-
-            # with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'wb') as w:
-            #     w.write(r.content.decode('utf-8'))
-            # with open('/Users/zipinghuang/Downloads/' + file_name.replace('zip', 'csv'), 'r', encoding='utf-8') as df:
-            #     test
-                # read = csv.reader(df)
-                # tmp = [row for row in read]
-                # self.rows.append(tmp)
-                # print("self.row len:" + str(len(self.rows)))
-                # time.sleep(5)
-            # index = CalcIndex(self.rows)
-
-        # official
-        if config.platform != 'test':
-            self.loop_one_ratio()
-        else:
-        #test
-            ratio_list = np.arange(0.3, 1.6, 0.1)# 利率范围
-            martin_list = np.arange(6, 26, 5) # 马丁格子数范围
-            # for i in range(0, 10, 1/10):
-            #     ratio_list.append(i)
-            print(str(ratio_list))
-            time.sleep(10)
-            for l in range(0, len(symbol_list)):
-                with open(self.computer_path_base + 'backtest/backtest_result.txt',
-                          'a+') as dfout:
-                    dfout.write(str(symbol_list[l]) + '交易对' + '\n')
-                    if config.platform == 'test':
-                        config.symbol = symbol_list[l]
-                for j in range(0, len(martin_list)):# 前多少为马丁
-                    with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as dfout:
-                        dfout.write('前' + str(martin_list[j]) + '格为马丁' + '\n')
-                    if config.platform == 'test':
-                        self.end_martin_grid = martin_list[j]
-                    for i in range(0, len(ratio_list)):
-                        if config.platform == 'test':
-                            fc.ratio_up_or_down = ratio_list[i]
-                            fc.ratio_no_trendency = ratio_list[i]
-                        self.loop_one_ratio()
-
-                        # time.sleep(5)
 
     def set_ratio_and_price(self, set_side = ''):
         self.set_spot_ratio()
@@ -942,7 +923,7 @@ class HengedGrid(object):
     def add_record_spot_price(self, value):
         dynamicConfig.record_spot_price.append(value)
         print('record_spot_price:' + str(dynamicConfig.record_spot_price))
-        dynamicConfig.record_spot_price.sort(reverse=True)#降序
+        #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
 
     def get_last_spot_price(self):
@@ -972,7 +953,7 @@ class HengedGrid(object):
 
     def add_record_future_price(self, value):
         dynamicConfig.record_future_price.append(value)
-        dynamicConfig.record_future_price.sort()
+        #dynamicConfig.record_future_price.sort()
         print('record_future_price:' + str(dynamicConfig.record_future_price))
         self.save_trade_info()
 
@@ -1023,7 +1004,10 @@ class HengedGrid(object):
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
         if self.end_martin_grid > 0 and len(dynamicConfig.record_spot_price) > 0 and len(dynamicConfig.record_spot_price) <= self.end_martin_grid:
             print("execute martin stragety")
-            self.spot_sell_price = (1 + dynamicConfig.spot_rising_ratio / 100) * round(sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]), 2)
+            if len(dynamicConfig.record_spot_price) == 1:
+                self.spot_sell_price = round((1 + dynamicConfig.spot_rising_ratio / 100) * max(deal_price, sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(1.5, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))])), 2)
+            else:
+                self.spot_sell_price = round((1 + dynamicConfig.spot_rising_ratio / 100) * sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(1.5, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]), 2)
             # max(round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point), (round(sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)) if len(dynamicConfig.record_spot_price) > 0 else self.spot_sell_price)
             dynamicConfig.spot_sell_price = self.spot_sell_price
             print("self.spot_sell_price：" + str(self.spot_sell_price))
@@ -1036,7 +1020,7 @@ class HengedGrid(object):
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_falling_ratio / 100), demical_point)
+        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_rising_ratio / 100), demical_point)
         self.future_sell_price = dynamicConfig.future_sell_price
         # print("设置接下来新开空单卖出的价格, " + str(self.future_sell_price))
 
@@ -1217,7 +1201,6 @@ class HengedGrid(object):
     def save_trade_info(self):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
-
         record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
 
         if config.platform == 'test':
@@ -1335,21 +1318,6 @@ class HengedGrid(object):
 
 
 if __name__ == "__main__":
-
-    # test
-    # kline_path = '/home/code/binance/backtest/UNIBUSD-1m-2021-12-01.csv'
-    # with open(kline_path, 'r', encoding='utf-8') as df:
-    #     # test
-    #     read = csv.reader(df)
-    #     rows = [row for row in read]
-    #     # index = CalcIndex(self.rows)
-    #     cur_market_price = rows[0][4]
-    #
-    # for i in range(0, len(rows)):
-    #     print("cur_market_price:" + str(rows[i][4]))
-
-    ###########################################################
-    #official
     print('=======cypto script begin======')
     error_raw = ''
     hengedGrid = None
@@ -1394,4 +1362,5 @@ if __name__ == "__main__":
         hengedGrid.save_trade_info()
         if error_raw:
             error_info = "报警：币种{coin},服务停止.错误原因{info}".format(coin=config.symbol, info=str(error_raw) + "目前盈利：")
-            Message.dingding_warn("[test]"+str(error_info))
+            Message.dingding_warn(str(error_info))
+
