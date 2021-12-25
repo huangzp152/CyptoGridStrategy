@@ -326,9 +326,16 @@ class HengedGrid(object):
                     time.sleep(5)
                     continue
                 # print('check account: ' + str(self.getAsset()))
-                print('马丁份数: ' + str(self.martin_grids))
-                print('马丁的份额: ' + str(round(float(sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * self.quantity for i in range(0, int(self.martin_grids))])), 2)))
-                self.end_martin_grid = int((self.getAsset() / round(float(sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) * float(self.quantity) for i in range(0, int(self.martin_grids))])), 2)) * 1 / 3)
+                if len(dynamicConfig.record_spot_price) <= 1:
+                    self.martin_grids = 1
+                    self.end_martin_grid = 5
+                else:
+                    self.end_martin_grid = int((float(self.getAsset()) / round(float(
+                        sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * float(self.quantity) for i in
+                             range(0, int(self.martin_grids))])), 2)) * 1 / 3)
+                print('马丁的份额: ' + str(round(float(
+                    sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * float(self.quantity) for i in
+                         range(0, int(self.martin_grids))])), 2)))
                 print('self.end_martin_grid: ' + str(self.end_martin_grid))
                 self.gross_profit = str(
                     round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
