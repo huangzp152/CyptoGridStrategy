@@ -34,7 +34,7 @@ class flaskConfig(object):
         self.ease_position_share = 50 #多空单都超过8个时，掐掉一些，减少持仓数量
         self.crazy_buy = False
         self.open_trend_trade = False
-        self.end_martin_grid = 11 # 要不设定为三分之一仓位？？
+        self.end_martin_grid = 5 # 要不设定为三分之一仓位？？
         # self.end_martin_grid = 5 # 要不设定为三分之一仓位？？
 
 

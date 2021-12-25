@@ -8,7 +8,7 @@ class Config:
 
         self.platform: str = "binance_spot"  # 交易的平台
         self.symbol: str = "BTCBUSD"  # 交易对.
-        self.coin: str = "BTC" # 要进行仓位查询的币种
+        self.coin: str = "BUSD" # 要进行仓位查询的币种
         self.gap_percent: float = 0.01  # 网格变化交易的单位.
         self.api_key: str = None
         self.api_secret: str = None
@@ -74,13 +74,14 @@ class DynamicConfig(object):
         self.spot_sell_price = 0.0000001
         self.spot_step = 0 #步数/仓位数
         self.record_spot_price = []
-        self.every_time_trade_share = 200 #33是测试的 不然过不了精度 10.1 #每次交易的份额
+        self.every_time_trade_share = 50 #33是测试的 不然过不了精度 10.1 #每次交易的份额
 
         self.future_buy_price = 9999999
         self.future_sell_price = 0.0000001
         self.future_step = 0 #步数/仓位数
         self.record_future_price = []
         self.long_bottom_position_price = []# 记录做多的底仓的价格列表
+        self.record_martin_grids = 1
 
         # test
         self.order_list = []

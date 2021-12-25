@@ -61,6 +61,7 @@ class HengedGrid(object):
         self.gross_profit = 0
         self.grid_run_time = ""
         self.end_martin_grid = fc.end_martin_grid
+        self.martin_grids = 0
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
         self.is_mac = True
@@ -324,7 +325,15 @@ class HengedGrid(object):
                     print('exception:' + str(e))
                     time.sleep(5)
                     continue
+                finally:
+                    print('')
                 # print('check account: ' + str(self.getAsset()))
+
+				# print("马丁份数:  + str(self.martin_grids)")
+                print('马丁的份额: ' + str(round(float(sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * self.quantity for i in range(0, int(self.martin_grids))])), 2)))
+                self.end_martin_grid = int((self.getAsset() / round(float(sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i+1) * float(self.quantity) for i in range(0, int(self.martin_grids))])), 2)) * 1 / 3)
+                print('self.end_martin_grid: ' + str(self.end_martin_grid))
+
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
                 msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
                 msg2 = '目前网格套利数：' + str(dynamicConfig.total_earn_grids) + ', 网格利润率：' + self.gross_profit + ('(每小时：' + str(round(float(dynamicConfig.total_earn) / float(self.spot_money) / float(diff_time / 3600) * 100, 2)) + '%)') if float(diff_time / 3600) != 0 else ''
@@ -599,6 +608,8 @@ class HengedGrid(object):
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
+                if isMartin:
+                    self.add_record_martin_grids(self.martin_grids + 1)
                 self.set_spot_share(self.spot_step + 1)
                 dynamicConfig.total_steps += 1
             else:
@@ -892,6 +903,12 @@ class HengedGrid(object):
         #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
 
+    def add_record_martin_grids(self, value):
+        dynamicConfig.record_martin_grids.append(value)
+        print('record_martin_grids:' + str(dynamicConfig.record_martin_grids))
+        #dynamicConfig.record_spot_price.sort(reverse=True)#降序
+        self.save_trade_info()
+
     def get_last_spot_price(self):
         if len(dynamicConfig.record_spot_price) == 0:
             return float(dynamicConfig.spot_buy_price)
@@ -1150,12 +1167,27 @@ class HengedGrid(object):
             if 'record_spot_price' in record_price_dict_to_file.keys():
                 print(f"record_price_dict_to_file['record_spot_price']:{record_price_dict_to_file['record_spot_price']}")
                 dynamicConfig.record_spot_price = record_price_dict_to_file['record_spot_price']
+            else:
+                self.save_part_of_trade_info(record_price_dict_to_file, 'record_spot_price', dynamicConfig.record_spot_price)
+
             if 'record_future_price' in record_price_dict_to_file.keys():
                 print(f"record_price_dict_to_file['record_future_price']:{record_price_dict_to_file['record_future_price']}")
                 dynamicConfig.record_future_price = record_price_dict_to_file['record_future_price']
+            else:
+                self.save_part_of_trade_info(record_price_dict_to_file, 'record_future_price', dynamicConfig.record_future_price)
+
             if 'long_bottom_position_price' in record_price_dict_to_file.keys():
                 print(f"record_price_dict_to_file['long_bottom_position_price']:{record_price_dict_to_file['long_bottom_position_price']}")
                 dynamicConfig.long_bottom_position_price = record_price_dict_to_file['long_bottom_position_price']
+            else:
+                self.save_part_of_trade_info(record_price_dict_to_file, 'long_bottom_position_price', dynamicConfig.long_bottom_position_price)
+
+            if 'record_martin_grids' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['record_martin_grids']:{record_price_dict_to_file['record_martin_grids']}")
+                dynamicConfig.record_martin_grids = record_price_dict_to_file['record_martin_grids']
+            else:
+                self.save_part_of_trade_info(record_price_dict_to_file, 'record_martin_grids', dynamicConfig.record_martin_grids)
+
             dynamicConfig.total_steps = len(dynamicConfig.record_spot_price) + len(dynamicConfig.record_future_price) + len(dynamicConfig.long_bottom_position_price)
 
     # def init_record_future_price_list(self):
@@ -1164,10 +1196,19 @@ class HengedGrid(object):
     #         if order.get('positionSide') == 'SHORT' and order.get('side') == OrderSide.SELL.value and order.get('status') == OrderStatus.FILLED.value:
     #             dynamicConfig.record_future_price.append(order.get('price'))
 
+    def save_part_of_trade_info(self, item, key, value):
+        item[key] = value
+        if config.platform == 'test':
+            trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
+        else:
+            trade_info_file_path = '../data/trade_info_%s.json' % config.symbol
+        with open(trade_info_file_path, "w") as df:
+            json.dump(item, df)
+
     def save_trade_info(self):
         print("存储记录的价格到文件里")
-        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}")
-        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price}
+        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}, dynamicConfig.record_martin_grids:{dynamicConfig.record_martin_grids}")
+        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price, 'dynamicConfig.record_martin_grids':{dynamicConfig.record_martin_grids}}
 
         if config.platform == 'test':
             trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
