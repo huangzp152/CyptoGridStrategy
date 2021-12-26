@@ -340,7 +340,7 @@ class HengedGrid(object):
                 print('马丁的份额: ' + str(round(float(
                     sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * float(self.quantity) for i in
                          range(0, int(self.martin_grids))])), 2)))
-                print('self.end_martin_grid: ' + str(self.end_martin_grid))
+                print('self.end_martin_grid 前多少格跑马丁: ' + str(self.end_martin_grid))
 
                 self.gross_profit = str(round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
                 msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(diff_time / 3600) != 0 else ''
@@ -1216,7 +1216,7 @@ class HengedGrid(object):
     def save_trade_info(self):
         print("存储记录的价格到文件里")
         print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}, dynamicConfig.record_martin_grids:{dynamicConfig.record_martin_grids}")
-        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price, 'dynamicConfig.record_martin_grids':{dynamicConfig.record_martin_grids}}
+        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price, 'record_martin_grids':dynamicConfig.record_martin_grids}
 
         if config.platform == 'test':
             trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
