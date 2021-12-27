@@ -903,7 +903,7 @@ class HengedGrid(object):
             if fc.open_trend_trade_singal_from_client:
                 self.open_trend_trade=fc.open_trend_trade
                 fc.open_trend_trade_singal_from_client=False
-            print("self.crazy_buy")
+            # print("self.crazy_buy")
             self.crazy_buy = fc.crazy_buy
             # current_falling_ratio = dynamicConfig.spot_falling_ratio
             #     current_rising_ratio = dynamicConfig.rising_ratio

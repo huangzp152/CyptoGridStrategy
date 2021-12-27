@@ -44,7 +44,7 @@ class ftx_future:
     def _request(self, method: str, path: str, **kwargs) -> Any:
         request = Request(method, self._ENDPOINT + path, **kwargs)
         self._sign_request(request)
-        response = self._session.send(request.prepare())
+        response = self._session.send(request.prepare(), timeout=5)
         result = ''
         for i in range(5):
             try:
