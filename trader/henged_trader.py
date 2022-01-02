@@ -604,7 +604,7 @@ class HengedGrid(object):
         # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(spot_res)
         isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
-        quantity = round(float(self.quantity) * pow(1.5, len(dynamicConfig.record_spot_price)+1) if (isMartin and not build_position_share) else float(float(self.quantity)), 3)# uni精度为整数
+        quantity = round(float(self.quantity) * pow(1.5, len(dynamicConfig.record_spot_price)+1) if (isMartin and not build_position_share) else float(self.quantity), 3)# uni精度为整数
         print('quantity::' + str(quantity))
         spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price=str(round(float(self.cur_market_future_price), 2)))
         # print('开多单完整结果：'+str(spot_res))
@@ -672,6 +672,7 @@ class HengedGrid(object):
                     if isMartin:
                         self.remove_except_first_spot_price()
                         self.change_first_spot_record_price(str(open_spot_price))
+                        self.add_record_martin_grids(1)
                     else:
                         self.remove_last_spot_price()  # 移除上次的价格 这个价格就是刚刚卖出的价格
 
@@ -731,7 +732,7 @@ class HengedGrid(object):
         # future_res= {'orderId': 'Order' + str(random.randint(1000, 10000))}
         # dynamicConfig.order_list.append(future_res)
         isMartin = True if len(dynamicConfig.record_future_price) <= self.end_martin_grid else False
-        quantity = float(self.quantity) * pow(1.5, len(dynamicConfig.record_future_price) + 1) if isMartin else float(float(self.quantity))
+        quantity = float(self.quantity) * pow(1.5, len(dynamicConfig.record_future_price) + 1) if isMartin else float(self.quantity)
         future_res = self.http_client_future.place_order(config.symbol, OrderSide.SELL, "SHORT", OrderType.MARKET, quantity, round(float(self.cur_market_future_price), 2),"")
 
         if future_res and 'orderId' in future_res.keys():
@@ -819,7 +820,7 @@ class HengedGrid(object):
                     last_get_profit_time_struct.tm_sec))
 
                 msg = tag + '【' + str(config.symbol) + '】空单买回获利了！获得：' + str(round((float(open_future_price) - float(self.cur_market_future_price)) * float(
-                        float(self.quantity)),2)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
+                        self.quantity),3)) + " usdt， 买回的价格：" + str(self.cur_market_future_price) + ", 卖出的价格:" + str(
                     open_future_price) + ", 买回的数量：" + str(future_quantity) + ', 目前总获利：' + str(dynamicConfig.total_earn) + ', 总格子数：' + str(int(dynamicConfig.total_earn_grids)) + ', 利润率：' + self.gross_profit + ', 多仓:' + str(self.spot_step) + ', 空仓:' + str(self.future_step) + ', 仓位具体信息, 多仓:' + str(dynamicConfig.record_spot_price) + ', 空仓:' + str(dynamicConfig.record_future_price) + ', 底仓：' + str(dynamicConfig.long_bottom_position_price) + ', (' + str(self.get_long_bottom_position_scale()) + '), 阈值：' + str(fc.long_bottom_position_share) + ', ' + self.grid_run_time + ', ' + self.last_get_profit_time_delta
                 print(msg)
                 Message.dingding_warn(msg)
@@ -1146,12 +1147,12 @@ class HengedGrid(object):
             for item in tmp:  # 遍历所有仓位
                 if direction:  # 多头持仓均价
                     if item['positionSide'] == "LONG":#这是合约才有的
-                        res = abs(int(float(item['positionAmt'])/float(float(self.quantity))))#  本来结果是负数
+                        res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  本来结果是负数
                         print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
                         return res
                 else:        # 空头持仓均价
                     if item['positionSide'] == "SHORT":
-                        res = abs(int(float(item['positionAmt'])/float(float(self.quantity))))#  为何买了空单后，positionamt为空
+                        res = abs(int(float(item['positionAmt'])/float(self.quantity)))#  为何买了空单后，positionamt为空
                         print(f"positionSide:{item['positionSide']}, positionAmt:{res}")
                         return res
 
@@ -1295,7 +1296,7 @@ class HengedGrid(object):
 
     def get_long_bottom_position_scale(self):
         current_position_share = (sum([float(tmp) for tmp in dynamicConfig.long_bottom_position_price]) * float(
-            float(self.quantity))) / self.spot_money
+            self.quantity)) / self.spot_money
         ret = current_position_share
         print("current_position_share:" + str(current_position_share))
         return ret
