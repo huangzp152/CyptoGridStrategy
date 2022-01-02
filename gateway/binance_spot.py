@@ -94,7 +94,7 @@ class OrderSide(Enum):
 
 class BinanceSpotHttp(object):
 
-    def __init__(self, api_key=None, secret=None, host=None, proxy_host=None, proxy_port=0, timeout=5, try_counts=5):
+    def __init__(self, api_key=None, secret=None, host=None, proxy_host=None, proxy_port=0, timeout=5, try_counts=10000):
         self.api_key = api_key
         self.secret = secret
         self.host = host if host else "https://api.binance.com"#"https://testnet.binance.vision"#"https://api.binance.com"
@@ -139,6 +139,7 @@ class BinanceSpotHttp(object):
             except Exception as error:
                 print(f"请求:{path}, 发生了错误: {error}")
                 time.sleep(3)
+        return "request_fail"
 
     def get_server_time(self):
         path = '/api/v3/time'
