@@ -62,7 +62,7 @@ class HengedGrid(object):
         self.grid_run_time = ""
         self.end_martin_grid = fc.end_martin_grid
         self.martin_grids = 0
-        self.martin_add_ratio = 1.5 
+        self.martin_add_ratio = 1
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
         self.is_mac = True
