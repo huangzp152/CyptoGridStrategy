@@ -15,9 +15,11 @@ import csv
 import json
 import os
 import random
+import signal
 import threading
 import time
 import sys
+from _signal import SIGKILL
 
 import numpy as np
 
@@ -597,6 +599,7 @@ class HengedGrid(object):
             all_invests = 0
             with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as df:
                 df.write(backtest_result + '\n')
+        os.kill(os.getpid(), SIGKILL)
 
 
     def set_ratio_and_price(self, set_side = ''):
