@@ -419,7 +419,8 @@ class HengedGrid(object):
 
 
                 if len(dynamicConfig.record_future_price) > 0:
-                    future_lost_ratio = (float(self.cur_market_future_price) - float(dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
+                    future_lost_ratio = (float(self.cur_market_future_price) - float(
+                        dynamicConfig.record_future_price[0])) / float(dynamicConfig.record_future_price[0])
                     if future_lost_ratio > self.cut_position_threshold:
                         msg = '要清掉一份仓位，不然要容易爆仓'
                         print(msg)
@@ -943,7 +944,7 @@ class HengedGrid(object):
         self.save_trade_info()
 
     def add_record_martin_grids(self, value):
-        dynamicConfig.record_martin_grids.append(str(value))
+        dynamicConfig.record_martin_grids = value
         print('record_martin_grids:' + str(dynamicConfig.record_martin_grids))
         #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()

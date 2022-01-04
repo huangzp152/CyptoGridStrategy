@@ -946,7 +946,7 @@ class HengedGrid(object):
         self.save_trade_info()
 
     def add_record_martin_grids(self, value):
-        dynamicConfig.record_martin_grids.append(str(value))
+        dynamicConfig.record_martin_grids = value
         print('record_martin_grids:' + str(dynamicConfig.record_martin_grids))
         #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()

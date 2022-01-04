@@ -65,6 +65,7 @@ class HengedGrid(object):
         self.grid_run_time = ""
         self.end_martin_grid = fc.end_martin_grid
         self.martin_grids = 0
+        self.martin_add_ratio = 1
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
         self.is_mac = True
@@ -945,7 +946,7 @@ class HengedGrid(object):
         self.save_trade_info()
 
     def add_record_martin_grids(self, value):
-        dynamicConfig.record_martin_grids.append(str(value))
+        dynamicConfig.record_martin_grids = value
         print('record_martin_grids:' + str(dynamicConfig.record_martin_grids))
         #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
