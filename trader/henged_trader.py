@@ -682,7 +682,14 @@ class HengedGrid(object):
                 order_type = OrderType.LIMIT
                 time_inforce = "GTC"
             tag = '【马丁】' if isMartin else '【网格】'
-            current_average_spot_price = float(dynamicConfig.record_spot_price[0]) if len(dynamicConfig.record_spot_price) <= 1 else (sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / (self.martin_add_ratio * (1 - pow(self.martin_add_ratio, len(dynamicConfig.record_spot_price))) / (1 - self.martin_add_ratio)))
+            if len(dynamicConfig.record_spot_price) <= 1:
+                print("len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)))
+                current_average_spot_price = float(dynamicConfig.record_spot_price[0])
+                print("current_average_spot_price:" + str(current_average_spot_price))
+            else:
+                print("len(dynamicConfig.record_spot_price):" + str(len(dynamicConfig.record_spot_price)))
+                current_average_spot_price = round(sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / (self.martin_add_ratio * (1 - pow(self.martin_add_ratio, len(dynamicConfig.record_spot_price))) / (1 - self.martin_add_ratio)) if self.martin_add_ratio > 1 else sum([float(dynamicConfig.record_spot_price[i]) for i in range(0, len(dynamicConfig.record_spot_price))]) / len(dynamicConfig.record_spot_price), 3)
+                print("current_average_spot_price:" + str(current_average_spot_price))
             self.current_all_spot_quantity = float(self.quantity) * (sum([pow(self.martin_add_ratio, i+1) for i in range(1, len(dynamicConfig.record_spot_price))]) if ((len(dynamicConfig.record_spot_price) > 1) and isMartin) else 1)
             open_spot_price = current_average_spot_price if isMartin else self.get_last_spot_price()
             spot_quantity = round(self.current_all_spot_quantity if isMartin else float(self.quantity), 3)
