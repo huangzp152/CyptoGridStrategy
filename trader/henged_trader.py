@@ -333,7 +333,7 @@ class HengedGrid(object):
                 # print('check account: ' + str(self.getAsset()))
                 # if len(dynamicConfig.record_spot_price) <= 1:
                 # self.martin_grids = 1
-                self.end_martin_grid = 5
+                self.end_martin_grid = fc.end_martin_grid
                 # else:
                 #     self.end_martin_grid = int((float(self.getAsset()) / round(float(
                 #         sum([float(dynamicConfig.record_spot_price[i]) * pow(1.5, i + 1) * float(self.quantity) for i in
