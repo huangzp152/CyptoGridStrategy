@@ -122,7 +122,8 @@ class BinanceSpotHttp(object):
     def request(self, req_method: RequestMethod, path: str, requery_dict=None, verify=False):
         for i in range(0, self.try_counts):
             try:
-                requery_dict["timestamp"] = self.get_current_timestamp()
+                if "timestamp" in requery_dict.keys():
+                    requery_dict["timestamp"] = self.get_current_timestamp()
                 url = self.host + path
                 if verify:
                     query_str = self._sign(requery_dict)
