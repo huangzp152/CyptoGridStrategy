@@ -120,22 +120,23 @@ class BinanceSpotHttp(object):
         return '&'.join([f"{key}={params[key]}" for key in params.keys()])
 
     def request(self, req_method: RequestMethod, path: str, requery_dict=None, verify=False):
-        url = self.host + path
-
-        if verify:
-            query_str = self._sign(requery_dict)
-            url += '?' + query_str
-        elif requery_dict:
-            url += '?' + self.build_parameters(requery_dict)
-        headers = {"X-MBX-APIKEY": self.api_key}
-
         for i in range(0, self.try_counts):
             try:
+                requery_dict["timestamp"] = self.get_current_timestamp()
+                url = self.host + path
+                if verify:
+                    query_str = self._sign(requery_dict)
+                    url += '?' + query_str
+                elif requery_dict:
+                    url += '?' + self.build_parameters(requery_dict)
+                headers = {"X-MBX-APIKEY": self.api_key}
+
                 response = requests.request(req_method.value, url=url, headers=headers, timeout=self.timeout, proxies=self.proxies)
                 if response.status_code == 200:
                     return response.json()
                 else:
                     print(f"请求:{path}:", response.json(), response.status_code)
+                    time.sleep(5)
             except Exception as error:
                 print(f"请求:{path}, 发生了错误: {error}")
                 time.sleep(3)
