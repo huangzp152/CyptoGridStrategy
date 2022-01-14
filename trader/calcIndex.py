@@ -5,19 +5,22 @@ import numpy as np
 
 from gateway import BinanceSpotHttp, BinanceFutureHttp
 from gateway.ftx_future import ftx_future
+# from utils import config
 from utils import config_ftt
-from utils.config_dot import config
+from utils.config_ftt import config
 
 
 class CalcIndex:
 
-    def __init__(self, test_data=None):
-        self.coinType = config.symbol  # 交易币种
-        if config.platform == "test":
+    def __init__(self, config,test_data=None):
+        self.config = config
+        self.coinType = self.config.symbol  # 交易币种
+        print("config.platform:" + self.config.platform)
+        if self.config.platform == "test":
             pass
-        elif config.platform == "binance_future_test":
-            self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret,
-                                                 proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        elif self.config.platform == "binance_future_test":
+            self.http_client = BinanceSpotHttp(api_key=self.config.api_key, secret=self.config.api_secret,
+                                                 proxy_host=self.config.proxy_host, proxy_port=self.config.proxy_port)
         else:
             self.http_client = ftx_future(api_key=config_ftt.config.api_key, api_secret=config_ftt.config.api_secret)
 
@@ -163,7 +166,7 @@ class CalcIndex:
         last_ma = 0
         next_ma = 0
 
-        if config.test:
+        if self.config.test:
             for i in range(0, len(self.kline_list)):
                 # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
                 if int(int(str(current_time_for_test)[:-3]) / 60) == int(int(str(self.kline_list[i][0])[:-3])/ 60):
@@ -193,7 +196,7 @@ class CalcIndex:
         '''
 
         finish_find_out_sustain = False
-        if config.test:
+        if self.config.test:
             # print('len(self.kline_list):' + str(len(self.kline_list)))
             for i in range(0, len(self.kline_list)):
                 # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
@@ -264,7 +267,7 @@ class CalcIndex:
         '''
         #
         finish_find_out_press = False
-        if config.test:
+        if self.config.test:
             # print('len(self.kline_list):' + str(len(self.kline_list)))
             for i in range(0, len(self.kline_list)):
                 # print('~~:' + str(int(int(str(current_time_for_test)[:-3]) / 60)) + ', ' + str(int(int(str(self.kline_list[i][0])[:-3])/ 60)))
@@ -497,7 +500,7 @@ class CalcIndex:
         return round(sum_ma / ma_number, point)
 
     def get_position_price(self,direction=True):
-        tmp = self.http_client.get_positionInfo(config.symbol)
+        tmp = self.http_client.get_positionInfo(self.config.symbol)
         for item in tmp:  # 遍历所有仓位
             if direction: # 多头持仓均价
                 if item['positionSide'] == "LONG" and float(item['positionAmt']) != 0.0:

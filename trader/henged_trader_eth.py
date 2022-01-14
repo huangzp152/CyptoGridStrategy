@@ -156,7 +156,7 @@ class HengedGrid(object):
             # for i in range(0, 10, 1/10):
             #     ratio_list.append(i)
             print(str(ratio_list))
-            time.sleep(10)
+            time.sleep(5)
             for l in range(0, len(symbol_list)):
                 with open(self.computer_path_base + 'backtest/backtest_result.txt',
                           'a+') as dfout:
@@ -177,7 +177,7 @@ class HengedGrid(object):
                         # time.sleep(5)
 
     def loop_one_ratio(self):
-        index = CalcIndex()
+        index = CalcIndex(config)
         # 取出之前存好的多单和空单的买价或者卖价，它们存储在文件里
         if config.platform == 'test':
             pass
@@ -342,7 +342,7 @@ class HengedGrid(object):
                 #          range(0, int(self.martin_grids))])), 2)))
                 print('self.end_martin_grid: ' + str(self.end_martin_grid))
                 self.gross_profit = str(
-                    round(float(dynamicConfig.total_earn) / float(dynamicConfig.total_invest) * 100, 2)) + '%'
+                    round(float(dynamicConfig.total_earn) / float(dynamicConfig.total_invest) * 100, 2) if dynamicConfig.total_invest > 0 else 0) + '%'
                 msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(
                     round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(
                     diff_time / 3600) != 0 else ''
@@ -594,14 +594,15 @@ class HengedGrid(object):
                 int(self.rows[config.symbol][0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
                 round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(
                 round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(
-                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(all_invests)
+                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(dynamicConfig.total_invest)
             print(backtest_result)
             dynamicConfig.total_earn = 0
             dynamicConfig.record_spot_price = []
             all_invests = 0
             with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as df:
                 df.write(backtest_result + '\n')
-        os.kill(os.getpid(), SIGKILL)
+        if config.platform != "test":
+            os.kill(os.getpid(), SIGKILL)
 
 
     def set_ratio_and_price(self, set_side = ''):
@@ -652,7 +653,7 @@ class HengedGrid(object):
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
-                self.add_total_invest(max(dynamicConfig.total_invest, round(sum([float(tmp) for tmp in dynamicConfig.record_spot_price]), 3) if len(dynamicConfig.record_spot_price) > 0 else 0))
+                self.add_total_invest(max(dynamicConfig.total_invest, round(sum([float(tmp) for tmp in dynamicConfig.record_spot_price]) * float(quantity), 3) if len(dynamicConfig.record_spot_price) > 0 else 0))
                 if isMartin:
                     self.add_record_martin_grids(self.martin_grids + 1)
                 self.set_spot_share(self.spot_step + 1)

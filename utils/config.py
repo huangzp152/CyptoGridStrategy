@@ -62,6 +62,7 @@ class Config:
             setattr(self, k, v)
 
 config = Config()
+config.loads('../config.json')
 
 class DynamicConfig(object):
 

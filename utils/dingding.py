@@ -7,8 +7,7 @@ import requests,json
 # from app.authorization import dingding_token, recv_window,api_secret,api_key
 # from app.BinanceAPI import BinanceAPI
 # linux
-from utils.config_uni import config
-
+from utils.config import config
 
 class Message:
 
@@ -199,6 +198,7 @@ class Message:
     def dingding_warn(text):
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         text = text + ', \n时间：' + time_format
+        print("config.platform:" + str(config.platform))
         if config.platform == 'test':
             pass
         else:
