@@ -69,6 +69,7 @@ class HengedGrid(object):
         self.current_all_spot_quantity = 0.0
         self.current_all_future_quantity = 0.0
         self.is_mac = True
+        dynamicConfig.total_invest = 0
         self.computer_path_base = '/Users/zipinghuang/Downloads/binance/CyptoGridStrategy/' if self.is_mac else 'G:\\PersonalFiles\\binance_grid_trader-master\\'
         pass
 
@@ -341,7 +342,7 @@ class HengedGrid(object):
                 #          range(0, int(self.martin_grids))])), 2)))
                 print('self.end_martin_grid: ' + str(self.end_martin_grid))
                 self.gross_profit = str(
-                    round(float(dynamicConfig.total_earn) / float(self.spot_money) * 100, 2)) + '%'
+                    round(float(dynamicConfig.total_earn) / float(dynamicConfig.total_invest) * 100, 2)) + '%'
                 msg1 = '目前盈利：' + str(dynamicConfig.total_earn) + ('(每小时：' + str(
                     round(dynamicConfig.total_earn / float(diff_time / 3600), 2)) + ')') if float(
                     diff_time / 3600) != 0 else ''
@@ -646,10 +647,12 @@ class HengedGrid(object):
         if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
             self.decreaseMoney(float(self.cur_market_future_price) * quantity)
+
             dynamicConfig.total_invest += float(self.cur_market_future_price) * quantity
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
+                self.add_total_invest(max(dynamicConfig.total_invest, round(sum([float(tmp) for tmp in dynamicConfig.record_spot_price]), 3) if len(dynamicConfig.record_spot_price) > 0 else 0))
                 if isMartin:
                     self.add_record_martin_grids(self.martin_grids + 1)
                 self.set_spot_share(self.spot_step + 1)
@@ -958,6 +961,12 @@ class HengedGrid(object):
         #dynamicConfig.record_spot_price.sort(reverse=True)#降序
         self.save_trade_info()
 
+    def add_total_invest(self, value):
+        dynamicConfig.total_invest = value
+        print('total_invest:' + str(dynamicConfig.total_invest))
+        #dynamicConfig.record_spot_price.sort(reverse=True)#降序
+        self.save_trade_info()
+
     def get_last_spot_price(self):
         if len(dynamicConfig.record_spot_price) == 0:
             return float(dynamicConfig.spot_buy_price)
@@ -1233,9 +1242,15 @@ class HengedGrid(object):
 
             if 'record_martin_grids' in record_price_dict_to_file.keys():
                 print(f"record_price_dict_to_file['record_martin_grids']:{record_price_dict_to_file['record_martin_grids']}")
-                dynamicConfig.record_martin_grids = record_price_dict_to_file['record_martin_grids']
+                dynamicConfig.record_martin_grids = float(record_price_dict_to_file['record_martin_grids'])
             else:
                 self.save_part_of_trade_info(record_price_dict_to_file, 'record_martin_grids', dynamicConfig.record_martin_grids)
+
+            if 'total_invest' in record_price_dict_to_file.keys():
+                print(f"record_price_dict_to_file['total_invest']:{record_price_dict_to_file['total_invest']}")
+                dynamicConfig.total_invest = float(record_price_dict_to_file['total_invest'])
+            else:
+                self.save_part_of_trade_info(record_price_dict_to_file, 'total_invest', dynamicConfig.total_invest)
 
             dynamicConfig.total_steps = len(dynamicConfig.record_spot_price) + len(dynamicConfig.record_future_price) + len(dynamicConfig.long_bottom_position_price)
 
@@ -1246,7 +1261,7 @@ class HengedGrid(object):
     #             dynamicConfig.record_future_price.append(order.get('price'))
 
     def save_part_of_trade_info(self, item, key, value):
-        item[key] = value
+        item[key] = str(value)
         if config.platform == 'test':
             trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
         else:
@@ -1256,8 +1271,8 @@ class HengedGrid(object):
 
     def save_trade_info(self):
         print("存储记录的价格到文件里")
-        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}, dynamicConfig.record_martin_grids:{dynamicConfig.record_martin_grids}")
-        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price, 'record_martin_grids':dynamicConfig.record_martin_grids}
+        print(f"save_trade_info, record_spot_price:{dynamicConfig.record_spot_price}, record_future_price:{dynamicConfig.record_future_price}, dynamicConfig.long_bottom_position_price:{dynamicConfig.long_bottom_position_price}, dynamicConfig.record_martin_grids:{dynamicConfig.record_martin_grids}, 'total_invest':{dynamicConfig.total_invest}")
+        record_price_dict_to_file = {'record_spot_price':dynamicConfig.record_spot_price, 'record_future_price':dynamicConfig.record_future_price, 'long_bottom_position_price':dynamicConfig.long_bottom_position_price, 'record_martin_grids':str(dynamicConfig.record_martin_grids), 'total_invest':str(dynamicConfig.total_invest)}
 
         if config.platform == 'test':
             trade_info_file_path = '../data/trade_info_%s_test.json' % config.symbol
