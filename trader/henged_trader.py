@@ -118,7 +118,7 @@ class HengedGrid(object):
         # while(True):
 
         self.rows = {}
-        symbol_list = ['BTCBUSD']
+        symbol_list = ['ROSEBUSD', 'GLMRBUSD']
         if config.platform == 'test':
               # 交易对范围
             for m in range(0, len(symbol_list)):
@@ -152,7 +152,7 @@ class HengedGrid(object):
             self.loop_one_ratio()
         else:
         #test
-            ratio_list = np.arange(0.4, 1.6, 0.1)# 利率范围
+            ratio_list = np.arange(0.5, 1.1, 0.5)# 利率范围
             martin_list = np.arange(1, 16, 5) # 马丁格子数范围
             # for i in range(0, 10, 1/10):
             #     ratio_list.append(i)
@@ -174,6 +174,7 @@ class HengedGrid(object):
                         if config.platform == 'test':
                             fc.ratio_up_or_down = ratio_list[i]
                             fc.ratio_no_trendency = ratio_list[i]
+                            dynamicConfig.total_invest = 0
                         self.loop_one_ratio()
 
                         # time.sleep(5)
@@ -591,9 +592,9 @@ class HengedGrid(object):
         if config.platform == 'test':
             backtest_result = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
                 int(self.rows[config.symbol][0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
-                round(dynamicConfig.spot_rising_ratio, 2)) + '最终收益：' + str(
-                round(dynamicConfig.total_earn, 2)) + '格子数量：' + str(
-                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(dynamicConfig.total_invest)
+                round(dynamicConfig.spot_rising_ratio, 2)) + '， 最终收益：' + str(
+                round(dynamicConfig.total_earn, 2)) + ', 现存格子数量：' + str(
+                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(dynamicConfig.total_invest) + ', 利润率：' + str(self.gross_profit) + '， 效率：' + str(float(self.gross_profit.replace('%', '')) / len(dynamicConfig.record_spot_price))
             print(backtest_result)
             dynamicConfig.total_earn = 0
             dynamicConfig.record_spot_price = []
@@ -647,11 +648,12 @@ class HengedGrid(object):
         if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
             self.decreaseMoney(float(self.cur_market_future_price) * quantity)
-            dynamicConfig.total_invest += float(self.cur_market_future_price) * quantity
+            # dynamicConfig.total_invest += float(self.cur_market_future_price) * quantity
             if not build_position_share:
                 Message.dingding_warn('【' + str(config.symbol) + '】' + str(self.cur_market_future_price) + "买入一份多单了！")
                 self.add_record_spot_price(self.cur_market_future_price)
-                self.add_total_invest(max(dynamicConfig.total_invest, round(sum([float(tmp) for tmp in dynamicConfig.record_spot_price]) * float(quantity), 3) if len(dynamicConfig.record_spot_price) > 0 else 0))
+                dynamicConfig.total_invest = max(dynamicConfig.total_invest, round(sum([float(tmp) for tmp in dynamicConfig.record_spot_price]) * float(quantity), 3) if len(dynamicConfig.record_spot_price) > 0 else 0)
+                self.add_total_invest(dynamicConfig.total_invest)
                 if isMartin:
                     self.add_record_martin_grids(self.martin_grids + 1)
                 self.set_spot_share(self.spot_step + 1)
