@@ -149,6 +149,8 @@ class HengedGrid(object):
                             print("self.row len:" + str(len(self.rows[symbol_list[m]])))
         # official
         if config.platform != 'test':
+            self.best_efficient = 0 #useless
+            self.suggest_result = "" #useless
             self.loop_one_ratio()
         else:
         #test
@@ -159,6 +161,8 @@ class HengedGrid(object):
             print(str(ratio_list))
             time.sleep(5)
             for l in range(0, len(symbol_list)):
+                self.best_efficient = 0
+                self.suggest_result = ""
                 with open(self.computer_path_base + 'backtest/backtest_result.txt',
                           'a+') as dfout:
                     dfout.write(str(symbol_list[l]) + '交易对' + '\n')
@@ -176,6 +180,10 @@ class HengedGrid(object):
                             fc.ratio_no_trendency = ratio_list[i]
                             dynamicConfig.total_invest = 0
                         self.loop_one_ratio()
+                with open(self.computer_path_base + 'backtest/backtest_result.txt', 'a+') as df:
+                    df.write("此交易对最佳推荐：" + self.suggest_result + '\n')
+
+
 
                         # time.sleep(5)
 
@@ -590,12 +598,16 @@ class HengedGrid(object):
         Message.dingding_warn(str(msg1 + '\n' + msg2 + '\n' + msg3))
         stop_singal_from_client = False
         if config.platform == 'test':
+            current_efficient = float(self.gross_profit.replace('%', '')) / len(dynamicConfig.record_spot_price)
             backtest_result = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
                 int(self.rows[config.symbol][0][0][:-3])))) + ', 交易对:' + config.symbol + '回测结果：' + "格子利率：" + str(
                 round(dynamicConfig.spot_rising_ratio, 2)) + '， 最终收益：' + str(
                 round(dynamicConfig.total_earn, 2)) + ', 现存格子数量：' + str(
-                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(dynamicConfig.total_invest) + ', 利润率：' + str(self.gross_profit) + '， 效率：' + str(float(self.gross_profit.replace('%', '')) / len(dynamicConfig.record_spot_price))
+                len(dynamicConfig.record_spot_price)) + ', 最多投资额：' + str(dynamicConfig.total_invest) + ', 利润率：' + str(self.gross_profit) + '， 效率：' + str(current_efficient)
             print(backtest_result)
+            if current_efficient > self.best_efficient:
+                self.best_efficient = current_efficient
+                self.suggest_result = backtest_result
             dynamicConfig.total_earn = 0
             dynamicConfig.record_spot_price = []
             all_invests = 0
@@ -1344,6 +1356,8 @@ class HengedGrid(object):
         :return:
         '''
         need_join = False
+        if len(dynamicConfig.long_bottom_position_price) == 0:
+            return need_join
         tmp_list = [float(tmp) for tmp in dynamicConfig.long_bottom_position_price]
         if len(tmp_list) == 0:
             need_join = True
