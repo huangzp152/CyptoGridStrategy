@@ -5,7 +5,7 @@ import json
 class Config:
 
     def __init__(self):
-
+        self.port: str = "5002"
         self.platform: str = "binance_spot"  # 交易的平台
         self.symbol: str = "BTCBUSD"  # 交易对.
         self.coin: str = "BUSD" # 要进行仓位查询的币种

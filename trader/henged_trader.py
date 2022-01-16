@@ -473,7 +473,7 @@ class HengedGrid(object):
 
                 if loop_count % 1800 == 5:  # 半小时汇报一次
                     msg = '【' + str(
-                        config.symbol) + '】' + '汇报脚本运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
+                        config.symbol) + '】' + '汇报脚本【' + str(os.getpid()) + '】运行情况：' + msg1 + ', ' + msg2 + ', ' + msg3 + ', ' + msg4 + ', ' + msg5 + ', ' + msg6 + ', ' + msg7 + ', ' + msg8 + ', ' + self.grid_run_time
                     Message.dingding_warn(msg)
 
                 #设定仓位
@@ -507,7 +507,7 @@ class HengedGrid(object):
                 # 要卖出时，市场价也要大于最近上次那个的价格，因为计算盈利的时候，要拿上次的价格来算盈利的，如果max(sell_price,market_price) < get_last_spot_price,会亏钱 # 可能高位的单需要留着，因为还没到它的目标止盈点
                 elif not isTrendComing and float(self.cur_market_future_price) >= float(self.spot_sell_price) * (
                         1 + self.handling_ratio):
-                    spot_res = self.close_long(time_format, False, self.cur_market_future_price)
+                    spot_res = self.close_long(time_format, False)
 
                 # 开空单（卖出借仓）
                 # 空单市场价要高于你的卖出价，才能成交
@@ -655,7 +655,7 @@ class HengedGrid(object):
         isMartin = True if len(dynamicConfig.record_spot_price) <= self.end_martin_grid else False
         quantity = round(float(self.quantity) * pow(self.martin_add_ratio, len(dynamicConfig.record_spot_price)+1) if (isMartin and not build_position_share) else float(self.quantity), 3)# uni精度为整数
         print('quantity::' + str(quantity))
-        spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.LIMIT, quantity, price=str(round(float(self.cur_market_future_price), 2)))
+        spot_res = {'orderId':'backtestid'} if config.platform == 'test' else self.http_client_spot.place_order(config.symbol, OrderSide.BUY, OrderType.MARKET, quantity, price=str(round(float(self.cur_market_future_price), 2)))
         # print('开多单完整结果：'+str(spot_res))
         if spot_res and 'orderId' in spot_res.keys():
             print("开多单成功")
@@ -695,7 +695,7 @@ class HengedGrid(object):
             # test
             # spot_res = {'orderId': 'Order' + str(random.randint(1000, 10000))}
             # dynamicConfig.order_list.append(spot_res)
-            order_type = OrderType.LIMIT
+            order_type = OrderType.MARKET
             time_inforce = ''
             if price != 'none':
                 order_type = OrderType.LIMIT
@@ -1183,7 +1183,7 @@ class HengedGrid(object):
 
     def open_receiver(self):
         #todo 最好还是放在另外一个进程里，方便命令调起网格策略
-        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else 5002, threaded=True)
+        app.run(host='104.225.143.245', port=5000 if config.platform == 'binance_future' else int(config.port), threaded=True)
 
     def get_future_share(self):
         # dynamicConfig.future_step = len(dynamicConfig.record_future_price)
