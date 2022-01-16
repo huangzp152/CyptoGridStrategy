@@ -118,12 +118,12 @@ class HengedGrid(object):
         # while(True):
 
         self.rows = {}
-        symbol_list = ['ROSEBUSD', 'GLMRBUSD']
+        symbol_list = ['SOLBUSD'] #['XRPBUSD', 'SOLBUSD','LUNABUSD','ETHBUSD', 'BTCBUSD']
         if config.platform == 'test':
               # 交易对范围
             for m in range(0, len(symbol_list)):
                 self.rows[symbol_list[m]] = []
-                for k in range(-1, -4, -1):
+                for k in range(-5, -15, -1):
                     timestamp = time.time() + 86400 * k
                     date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)).split(' ')[0]
                     base_url = 'https://data.binance.vision/data/spot/daily/klines/' + symbol_list[m] + '/1m/'
@@ -154,7 +154,7 @@ class HengedGrid(object):
             self.loop_one_ratio()
         else:
         #test
-            ratio_list = np.arange(0.5, 1.1, 0.5)# 利率范围
+            ratio_list = np.arange(1.5, 2.2, 0.3)# 利率范围
             martin_list = np.arange(1, 16, 5) # 马丁格子数范围
             # for i in range(0, 10, 1/10):
             #     ratio_list.append(i)
