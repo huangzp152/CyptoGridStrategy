@@ -1060,22 +1060,22 @@ class HengedGrid(object):
         if self.end_martin_grid > 0 and len(dynamicConfig.record_spot_price) > 0 and len(dynamicConfig.record_spot_price) <= self.end_martin_grid:
             print("execute martin stragety")
             if len(dynamicConfig.record_spot_price) == 1:
-                self.spot_sell_price = round((1 + dynamicConfig.spot_rising_ratio / 100) * max(deal_price, sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(self.martin_add_ratio, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))])), 2)
+                self.spot_sell_price = round(max(deal_price, sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(self.martin_add_ratio, i + 1) for i in range(0, len(dynamicConfig.record_spot_price))])) / (1 - dynamicConfig.spot_rising_ratio / 100), 2)
             else:
-                self.spot_sell_price = round((1 + dynamicConfig.spot_rising_ratio / 100) * sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]), 2)
+                self.spot_sell_price = round(sum([float(dynamicConfig.record_spot_price[i]) * pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / sum([pow(self.martin_add_ratio, i+1) for i in range(0, len(dynamicConfig.record_spot_price))]) / (1 - dynamicConfig.spot_rising_ratio / 100), 2)
             # max(round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point), (round(sum([float(item) for item in dynamicConfig.record_spot_price]) / len(dynamicConfig.record_spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)) if len(dynamicConfig.record_spot_price) > 0 else self.spot_sell_price)
             dynamicConfig.spot_sell_price = self.spot_sell_price
             print("self.spot_sell_price：" + str(self.spot_sell_price))
             # float(self.quantity) = float(self.quantity) * (len(dynamicConfig.record_spot_price) - 1) # 留一份
         else:
-            dynamicConfig.spot_sell_price = round(deal_price * (1 + dynamicConfig.spot_rising_ratio / 100), demical_point)
+            dynamicConfig.spot_sell_price = round(deal_price / (1 - dynamicConfig.spot_rising_ratio / 100), demical_point)
             self.spot_sell_price = max(dynamicConfig.spot_sell_price, (float(dynamicConfig.record_spot_price[-1]) if len(dynamicConfig.record_spot_price) > 0 else 0)) # 如果多单平仓价比列表里最小的还小，那交易时就亏本了啊
             print("[ss]设置接下来多单卖出的价格:" + str(self.spot_sell_price))
 
     def set_future_next_sell_price(self, deal_price):
         price_str_list = str(deal_price).split(".")
         demical_point = len(price_str_list[1]) if len(price_str_list) > 1 else 0 + 2
-        dynamicConfig.future_sell_price = round(deal_price * (1 + dynamicConfig.future_rising_ratio / 100), demical_point)
+        dynamicConfig.future_sell_price = round(deal_price / (1 - dynamicConfig.future_rising_ratio / 100), demical_point)
         self.future_sell_price = dynamicConfig.future_sell_price
         # print("设置接下来新开空单卖出的价格, " + str(self.future_sell_price))
 
@@ -1177,7 +1177,7 @@ class HengedGrid(object):
         print('停止时，自动挂单吧')
         time_format = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for spot_price in dynamicConfig.record_spot_price:
-            self.close_long(time_format, False, str(int(float(spot_price) * (1 + dynamicConfig.spot_rising_ratio / 100))))
+            self.close_long(time_format, False, str(int(float(spot_price) / (1 - dynamicConfig.spot_rising_ratio / 100))))
         for future_price in dynamicConfig.record_future_price:
             self.close_short(time_format, False, str(int(float(future_price) * (1 - dynamicConfig.future_falling_ratio / 100))))
 
@@ -1386,7 +1386,7 @@ class HengedGrid(object):
             tmp = max(dynamicConfig.long_bottom_position_price)
             if float(tmp) > float(price):
                 print('这个价格超过目前的底仓列表，剔除【' + str(tmp) + '】，将它挂单')
-                self.close_long(time_format, False, str(round(float(tmp) * (1 + dynamicConfig.spot_rising_ratio / 100), 2)), True)#挂掉出了
+                self.close_long(time_format, False, str(round(float(tmp) / (1 - dynamicConfig.spot_rising_ratio / 100), 2)), True)#挂掉出了
                 tick_out_price = tmp
                 need_open_long_bottom_position = True
         if need_open_long_bottom_position and tick_out_price:
