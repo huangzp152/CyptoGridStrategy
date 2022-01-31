@@ -1,7 +1,7 @@
 {
-  "port": "5009",
-  "platform": "binance_futrue_shop",
-  "symbol": "SOLBUSD",
+  "port": "5002",
+  "platform": "binance_futrue_test",
+  "symbol": "BTCBUSD",
   "coin": "BUSD",
   "api_key": "Z5EMsxFw4v3wM7xklJlAzAXciGCEcLkrq7dp1EnTXDMOfVoFNKGhD1ejJyO5vTPM",
   "api_secret": "ysNnpFvkTzZPr5fwmb0lB5mWYllEA448TNf9W67ICc3h0YqUhnVpUbhn4qpOrEAL",
