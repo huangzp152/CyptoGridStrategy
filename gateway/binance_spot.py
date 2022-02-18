@@ -138,6 +138,8 @@ class BinanceSpotHttp(object):
                 else:
                     print(f"请求:{path}:", response.json(), response.status_code)
                     time.sleep(5)
+                    if "insufficient balance" in response.json():
+                        return ""
             except Exception as error:
                 print(f"请求:{path}, 发生了错误: {error}")
                 time.sleep(3)
